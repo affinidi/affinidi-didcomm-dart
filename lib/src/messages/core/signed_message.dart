@@ -7,6 +7,9 @@ part 'signed_message.g.dart';
 class SignedMessage extends DidcommMessage {
   SignedMessage();
 
+  @override
+  String get mediaType => 'application/didcomm-signed+json';
+
   factory SignedMessage.fromJson(Map<String, dynamic> json) =>
       _$SignedMessageFromJson(json);
 

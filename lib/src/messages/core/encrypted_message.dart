@@ -7,6 +7,9 @@ part 'encrypted_message.g.dart';
 class EncryptedMessage extends DidcommMessage {
   EncryptedMessage();
 
+  @override
+  String get mediaType => 'application/didcomm-encrypted+json';
+
   factory EncryptedMessage.fromJson(Map<String, dynamic> json) =>
       _$EncryptedMessageFromJson(json);
 
