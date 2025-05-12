@@ -1,0 +1,14 @@
+import 'package:json_annotation/json_annotation.dart';
+import '../../didcomm_message.dart';
+
+part 'query_message.g.dart';
+
+@JsonSerializable()
+class QueryMessage extends DidcommMessage {
+  QueryMessage();
+
+  factory QueryMessage.fromJson(Map<String, dynamic> json) =>
+      _$QueryMessageFromJson(json);
+
+  Map<String, dynamic> toJson() => _$QueryMessageToJson(this);
+}
