@@ -1,6 +1,7 @@
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/messages/attachments/attachment.dart';
 import 'package:didcomm/src/messages/attachments/attachment_data.dart';
+import 'package:didcomm/src/messages/didcomm_message.dart';
 import 'package:ssi/ssi.dart';
 import 'package:ssi/src/wallet/key_store/in_memory_key_store.dart';
 
@@ -46,6 +47,8 @@ void main() async {
     ],
   );
 
+  plainTextMessage['custom-header'] = 'custom-value';
+
   final signedMessage = SignedMessage.fromPlainTextMessage(
     plainTextMessage,
     wallet: aliceWallet,
@@ -64,4 +67,14 @@ void main() async {
   // --------------------------------------------------------------------
   // Bob decrypts message and verifies signature
   // --------------------------------------------------------------------
+
+  final extractedPlainTextMessage = DidcommMessage.extractPlainTextMessage(
+    message: encryptedMessage,
+    wallet: bobWallet,
+  );
+
+  final extractedSignedMessage = DidcommMessage.extractSignedMessage(
+    message: encryptedMessage,
+    wallet: bobWallet,
+  );
 }
