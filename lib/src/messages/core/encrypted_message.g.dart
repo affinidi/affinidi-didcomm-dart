@@ -8,13 +8,14 @@ part of 'encrypted_message.dart';
 
 EncryptedMessage _$EncryptedMessageFromJson(Map<String, dynamic> json) =>
     EncryptedMessage(
-      json['ciphertext'] as String,
-      json['protected'] as String,
-      (json['recipients'] as List<dynamic>)
-          .map((e) => Recipient.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      json['tag'] as String,
-      json['iv'] as String,
+      cipherText: json['ciphertext'] as String,
+      protected: json['protected'] as String,
+      recipients:
+          (json['recipients'] as List<dynamic>)
+              .map((e) => Recipient.fromJson(e as Map<String, dynamic>))
+              .toList(),
+      tag: json['tag'] as String,
+      initializationVector: json['iv'] as String,
     );
 
 Map<String, dynamic> _$EncryptedMessageToJson(EncryptedMessage instance) =>

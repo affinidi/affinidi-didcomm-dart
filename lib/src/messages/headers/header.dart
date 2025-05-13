@@ -9,8 +9,7 @@ class Header {
 
   Header({required this.keyId});
 
-  factory Header.fromJson(Map<String, dynamic> json) =>
-      _$RecipientHeaderFromJson(json);
+  factory Header.fromJson(Map<String, dynamic> json) => _$HeaderFromJson(json);
 
-  Map<String, dynamic> toJson() => _$RecipientHeaderToJson(this);
+  Map<String, dynamic> toJson() => _$HeaderToJson(this);
 }
