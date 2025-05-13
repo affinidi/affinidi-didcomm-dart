@@ -1,13 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'recipient_header.dart';
+part of 'header.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-RecipientHeader _$RecipientHeaderFromJson(Map<String, dynamic> json) =>
-    RecipientHeader(keyId: json['kid'] as String);
+Header _$RecipientHeaderFromJson(Map<String, dynamic> json) =>
+    Header(keyId: json['kid'] as String);
 
-Map<String, dynamic> _$RecipientHeaderToJson(RecipientHeader instance) =>
+Map<String, dynamic> _$RecipientHeaderToJson(Header instance) =>
     <String, dynamic>{'kid': instance.keyId};

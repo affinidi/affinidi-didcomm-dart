@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import './recipient_header.dart';
+import '../headers/header.dart';
 
 part 'recipient.g.dart';
 
@@ -8,7 +8,7 @@ class Recipient {
   @JsonKey(name: 'encrypted_key')
   final String encryptedKey;
 
-  final RecipientHeader header;
+  final Header header;
 
   Recipient({required this.encryptedKey, required this.header});
 
