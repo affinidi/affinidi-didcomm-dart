@@ -1,17 +1,19 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'recipient.dart';
+part of 'signature.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-Recipient _$RecipientFromJson(Map<String, dynamic> json) => Recipient(
-  encryptedKey: json['encrypted_key'] as String,
+Signature _$SignatureFromJson(Map<String, dynamic> json) => Signature(
+  protected: json['protected'] as String,
+  signature: json['signature'] as String,
   header: Header.fromJson(json['header'] as Map<String, dynamic>),
 );
 
-Map<String, dynamic> _$RecipientToJson(Recipient instance) => <String, dynamic>{
-  'encrypted_key': instance.encryptedKey,
+Map<String, dynamic> _$SignatureToJson(Signature instance) => <String, dynamic>{
+  'protected': instance.protected,
+  'signature': instance.signature,
   'header': instance.header,
 };
