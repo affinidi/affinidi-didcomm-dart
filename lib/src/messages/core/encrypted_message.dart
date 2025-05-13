@@ -32,7 +32,7 @@ class EncryptedMessage extends DidcommMessage {
     DidcommMessage message, {
     required Wallet wallet,
     required String walletKeyId,
-    required List<Map<String, dynamic>> recipientPublicKeyJwks,
+    required List<Jwk> recipientPublicKeyJwks,
   }) {
     return EncryptedMessage(
       cipherText: '',

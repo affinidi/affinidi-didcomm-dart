@@ -20,7 +20,6 @@ class SignedMessage extends DidcommMessage {
     PlaintextMessage message, {
     required Wallet wallet,
     required String walletKeyId,
-    required List<Map<String, dynamic>> recipientPublicKeyJwks,
   }) {
     return SignedMessage(payload: '', signatures: []);
   }
