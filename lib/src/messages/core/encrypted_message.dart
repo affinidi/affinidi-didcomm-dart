@@ -1,11 +1,14 @@
+import 'package:didcomm/src/annotations/own_json_properties.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:ssi/ssi.dart';
 import '../didcomm_message.dart';
 import '../recipients/recipient.dart';
 
 part 'encrypted_message.g.dart';
+part 'encrypted_message.own_json_props.g.dart';
 
-@JsonSerializable()
+@OwnJsonProperties()
+@JsonSerializable(includeIfNull: false)
 class EncryptedMessage extends DidcommMessage {
   @override
   String get mediaType => 'application/didcomm-encrypted+json';

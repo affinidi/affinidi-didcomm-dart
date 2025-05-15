@@ -1,3 +1,4 @@
+import 'package:didcomm/src/annotations/own_json_properties.dart';
 import 'package:didcomm/src/messages/core/plaintext_message.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:ssi/ssi.dart';
@@ -5,8 +6,10 @@ import '../signatures/signature.dart';
 import '../didcomm_message.dart';
 
 part 'signed_message.g.dart';
+part 'signed_message.own_json_props.g.dart';
 
-@JsonSerializable()
+@OwnJsonProperties()
+@JsonSerializable(includeIfNull: false)
 class SignedMessage extends DidcommMessage {
   @override
   String get mediaType => 'application/didcomm-signed+json';

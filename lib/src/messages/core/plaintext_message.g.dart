@@ -33,20 +33,24 @@ Map<String, dynamic> _$PlaintextMessageToJson(PlaintextMessage instance) =>
     <String, dynamic>{
       'id': instance.id,
       'type': instance.type.toString(),
-      'from': instance.from,
-      'to': instance.to,
-      'thid': instance.threadId,
-      'pthid': instance.parentThreadId,
-      'created_time': _$JsonConverterToJson<int, DateTime>(
-        instance.createdTime,
-        const EpochSecondsConverter().toJson,
-      ),
-      'expires_time': _$JsonConverterToJson<int, DateTime>(
-        instance.expiresTime,
-        const EpochSecondsConverter().toJson,
-      ),
-      'body': instance.body,
-      'attachments': instance.attachments,
+      if (instance.from case final value?) 'from': value,
+      if (instance.to case final value?) 'to': value,
+      if (instance.threadId case final value?) 'thid': value,
+      if (instance.parentThreadId case final value?) 'pthid': value,
+      if (_$JsonConverterToJson<int, DateTime>(
+            instance.createdTime,
+            const EpochSecondsConverter().toJson,
+          )
+          case final value?)
+        'created_time': value,
+      if (_$JsonConverterToJson<int, DateTime>(
+            instance.expiresTime,
+            const EpochSecondsConverter().toJson,
+          )
+          case final value?)
+        'expires_time': value,
+      if (instance.body case final value?) 'body': value,
+      if (instance.attachments case final value?) 'attachments': value,
     };
 
 Value? _$JsonConverterFromJson<Json, Value>(
