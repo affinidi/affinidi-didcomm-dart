@@ -1,0 +1,3 @@
+class OwnProperties {
+  const OwnProperties();
+}
