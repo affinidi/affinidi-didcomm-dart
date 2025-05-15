@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/messages/attachments/attachment.dart';
 import 'package:didcomm/src/messages/attachments/attachment_data.dart';
@@ -11,7 +13,7 @@ void main() async {
     type: Uri.parse('https://didcomm.org/example/1.0/message'),
   );
 
-  print(message.ownProperties());
+  print(jsonEncode(message));
 
   /*
   // --------------------------------------------------------------------

@@ -8,7 +8,7 @@ part 'plaintext_message.g.dart';
 part 'plaintext_message.own_json_props.g.dart';
 
 @OwnJsonProperties()
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class PlaintextMessage extends DidcommMessage {
   final String id;
   final Uri type;
