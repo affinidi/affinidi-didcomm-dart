@@ -45,8 +45,13 @@ class PlaintextMessage extends DidcommMessage {
     this.attachments,
   });
 
-  factory PlaintextMessage.fromJson(Map<String, dynamic> json) =>
-      _$PlaintextMessageFromJson(json);
+  factory PlaintextMessage.fromJson(Map<String, dynamic> json) {
+    final message = _$PlaintextMessageFromJson(json)
+      ..assignCustomHeaders(json, _$ownJsonProperties);
 
-  Map<String, dynamic> toJson() => _$PlaintextMessageToJson(this);
+    return message;
+  }
+
+  Map<String, dynamic> toJson() =>
+      withCustomHeaders(_$PlaintextMessageToJson(this));
 }

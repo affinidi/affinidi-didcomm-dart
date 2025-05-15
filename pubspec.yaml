@@ -13,6 +13,7 @@ dependencies:
   build_runner: ^2.4.15
   collection: ^1.19.1
   json_annotation: ^4.9.0
+  meta: ^1.17.0
   source_gen: ^2.0.0
   ssi: ^1.0.0-dev.27
   # path: ^1.8.0
