@@ -7,6 +7,4 @@ part of 'signed_message.dart';
 // OwnJsonPropertiesGenerator
 // **************************************************************************
 
-extension SignedMessageOwnPropertiesExtension on SignedMessage {
-  List<String> ownProperties() => ['payload', 'signatures'];
-}
+const _$ownJsonProperties = ['payload', 'signatures'];

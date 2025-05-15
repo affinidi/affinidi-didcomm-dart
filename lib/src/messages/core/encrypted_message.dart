@@ -46,8 +46,13 @@ class EncryptedMessage extends DidcommMessage {
     );
   }
 
-  factory EncryptedMessage.fromJson(Map<String, dynamic> json) =>
-      _$EncryptedMessageFromJson(json);
+  factory EncryptedMessage.fromJson(Map<String, dynamic> json) {
+    final message = _$EncryptedMessageFromJson(json)
+      ..assignCustomHeaders(json, _$ownJsonProperties);
 
-  Map<String, dynamic> toJson() => _$EncryptedMessageToJson(this);
+    return message;
+  }
+
+  Map<String, dynamic> toJson() =>
+      withCustomHeaders(_$EncryptedMessageToJson(this));
 }

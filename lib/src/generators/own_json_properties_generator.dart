@@ -14,13 +14,12 @@ class OwnJsonPropertiesGenerator
   ) async {
     if (declaration is! ClassElement) {
       throw InvalidGenerationSourceError(
-        '@OwnProperties can only be used on classes',
+        '@OwnJsonProperties can only be used on classes',
         element: declaration,
       );
     }
 
     final classElement = declaration;
-    final className = classElement.name;
 
     final fields = classElement.fields
         .where((field) => !field.isStatic && !field.isSynthetic)
@@ -46,9 +45,7 @@ class OwnJsonPropertiesGenerator
         .join(', ');
 
     return '''
-extension ${className}OwnPropertiesExtension on $className {
-  List<String> ownProperties() => [$fields];
-}
+  const _\$ownJsonProperties = [$fields];
 ''';
   }
 }

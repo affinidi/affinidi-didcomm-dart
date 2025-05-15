@@ -7,17 +7,15 @@ part of 'plaintext_message.dart';
 // OwnJsonPropertiesGenerator
 // **************************************************************************
 
-extension PlaintextMessageOwnPropertiesExtension on PlaintextMessage {
-  List<String> ownProperties() => [
-    'id',
-    'type',
-    'from',
-    'to',
-    'thid',
-    'pthid',
-    'created_time',
-    'expires_time',
-    'body',
-    'attachments',
-  ];
-}
+const _$ownJsonProperties = [
+  'id',
+  'type',
+  'from',
+  'to',
+  'thid',
+  'pthid',
+  'created_time',
+  'expires_time',
+  'body',
+  'attachments',
+];
