@@ -27,8 +27,13 @@ class SignedMessage extends DidcommMessage {
     return SignedMessage(payload: '', signatures: []);
   }
 
-  factory SignedMessage.fromJson(Map<String, dynamic> json) =>
-      _$SignedMessageFromJson(json);
+  factory SignedMessage.fromJson(Map<String, dynamic> json) {
+    final message = _$SignedMessageFromJson(json)
+      ..assignCustomHeaders(json, _$ownJsonProperties);
 
-  Map<String, dynamic> toJson() => _$SignedMessageToJson(this);
+    return message;
+  }
+
+  Map<String, dynamic> toJson() =>
+      withCustomHeaders(_$SignedMessageToJson(this));
 }

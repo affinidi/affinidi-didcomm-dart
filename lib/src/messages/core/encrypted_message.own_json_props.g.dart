@@ -7,12 +7,10 @@ part of 'encrypted_message.dart';
 // OwnJsonPropertiesGenerator
 // **************************************************************************
 
-extension EncryptedMessageOwnPropertiesExtension on EncryptedMessage {
-  List<String> ownProperties() => [
-    'ciphertext',
-    'protected',
-    'recipients',
-    'tag',
-    'iv',
-  ];
-}
+const _$ownJsonProperties = [
+  'ciphertext',
+  'protected',
+  'recipients',
+  'tag',
+  'iv',
+];
