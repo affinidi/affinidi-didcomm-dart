@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import '../headers/header.dart';
+import '../recipients/recipient_header.dart';
 
 part 'signature.g.dart';
 
@@ -7,7 +7,7 @@ part 'signature.g.dart';
 class Signature {
   final String protected;
   final String signature;
-  final Header header;
+  final RecipientHeader header;
 
   Signature({
     required this.protected,
