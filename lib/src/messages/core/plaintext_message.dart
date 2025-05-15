@@ -1,13 +1,13 @@
-import 'package:didcomm/src/annotations/own_properties.dart';
+import 'package:didcomm/src/annotations/own_json_properties.dart';
 import 'package:didcomm/src/messages/attachments/attachment.dart';
 import 'package:json_annotation/json_annotation.dart';
 import '../../converters/epoch_seconds_converter.dart';
 import '../didcomm_message.dart';
 
 part 'plaintext_message.g.dart';
-part 'plaintext_message.own_props.g.dart';
+part 'plaintext_message.own_json_props.g.dart';
 
-@OwnProperties()
+@OwnJsonProperties()
 @JsonSerializable()
 class PlaintextMessage extends DidcommMessage {
   final String id;
