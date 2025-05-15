@@ -1,0 +1,17 @@
+# build.yaml
+targets:
+  $default:
+    builders:
+      didcomm|own_properties:
+        generate_for:
+          include:
+            - lib/**.dart
+
+builders:
+  own_properties:
+    import: "package:didcomm/builder.dart"
+    builder_factories: ["ownPropertiesBuilder"]
+    build_extensions: {".dart": [".g.dart"]}
+    auto_apply: dependents
+    build_to: source
+    applies_builders: ["source_gen|combining_builder"]

@@ -6,6 +6,14 @@ import 'package:ssi/ssi.dart';
 import 'package:ssi/src/wallet/key_store/in_memory_key_store.dart';
 
 void main() async {
+  final message = PlaintextMessage(
+    id: '123',
+    type: Uri.parse('https://didcomm.org/example/1.0/message'),
+  );
+
+  print(message.ownProperties());
+
+  /*
   // --------------------------------------------------------------------
   // Alice creates a message fro Bob. The message is signed and encrypted
   // --------------------------------------------------------------------
@@ -77,4 +85,5 @@ void main() async {
     message: encryptedMessage,
     wallet: bobWallet,
   );
+  */
 }
