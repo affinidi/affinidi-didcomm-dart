@@ -4,7 +4,7 @@
 part of 'plaintext_message.dart';
 
 // **************************************************************************
-// OwnPropertiesGenerator
+// OwnJsonPropertiesGenerator
 // **************************************************************************
 
 extension PlaintextMessageOwnPropertiesExtension on PlaintextMessage {
@@ -13,10 +13,10 @@ extension PlaintextMessageOwnPropertiesExtension on PlaintextMessage {
     'type',
     'from',
     'to',
-    'threadId',
-    'parentThreadId',
-    'createdTime',
-    'expiresTime',
+    'thid',
+    'pthid',
+    'created_time',
+    'expires_time',
     'body',
     'attachments',
   ];

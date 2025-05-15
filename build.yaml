@@ -2,15 +2,15 @@
 targets:
   $default:
     builders:
-      didcomm|own_properties:
+      didcomm|own_json_properties:
         generate_for:
           include:
             - lib/**.dart
 
 builders:
-  own_properties:
+  own_json_properties:
     import: "package:didcomm/builder.dart"
-    builder_factories: ["ownPropertiesBuilder"]
+    builder_factories: ["ownJsonPropertiesBuilder"]
     build_extensions: {".dart": [".g.dart"]}
     auto_apply: dependents
     build_to: source
