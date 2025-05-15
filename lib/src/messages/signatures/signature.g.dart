@@ -9,7 +9,7 @@ part of 'signature.dart';
 Signature _$SignatureFromJson(Map<String, dynamic> json) => Signature(
   protected: json['protected'] as String,
   signature: json['signature'] as String,
-  header: Header.fromJson(json['header'] as Map<String, dynamic>),
+  header: RecipientHeader.fromJson(json['header'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$SignatureToJson(Signature instance) => <String, dynamic>{

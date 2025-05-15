@@ -1,4 +1,5 @@
 import 'package:didcomm/src/annotations/own_json_properties.dart';
+import 'package:didcomm/src/common/crypto.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:ssi/ssi.dart';
 import '../didcomm_message.dart';
@@ -31,12 +32,26 @@ class EncryptedMessage extends DidcommMessage {
     required this.initializationVector,
   });
 
-  factory EncryptedMessage.fromMessage(
+  static Future<EncryptedMessage> fromMessage(
     DidcommMessage message, {
     required Wallet wallet,
     required String walletKeyId,
     required List<Jwk> recipientPublicKeyJwks,
-  }) {
+  }) async {
+    final publicKey = await wallet.getPublicKey(walletKeyId);
+    final epkKeyPair = getEphemeralPrivateKey(publicKey.type);
+
+    // final jweHeader = await JweHeader.encryptedDidCommMessage(
+    //   wallet: wallet,
+    //   keyId: keyId,
+    //   keyWrapAlgorithm: keyWrapAlgorithm,
+    //   encryptionAlgorithm: encryptionAlgorithm,
+    //   recipientPublicKeyJwks: recipientPublicKeyJwks,
+    //   senderPublicKey: publicKey,
+    //   epkPrivate: epkKeyPair.privateKeyBytes,
+    //   epkPublic: epkKeyPair.publicKeyBytes,
+    // );
+
     return EncryptedMessage(
       cipherText: '',
       protected: '',
