@@ -9,9 +9,8 @@ part of 'jwe_header.dart';
 JweHeader _$JweHeaderFromJson(Map<String, dynamic> json) => JweHeader(
   type: json['typ'] as String? ?? 'application/didcomm-encrypted+json',
   subjectKeyId: json['skid'] as String?,
-  algorithm: json['alg'] as String,
-  encryptionAlgorithm: json['enc'] as String,
-  keyWrapAlgorithm: json['keyWrapAlg'] as String,
+  keyWrappingAlgorithm: $enumDecode(_$KeyWrappingAlgorithmEnumMap, json['alg']),
+  encryptionAlgorithm: $enumDecode(_$EncryptionAlgorithmEnumMap, json['enc']),
   ephemeralKey: EphemeralKey.fromJson(json['epk'] as Map<String, dynamic>),
   agreementPartyUInfo: json['apu'] as String?,
   agreementPartyVInfo: json['apv'] as String?,
@@ -20,10 +19,19 @@ JweHeader _$JweHeaderFromJson(Map<String, dynamic> json) => JweHeader(
 Map<String, dynamic> _$JweHeaderToJson(JweHeader instance) => <String, dynamic>{
   'typ': instance.type,
   'skid': instance.subjectKeyId,
-  'alg': instance.algorithm,
-  'enc': instance.encryptionAlgorithm,
-  'keyWrapAlg': instance.keyWrapAlgorithm,
+  'alg': _$KeyWrappingAlgorithmEnumMap[instance.keyWrappingAlgorithm]!,
+  'enc': _$EncryptionAlgorithmEnumMap[instance.encryptionAlgorithm]!,
   'epk': instance.ephemeralKey,
   'apu': instance.agreementPartyUInfo,
   'apv': instance.agreementPartyVInfo,
+};
+
+const _$KeyWrappingAlgorithmEnumMap = {
+  KeyWrappingAlgorithm.ecdhES: 'ECDH-ES+A256KW',
+  KeyWrappingAlgorithm.ecdh1PU: 'ECDH-1PU+A256KW',
+};
+
+const _$EncryptionAlgorithmEnumMap = {
+  EncryptionAlgorithm.a256cbc: 'A256CBC-HS512',
+  EncryptionAlgorithm.a256gcm: 'A256GCM',
 };

@@ -1,3 +1,4 @@
+import 'package:didcomm/src/messages/jwm/ephemeral_key_type.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'ephemeral_key.g.dart';
@@ -5,22 +6,18 @@ part 'ephemeral_key.g.dart';
 @JsonSerializable()
 class EphemeralKey {
   @JsonKey(name: 'kty')
-  final String keyType;
-
+  final EphemeralKeyType keyType;
   @JsonKey(name: 'crv')
   final String curve;
 
-  @JsonKey(name: 'x')
-  final String xCoordinate;
-
-  @JsonKey(name: 'y')
-  final String yCoordinate;
+  final String x;
+  final String? y;
 
   EphemeralKey({
     required this.keyType,
     required this.curve,
-    required this.xCoordinate,
-    required this.yCoordinate,
+    required this.x,
+    this.y,
   });
 
   factory EphemeralKey.fromJson(Map<String, dynamic> json) =>
