@@ -50,11 +50,11 @@ class JweHeader {
   static Future<JweHeader> fromWalletKey(
     Wallet wallet,
     String keyId, {
-    required KeyWrappingAlgorithm keyWrappingAlgorithm,
-    required EncryptionAlgorithm encryptionAlgorithm,
     required Jwks recipientJwks,
     required Uint8List ephemeralPrivateKeyBytes,
     Uint8List? ephemeralPublicKeyBytes,
+    required KeyWrappingAlgorithm keyWrappingAlgorithm,
+    required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
     final (subjectKeyId, curve, senderPublicKey) = await _buildHeaderParts(
       wallet,
@@ -100,15 +100,19 @@ class JweHeader {
     Wallet wallet,
     String keyId,
   ) async {
-    final senderPublicKey = await wallet.getPublicKey(keyId);
-    final curve = getCurveByPublicKey(senderPublicKey.type);
+    final publicKey = await wallet.getPublicKey(keyId);
+    final curve = getCurveByPublicKey(publicKey.type);
     final DidDocument didDocument;
 
     if (isSecp256OrPCurve(curve)) {
-      didDocument = DidKey.generateDocument(senderPublicKey);
+      didDocument = DidKey.generateDocument(publicKey);
     } else if (isXCurve(curve)) {
-      final x25519PublicKey = await (wallet as Bip32Ed25519Wallet)
-          .getX25519PublicKey(keyId);
+      // TODO: revisit wallet casting
+      if (wallet is! Bip32Ed25519Wallet) {
+        throw Exception('Wallet must be Bip32Ed25519Wallet for X curve');
+      }
+
+      final x25519PublicKey = await wallet.getX25519PublicKey(keyId);
 
       didDocument = DidKey.generateDocument(
         PublicKey(keyId, x25519PublicKey, KeyType.x25519),
@@ -120,7 +124,7 @@ class JweHeader {
     // TODO: revisit taking the first key agreement
     // TODO: key arrangement can be a string https://identity.foundation/didcomm-messaging/spec/#key-ids
     final subjectKeyId = didDocument.keyAgreement.first.id;
-    return (subjectKeyId, curve, senderPublicKey);
+    return (subjectKeyId, curve, publicKey);
   }
 
   static String _buildAgreementPartyVInfo(Jwks jwks, String curve) {
