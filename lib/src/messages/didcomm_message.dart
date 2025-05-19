@@ -11,14 +11,18 @@ class DidcommMessage {
   dynamic operator [](String key) => _customHeaders[key];
   void operator []=(String key, dynamic value) => _customHeaders[key] = value;
 
-  static PlaintextMessage extractPlainTextMessage({
+  static PlaintextMessage unpackPlainTextMessage({
     required DidcommMessage message,
     required Wallet wallet,
   }) {
+    if (message is PlaintextMessage) {
+      return message;
+    }
+
     throw UnimplementedError();
   }
 
-  static SignedMessage extractSignedMessage({
+  static SignedMessage unpackSignedMessage({
     required DidcommMessage message,
     required Wallet wallet,
   }) {
