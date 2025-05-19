@@ -1,13 +1,15 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
 import 'package:ssi/ssi.dart';
+import '../../converters/base64_url_converter.dart';
+import '../../converters/jwe_header_converter.dart';
 import '../../jwks/jwks.dart';
 import '../../annotations/own_json_properties.dart';
 import '../../common/crypto.dart';
 import '../../common/encoding.dart';
-import '../../errors/errors.dart';
 import '../../extensions/extensions.dart';
 import '../algorithm_types/algorithms_types.dart';
 import '../didcomm_message.dart';
@@ -24,14 +26,20 @@ class EncryptedMessage extends DidcommMessage {
   String get mediaType => 'application/didcomm-encrypted+json';
 
   @JsonKey(name: 'ciphertext')
-  final String cipherText;
+  @Base64UrlConverter()
+  final Uint8List cipherText;
 
-  final String protected;
+  @JweHeaderConverter()
+  final JweHeader protected;
+
   final List<Recipient> recipients;
-  final String tag;
+
+  @Base64UrlConverter()
+  final Uint8List tag;
 
   @JsonKey(name: 'iv')
-  final String initializationVector;
+  @Base64UrlConverter()
+  final Uint8List initializationVector;
 
   EncryptedMessage({
     required this.cipherText,
@@ -41,7 +49,7 @@ class EncryptedMessage extends DidcommMessage {
     required this.initializationVector,
   });
 
-  static Future<EncryptedMessage> wrapMessage(
+  static Future<EncryptedMessage> pack(
     DidcommMessage message, {
     required Wallet wallet,
     required String keyId,
@@ -50,7 +58,7 @@ class EncryptedMessage extends DidcommMessage {
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
     if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1PU) {
-      final plainTextMessage = DidcommMessage.extractPlainTextMessage(
+      final plainTextMessage = DidcommMessage.unpackPlainTextMessage(
         message: message,
         wallet: wallet,
       );
@@ -87,12 +95,20 @@ class EncryptedMessage extends DidcommMessage {
       jweHeader: jweHeader,
     );
 
+    if (encryptedInnerMessage.initializationVector == null) {
+      throw Exception('Initialization vector not set after encryption');
+    }
+
+    if (encryptedInnerMessage.authenticationTag == null) {
+      throw Exception('Authentication tag not set after encryption');
+    }
+
     return EncryptedMessage(
-      cipherText: '',
-      protected: '',
+      cipherText: encryptedInnerMessage.data,
+      protected: jweHeader,
       recipients: [],
-      tag: '',
-      initializationVector: '',
+      tag: encryptedInnerMessage.authenticationTag!,
+      initializationVector: encryptedInnerMessage.initializationVector!,
     );
   }
 
@@ -123,7 +139,7 @@ class EncryptedMessage extends DidcommMessage {
     required EncryptionAlgorithm encryptionAlgorithm,
     required JweHeader jweHeader,
   }) {
-    final encrypter = _createEncrypter(encryptionAlgorithm, encryptionKey);
+    final encrypter = createEncrypter(encryptionAlgorithm, encryptionKey);
 
     final headerBase64Url = base64UrlEncodeNoPadding(jweHeader.toJsonBytes());
     final headerBytes = ascii.encode(headerBase64Url);
@@ -132,22 +148,5 @@ class EncryptedMessage extends DidcommMessage {
       message.toJsonBytes(),
       additionalAuthenticatedData: headerBytes,
     );
-  }
-
-  static ck.Encrypter _createEncrypter(
-    EncryptionAlgorithm encryptionAlgorithm,
-    ck.SymmetricKey encryptionKey,
-  ) {
-    if (encryptionAlgorithm == EncryptionAlgorithm.a256cbc) {
-      return encryptionKey.createEncrypter(
-        ck.algorithms.encryption.aes.cbcWithHmac.sha512,
-      );
-    }
-
-    if (encryptionAlgorithm == EncryptionAlgorithm.a256gcm) {
-      return encryptionKey.createEncrypter(ck.algorithms.encryption.aes.gcm);
-    }
-
-    throw UnsupportedEncryptionAlgorithmError(encryptionAlgorithm);
   }
 }

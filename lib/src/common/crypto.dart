@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:ssi/ssi.dart' show KeyType;
+import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
 import 'package:elliptic/elliptic.dart' as ec;
 import 'package:x25519/x25519.dart' as x25519;
 
@@ -9,6 +10,7 @@ import 'package:pointycastle/src/utils.dart' as pointycastle_utils;
 
 import '../common/encoding.dart';
 import '../errors/errors.dart';
+import '../messages/algorithm_types/encryption_algorithm.dart';
 
 ({Uint8List privateKeyBytes, Uint8List? publicKeyBytes}) getEphemeralKeyPair(
   KeyType keyType,
@@ -85,6 +87,23 @@ bool isSecp256OrPCurve(String crv) {
 
 bool isXCurve(String crv) {
   return crv.startsWith('X');
+}
+
+ck.Encrypter createEncrypter(
+  EncryptionAlgorithm encryptionAlgorithm,
+  ck.SymmetricKey encryptionKey,
+) {
+  if (encryptionAlgorithm == EncryptionAlgorithm.a256cbc) {
+    return encryptionKey.createEncrypter(
+      ck.algorithms.encryption.aes.cbcWithHmac.sha512,
+    );
+  }
+
+  if (encryptionAlgorithm == EncryptionAlgorithm.a256gcm) {
+    return encryptionKey.createEncrypter(ck.algorithms.encryption.aes.gcm);
+  }
+
+  throw UnsupportedEncryptionAlgorithmError(encryptionAlgorithm);
 }
 
 Uint8List _bigIntToUint8List(BigInt value, {int? length}) {
