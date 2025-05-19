@@ -6,21 +6,20 @@ repository: https://github.com/affinidi/didcomm-dart
 environment:
   sdk: ^3.7.2
 
-# Add regular dependencies here.
 dependencies:
   analyzer: ^7.4.5
   build: ^2.4.2
   build_runner: ^2.4.15
   collection: ^1.19.1
   crypto: ^3.0.6
+  crypto_keys_plus: ^0.5.0
   elliptic: ^0.3.11
   json_annotation: ^4.9.0
   meta: ^1.17.0
+  pointycastle: ^4.0.0
   source_gen: ^2.0.0
-  ssi: ^1.0.0-dev.27
-  web3dart: ^3.0.0
+  ssi: 1.0.0-dev.27
   x25519: ^0.1.1
-  # path: ^1.8.0
 
 dev_dependencies:
   json_serializable: ^6.9.5

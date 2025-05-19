@@ -1,8 +1,17 @@
-import 'package:didcomm/src/annotations/own_json_properties.dart';
-import 'package:didcomm/src/common/crypto.dart';
+import 'dart:convert';
+
 import 'package:json_annotation/json_annotation.dart';
+import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
 import 'package:ssi/ssi.dart';
+import '../../jwks/jwks.dart';
+import '../../annotations/own_json_properties.dart';
+import '../../common/crypto.dart';
+import '../../common/encoding.dart';
+import '../../errors/errors.dart';
+import '../../extensions/extensions.dart';
+import '../algorithm_types/algorithms_types.dart';
 import '../didcomm_message.dart';
+import '../jwm/jwe_header.dart';
 import '../recipients/recipient.dart';
 
 part 'encrypted_message.g.dart';
@@ -32,25 +41,51 @@ class EncryptedMessage extends DidcommMessage {
     required this.initializationVector,
   });
 
-  static Future<EncryptedMessage> fromMessage(
+  static Future<EncryptedMessage> wrapMessage(
     DidcommMessage message, {
     required Wallet wallet,
-    required String walletKeyId,
-    required List<Jwk> recipientPublicKeyJwks,
+    required String keyId,
+    required Jwks recipientJwks,
+    required KeyWrappingAlgorithm keyWrappingAlgorithm,
+    required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
-    final publicKey = await wallet.getPublicKey(walletKeyId);
-    final epkKeyPair = getEphemeralPrivateKey(publicKey.type);
+    if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1PU) {
+      final plainTextMessage = DidcommMessage.extractPlainTextMessage(
+        message: message,
+        wallet: wallet,
+      );
 
-    // final jweHeader = await JweHeader.encryptedDidCommMessage(
-    //   wallet: wallet,
-    //   keyId: keyId,
-    //   keyWrapAlgorithm: keyWrapAlgorithm,
-    //   encryptionAlgorithm: encryptionAlgorithm,
-    //   recipientPublicKeyJwks: recipientPublicKeyJwks,
-    //   senderPublicKey: publicKey,
-    //   epkPrivate: epkKeyPair.privateKeyBytes,
-    //   epkPublic: epkKeyPair.publicKeyBytes,
-    // );
+      if (plainTextMessage.from == null) {
+        throw ArgumentError(
+          'authcrypt envelope requires from header to be set in the plaintext message',
+          'message',
+        );
+      }
+    }
+
+    final publicKey = await wallet.getPublicKey(keyId);
+    final ephemeralKeyPair = getEphemeralKeyPair(publicKey.type);
+
+    final jweHeader = await JweHeader.fromWalletKey(
+      wallet,
+      keyId,
+      keyWrappingAlgorithm: keyWrappingAlgorithm,
+      encryptionAlgorithm: encryptionAlgorithm,
+      recipientJwks: recipientJwks,
+      ephemeralPrivateKeyBytes: ephemeralKeyPair.privateKeyBytes,
+      ephemeralPublicKeyBytes: ephemeralKeyPair.publicKeyBytes,
+    );
+
+    final contentEncryptionKey = _createContentEncryptionKey(
+      encryptionAlgorithm,
+    );
+
+    final encryptedInnerMessage = _encryptMessage(
+      message,
+      encryptionKey: contentEncryptionKey,
+      encryptionAlgorithm: encryptionAlgorithm,
+      jweHeader: jweHeader,
+    );
 
     return EncryptedMessage(
       cipherText: '',
@@ -70,4 +105,49 @@ class EncryptedMessage extends DidcommMessage {
 
   Map<String, dynamic> toJson() =>
       withCustomHeaders(_$EncryptedMessageToJson(this));
+
+  static ck.SymmetricKey _createContentEncryptionKey(
+    EncryptionAlgorithm encryptionAlgorithm,
+  ) {
+    if (encryptionAlgorithm == EncryptionAlgorithm.a256cbc) {
+      // TODO: clarify why 512
+      return ck.SymmetricKey.generate(512);
+    }
+
+    return ck.SymmetricKey.generate(256);
+  }
+
+  static ck.EncryptionResult _encryptMessage(
+    DidcommMessage message, {
+    required ck.SymmetricKey encryptionKey,
+    required EncryptionAlgorithm encryptionAlgorithm,
+    required JweHeader jweHeader,
+  }) {
+    final encrypter = _createEncrypter(encryptionAlgorithm, encryptionKey);
+
+    final headerBase64Url = base64UrlEncodeNoPadding(jweHeader.toJsonBytes());
+    final headerBytes = ascii.encode(headerBase64Url);
+
+    return encrypter.encrypt(
+      message.toJsonBytes(),
+      additionalAuthenticatedData: headerBytes,
+    );
+  }
+
+  static ck.Encrypter _createEncrypter(
+    EncryptionAlgorithm encryptionAlgorithm,
+    ck.SymmetricKey encryptionKey,
+  ) {
+    if (encryptionAlgorithm == EncryptionAlgorithm.a256cbc) {
+      return encryptionKey.createEncrypter(
+        ck.algorithms.encryption.aes.cbcWithHmac.sha512,
+      );
+    }
+
+    if (encryptionAlgorithm == EncryptionAlgorithm.a256gcm) {
+      return encryptionKey.createEncrypter(ck.algorithms.encryption.aes.gcm);
+    }
+
+    throw UnsupportedEncryptionAlgorithmError(encryptionAlgorithm);
+  }
 }

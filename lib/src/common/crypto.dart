@@ -1,14 +1,16 @@
 import 'dart:typed_data';
 
-import 'package:didcomm/src/common/encoding.dart';
-import 'package:ssi/ssi.dart';
+import 'package:ssi/ssi.dart' show KeyType;
 import 'package:elliptic/elliptic.dart' as ec;
 import 'package:x25519/x25519.dart' as x25519;
-import 'package:web3dart/web3dart.dart' as c;
 
+// ignore: implementation_imports
+import 'package:pointycastle/src/utils.dart' as pointycastle_utils;
+
+import '../common/encoding.dart';
 import '../errors/errors.dart';
 
-({Uint8List privateKeyBytes, Uint8List? publicKeyBytes}) getEphemeralPrivateKey(
+({Uint8List privateKeyBytes, Uint8List? publicKeyBytes}) getEphemeralKeyPair(
   KeyType keyType,
 ) {
   if (keyType == KeyType.p256) {
@@ -87,7 +89,9 @@ bool isXCurve(String crv) {
 
 Uint8List _bigIntToUint8List(BigInt value, {int? length}) {
   var bytes =
-      value < BigInt.zero ? c.intToBytes(value) : c.unsignedIntToBytes(value);
+      value < BigInt.zero
+          ? pointycastle_utils.encodeBigInt(value)
+          : pointycastle_utils.encodeBigIntAsUnsigned(value);
 
   if (length != null) {
     if (bytes.length > length) {
