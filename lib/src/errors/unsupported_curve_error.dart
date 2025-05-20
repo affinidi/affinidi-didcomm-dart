@@ -1,3 +1,5 @@
+import '../curves/curve_type.dart';
+
 class UnsupportedCurveError extends UnsupportedError {
-  UnsupportedCurveError(String curve) : super('$curve is not supported');
+  UnsupportedCurveError(CurveType curve) : super('$curve is not supported');
 }

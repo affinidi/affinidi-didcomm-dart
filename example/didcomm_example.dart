@@ -56,7 +56,7 @@ void main() async {
 
   /*
   // --------------------------------------------------------------------
-  // Alice creates a message fro Bob. The message is signed and encrypted
+  // Alice creates a message from Bob. The message is signed and encrypted
   // --------------------------------------------------------------------
 
   final aliceKeyStore = InMemoryKeyStore();
