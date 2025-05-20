@@ -45,9 +45,11 @@ void main() async {
     plainMessage,
     wallet: aliceWallet,
     keyId: aliceKeyId,
-    recipientJwks: Jwks.fromJson({
-      'keys': [bobJwk],
-    }),
+    jwksPerRecipient: [
+      Jwks.fromJson({
+        'keys': [bobJwk],
+      }),
+    ],
     keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1PU,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
