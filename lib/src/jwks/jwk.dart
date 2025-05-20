@@ -1,9 +1,12 @@
+import 'package:didcomm/src/curves/curve_type.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'jwk.g.dart';
 
 @JsonSerializable()
 class Jwk {
+  @JsonKey(name: 'kid')
+  final String keyId;
   @JsonKey(name: 'kty')
   final String keyType;
   @JsonKey(name: 'use')
@@ -12,8 +15,6 @@ class Jwk {
   final List<String>? keyOperations;
   @JsonKey(name: 'alg')
   final String? algorithm;
-  @JsonKey(name: 'kid')
-  final String? keyId;
   @JsonKey(name: 'x5u')
   final String? x509Url;
   @JsonKey(name: 'x5c')
@@ -25,7 +26,7 @@ class Jwk {
 
   // EC key fields
   @JsonKey(name: 'crv')
-  final String? curve;
+  final CurveType? curve;
   final String? x;
   final String? y;
   final String? d;
@@ -44,11 +45,11 @@ class Jwk {
   final String? k;
 
   Jwk({
+    required this.keyId,
     required this.keyType,
     this.publicKeyUse,
     this.keyOperations,
     this.algorithm,
-    this.keyId,
     this.x509Url,
     this.x509CertificateChain,
     this.x509Thumbprint,

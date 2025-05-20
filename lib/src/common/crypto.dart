@@ -69,26 +69,6 @@ ec.PrivateKey getPrivateKeyFromBytes(
   );
 }
 
-String getCurveByPublicKey(KeyType keyType) {
-  if (keyType == KeyType.p256) {
-    return 'P-256';
-  } else if (keyType == KeyType.secp256k1) {
-    return 'secp256k1';
-  } else if (keyType == KeyType.ed25519) {
-    return 'X25519';
-  }
-
-  throw UnsupportedKeyTypeError(keyType);
-}
-
-bool isSecp256OrPCurve(String crv) {
-  return crv.startsWith('P') || crv.startsWith('secp256k');
-}
-
-bool isXCurve(String crv) {
-  return crv.startsWith('X');
-}
-
 ck.Encrypter createEncrypter(
   EncryptionAlgorithm encryptionAlgorithm,
   ck.SymmetricKey encryptionKey,

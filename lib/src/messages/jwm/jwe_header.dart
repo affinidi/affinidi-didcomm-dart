@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:didcomm/src/messages/jwm/ephemeral_key_type.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto/crypto.dart' show sha256;
 import 'package:ssi/ssi.dart';
@@ -9,6 +8,9 @@ import '../../common/crypto.dart';
 import '../../common/encoding.dart';
 import '../../errors/errors.dart';
 import '../../jwks/jwks.dart';
+import '../../extensions/extensions.dart';
+import '../../curves/curve_type.dart';
+import '../../messages/jwm/ephemeral_key_type.dart';
 import '../algorithm_types/algorithms_types.dart';
 import 'ephemeral_key.dart';
 
@@ -96,17 +98,17 @@ class JweHeader {
     throw Exception('Ether skid or apu is required');
   }
 
-  static Future<(String, String, PublicKey)> _buildHeaderParts(
+  static Future<(String, CurveType, PublicKey)> _buildHeaderParts(
     Wallet wallet,
     String keyId,
   ) async {
     final publicKey = await wallet.getPublicKey(keyId);
-    final curve = getCurveByPublicKey(publicKey.type);
+    final curve = publicKey.type.asDidcommCurve();
     final DidDocument didDocument;
 
-    if (isSecp256OrPCurve(curve)) {
+    if (curve.isSecp256OrPCurve()) {
       didDocument = DidKey.generateDocument(publicKey);
-    } else if (isXCurve(curve)) {
+    } else if (curve.isXCurve()) {
       // TODO: revisit wallet casting
       if (wallet is! Bip32Ed25519Wallet) {
         throw Exception('Wallet must be Bip32Ed25519Wallet for X curve');
@@ -127,7 +129,7 @@ class JweHeader {
     return (subjectKeyId, curve, publicKey);
   }
 
-  static String _buildAgreementPartyVInfo(Jwks jwks, String curve) {
+  static String _buildAgreementPartyVInfo(Jwks jwks, CurveType curve) {
     final receiverKeyIds = _getKeyIds(jwks, curve);
     final keyIdString = receiverKeyIds.join('.');
 
@@ -140,11 +142,11 @@ class JweHeader {
     );
   }
 
-  static List<String> _getKeyIds(Jwks jwks, String curve) {
+  static List<String> _getKeyIds(Jwks jwks, CurveType curve) {
     final receiverKeyIds =
         jwks.keys
-            .where((key) => key.curve == curve && key.keyId != null)
-            .map((key) => key.keyId!)
+            .where((key) => key.curve == curve)
+            .map((key) => key.keyId)
             .toList();
 
     receiverKeyIds.sort();
@@ -155,9 +157,9 @@ class JweHeader {
     required Uint8List ephemeralPrivateKeyBytes,
     Uint8List? ephemeralPublicKeyBytes,
     required PublicKey senderPublicKey,
-    required String curve,
+    required CurveType curve,
   }) {
-    if (isSecp256OrPCurve(curve)) {
+    if (curve.isSecp256OrPCurve()) {
       final privateKey = getPrivateKeyFromBytes(
         ephemeralPrivateKeyBytes,
         keyType: senderPublicKey.type,
@@ -172,7 +174,7 @@ class JweHeader {
       );
     }
 
-    if (isXCurve(curve)) {
+    if (curve.isXCurve()) {
       if (ephemeralPublicKeyBytes == null) {
         throw Exception('ephemeralPublicKeyBytes is required for X curve');
       }
