@@ -5,6 +5,7 @@ part 'jwk.g.dart';
 
 @JsonSerializable()
 class Jwk {
+  // it is optional in spec, but required in our library and many others
   @JsonKey(name: 'kid')
   final String keyId;
   @JsonKey(name: 'kty')
