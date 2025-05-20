@@ -103,7 +103,8 @@ class JweHeader {
     String keyId,
   ) async {
     final publicKey = await wallet.getPublicKey(keyId);
-    final curve = publicKey.type.asDidcommCurve();
+    final curve = publicKey.type.asDidcommCompatibleCurve();
+
     final DidDocument didDocument;
 
     if (curve.isSecp256OrPCurve()) {
@@ -150,17 +151,9 @@ class JweHeader {
     // keys merged with comma and sorted alphabetically
 
     final keyIdsByCurve =
-        jwksPerRecipient.map((jwks) {
-          final jwk = jwks.firstWithCurveOrNull(curve);
-
-          if (jwk == null) {
-            throw Exception(
-              'One of recipients does not have any JWK with matching curve: $curve',
-            );
-          }
-
-          return jwk.keyId;
-        }).toList();
+        jwksPerRecipient
+            .map((jwks) => jwks.firstWithCurve(curve).keyId)
+            .toList();
 
     keyIdsByCurve.sort();
     return keyIdsByCurve;

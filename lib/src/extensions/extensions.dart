@@ -16,7 +16,7 @@ extension JsonBytesExtension on Object {
 }
 
 extension KeyTypeExtension on KeyType {
-  CurveType asDidcommCurve() {
+  CurveType asDidcommCompatibleCurve() {
     if (this == KeyType.p256) {
       return CurveType.p256;
     } else if (this == KeyType.secp256k1) {
@@ -31,7 +31,13 @@ extension KeyTypeExtension on KeyType {
 }
 
 extension JwksCurveExtension on Jwks {
-  Jwk? firstWithCurveOrNull(CurveType curve) {
-    return keys.firstWhereOrNull((jwk) => jwk.curve == curve);
+  Jwk firstWithCurve(CurveType curve) {
+    final match = keys.firstWhereOrNull((jwk) => jwk.curve == curve);
+
+    if (match == null) {
+      throw NotFoundJwkErrorByCurve(curve);
+    }
+
+    return match;
   }
 }
