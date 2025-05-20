@@ -7,18 +7,18 @@ part of 'jwk.dart';
 // **************************************************************************
 
 Jwk _$JwkFromJson(Map<String, dynamic> json) => Jwk(
+  keyId: json['kid'] as String,
   keyType: json['kty'] as String,
   publicKeyUse: json['use'] as String?,
   keyOperations:
       (json['key_ops'] as List<dynamic>?)?.map((e) => e as String).toList(),
   algorithm: json['alg'] as String?,
-  keyId: json['kid'] as String?,
   x509Url: json['x5u'] as String?,
   x509CertificateChain:
       (json['x5c'] as List<dynamic>?)?.map((e) => e as String).toList(),
   x509Thumbprint: json['x5t'] as String?,
   x509ThumbprintS256: json['x5t#S256'] as String?,
-  curve: json['crv'] as String?,
+  curve: $enumDecodeNullable(_$CurveTypeEnumMap, json['crv']),
   x: json['x'] as String?,
   y: json['y'] as String?,
   d: json['d'] as String?,
@@ -37,16 +37,16 @@ Jwk _$JwkFromJson(Map<String, dynamic> json) => Jwk(
 );
 
 Map<String, dynamic> _$JwkToJson(Jwk instance) => <String, dynamic>{
+  'kid': instance.keyId,
   'kty': instance.keyType,
   'use': instance.publicKeyUse,
   'key_ops': instance.keyOperations,
   'alg': instance.algorithm,
-  'kid': instance.keyId,
   'x5u': instance.x509Url,
   'x5c': instance.x509CertificateChain,
   'x5t': instance.x509Thumbprint,
   'x5t#S256': instance.x509ThumbprintS256,
-  'crv': instance.curve,
+  'crv': _$CurveTypeEnumMap[instance.curve],
   'x': instance.x,
   'y': instance.y,
   'd': instance.d,
@@ -59,4 +59,10 @@ Map<String, dynamic> _$JwkToJson(Jwk instance) => <String, dynamic>{
   'qi': instance.qi,
   'oth': instance.oth,
   'k': instance.k,
+};
+
+const _$CurveTypeEnumMap = {
+  CurveType.p256: 'P-256',
+  CurveType.secp256k1: 'secp256k1',
+  CurveType.x25519: 'X25519',
 };

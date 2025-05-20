@@ -1,5 +1,6 @@
-import 'package:didcomm/src/messages/jwm/ephemeral_key_type.dart';
 import 'package:json_annotation/json_annotation.dart';
+import '../../curves/curve_type.dart';
+import '../../messages/jwm/ephemeral_key_type.dart';
 
 part 'ephemeral_key.g.dart';
 
@@ -8,7 +9,7 @@ class EphemeralKey {
   @JsonKey(name: 'kty')
   final EphemeralKeyType keyType;
   @JsonKey(name: 'crv')
-  final String curve;
+  final CurveType curve;
 
   final String x;
   final String? y;
