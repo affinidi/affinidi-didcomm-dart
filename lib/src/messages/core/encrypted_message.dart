@@ -15,6 +15,7 @@ import '../algorithm_types/algorithms_types.dart';
 import '../didcomm_message.dart';
 import '../jwm/jwe_header.dart';
 import '../recipients/recipient.dart';
+import '../recipients/recipient_header.dart';
 
 part 'encrypted_message.g.dart';
 part 'encrypted_message.own_json_props.g.dart';
@@ -103,21 +104,21 @@ class EncryptedMessage extends DidcommMessage {
       throw Exception('Authentication tag not set after encryption');
     }
 
-    // final recipients = await _encryptContentEncryptionKey(
-    //   wallet: wallet,
-    //   keyId: keyId,
-    //   keyWrappingAlgorithm: keyWrappingAlgorithm,
-    //   authenticationTag: encryptedInnerMessage.authenticationTag!,
-    //   contentEncryptionKey: contentEncryptionKey,
-    //   epkPrivateKey: epkKeyPair.privateKeyBytes,
-    //   recipientPublicKeyJwks: recipientPublicKeyJwks,
-    //   jweHeader: jweHeader,
-    // );
+    final recipients = await _encryptContentEncryptionKey(
+      wallet: wallet,
+      keyId: keyId,
+      keyWrappingAlgorithm: keyWrappingAlgorithm,
+      jwksPerRecipient: jwksPerRecipient,
+      authenticationTag: encryptedInnerMessage.authenticationTag!,
+      contentEncryptionKey: contentEncryptionKey,
+      ephemeralPrivateKeyBytes: ephemeralKeyPair.privateKeyBytes,
+      jweHeader: jweHeader,
+    );
 
     return EncryptedMessage(
       cipherText: encryptedInnerMessage.data,
       protected: jweHeader,
-      recipients: [],
+      recipients: recipients,
       tag: encryptedInnerMessage.authenticationTag!,
       initializationVector: encryptedInnerMessage.initializationVector!,
     );
@@ -159,68 +160,55 @@ class EncryptedMessage extends DidcommMessage {
     );
   }
 
-  // static Future<List<Recipient>> _encryptContentEncryptionKey({
-  //   required Wallet wallet,
-  //   required String keyId,
-  //   required Jwks recipientJwks,
-  //   required JweHeader jweHeader,
-  //   required ck.SymmetricKey contentEncryptionKey,
-  //   required Uint8List ephemeralPrivateKeyBytes,
-  //   required Uint8List authenticationTag,
-  //   required KeyWrappingAlgorithm keyWrappingAlgorithm,
-  // }) async {
-  //   final publicKey = await wallet.getPublicKey(keyId);
-  //   final senderCurve = getCurveByPublicKey(publicKey.type);
+  static Future<List<Recipient>> _encryptContentEncryptionKey({
+    required Wallet wallet,
+    required String keyId,
+    required List<Jwks> jwksPerRecipient,
+    required JweHeader jweHeader,
+    required ck.SymmetricKey contentEncryptionKey,
+    required Uint8List ephemeralPrivateKeyBytes,
+    required Uint8List authenticationTag,
+    required KeyWrappingAlgorithm keyWrappingAlgorithm,
+  }) async {
+    final publicKey = await wallet.getPublicKey(keyId);
 
-  //   final matchingJwks = recipientJwks.keys.where(
-  //     (jwk) => jwk.curve == senderCurve,
-  //   );
+    return jwksPerRecipient.map((jwks) {
+      final curve = publicKey.type.asDidcommCompatibleCurve();
+      final jwk = jwks.firstWithCurve(curve);
 
-  //   if (matchingJwks.isEmpty) {
-  //     throw Exception(
-  //       'None of recipient public key curves matches sender curve.',
-  //     );
-  //   }
-
-  //   final List<Recipient> recipientList = [];
-
-  //   for (var recipientPublicKeyJwk in matchingJwks) {
-  //     late Uint8List encryptedCek;
-  //     if (keyWrapAlgorithm == KeyWrapAlgorithm.ecdhES) {
-  //       encryptedCek = await _encryptCekUsingECDH_ES(
-  //         cek,
-  //         wallet: wallet,
-  //         keyId: keyId,
-  //         recipientPublicKeyJwk: recipientPublicKeyJwk,
-  //         publicKey: publicKey,
-  //         epkPrivateKey: epkPrivateKey,
-  //         jweHeader: jweHeader,
-  //       );
-  //     } else if (keyWrapAlgorithm == KeyWrapAlgorithm.ecdh1PU) {
-  //       encryptedCek = await _encryptCekUsingECDH_1PU(
-  //         cek,
-  //         wallet: wallet,
-  //         keyId: keyId,
-  //         recipientPublicKeyJwk: recipientPublicKeyJwk,
-  //         publicKey: publicKey,
-  //         jweHeader: jweHeader,
-  //         epkPrivateKey: epkPrivateKey,
-  //         authenticationTag: authenticationTag,
-  //         keyWrapAlgorithm: keyWrapAlgorithm,
-  //       );
-  //     } else {
-  //       throw Exception('Key wrap algorithm "$keyWrapAlgorithm" not supported');
-  //     }
-
-  //     recipientList.add(
-  //       DidCommMessageRecipient(
-  //         header: DidCommMessageRecipientHeader(
-  //           kid: recipientPublicKeyJwk['kid'],
-  //         ),
-  //         encryptedKey: encryptedCek,
-  //       ),
-  //     );
-  //   }
-  //   return recipientList;
-  // }
+      return Recipient(
+        header: RecipientHeader(keyId: jwk.keyId),
+        encryptedKey: '',
+      );
+    }).toList();
+  }
 }
+
+
+      // late Uint8List encryptedCek;
+      // if (keyWrapAlgorithm == KeyWrapAlgorithm.ecdhES) {
+      //   encryptedCek = await _encryptCekUsingECDH_ES(
+      //     cek,
+      //     wallet: wallet,
+      //     keyId: keyId,
+      //     recipientPublicKeyJwk: recipientPublicKeyJwk,
+      //     publicKey: publicKey,
+      //     epkPrivateKey: epkPrivateKey,
+      //     jweHeader: jweHeader,
+      //   );
+      // } else if (keyWrapAlgorithm == KeyWrapAlgorithm.ecdh1PU) {
+      //   encryptedCek = await _encryptCekUsingECDH_1PU(
+      //     cek,
+      //     wallet: wallet,
+      //     keyId: keyId,
+      //     recipientPublicKeyJwk: recipientPublicKeyJwk,
+      //     publicKey: publicKey,
+      //     jweHeader: jweHeader,
+      //     epkPrivateKey: epkPrivateKey,
+      //     authenticationTag: authenticationTag,
+      //     keyWrapAlgorithm: keyWrapAlgorithm,
+      //   );
+      // } else {
+      //   throw Exception('Key wrap algorithm "$keyWrapAlgorithm" not supported');
+      // }
+      // );
