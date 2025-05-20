@@ -52,7 +52,7 @@ class JweHeader {
   static Future<JweHeader> fromWalletKey(
     Wallet wallet,
     String keyId, {
-    required Jwks recipientJwks,
+    required List<Jwks> jwksPerRecipient,
     required Uint8List ephemeralPrivateKeyBytes,
     Uint8List? ephemeralPublicKeyBytes,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
@@ -73,7 +73,7 @@ class JweHeader {
         senderPublicKey: senderPublicKey,
         curve: curve,
       ),
-      agreementPartyVInfo: _buildAgreementPartyVInfo(recipientJwks, curve),
+      agreementPartyVInfo: _buildAgreementPartyVInfo(jwksPerRecipient, curve),
       agreementPartyUInfo: _buildAgreementPartyUInfo(
         keyWrappingAlgorithm,
         subjectKeyId,
@@ -129,8 +129,11 @@ class JweHeader {
     return (subjectKeyId, curve, publicKey);
   }
 
-  static String _buildAgreementPartyVInfo(Jwks jwks, CurveType curve) {
-    final receiverKeyIds = _getKeyIds(jwks, curve);
+  static String _buildAgreementPartyVInfo(
+    List<Jwks> jwksPerRecipient,
+    CurveType curve,
+  ) {
+    final receiverKeyIds = _getKeyIds(jwksPerRecipient, curve);
     final keyIdString = receiverKeyIds.join('.');
 
     if (keyIdString.isEmpty) {
@@ -142,15 +145,25 @@ class JweHeader {
     );
   }
 
-  static List<String> _getKeyIds(Jwks jwks, CurveType curve) {
-    final receiverKeyIds =
-        jwks.keys
-            .where((key) => key.curve == curve)
-            .map((key) => key.keyId)
-            .toList();
+  static List<String> _getKeyIds(List<Jwks> jwksPerRecipient, CurveType curve) {
+    // https://identity.foundation/didcomm-messaging/spec/#ecdh-es-key-wrapping-and-common-protected-headers
+    // keys merged with comma and sorted alphabetically
 
-    receiverKeyIds.sort();
-    return receiverKeyIds;
+    final keyIdsByCurve =
+        jwksPerRecipient.map((jwks) {
+          final jwk = jwks.firstWithCurveOrNull(curve);
+
+          if (jwk == null) {
+            throw Exception(
+              'One of recipients does not have any JWK with matching curve: $curve',
+            );
+          }
+
+          return jwk.keyId;
+        }).toList();
+
+    keyIdsByCurve.sort();
+    return keyIdsByCurve;
   }
 
   static EphemeralKey _buildEphemeralKey({
@@ -165,12 +178,12 @@ class JweHeader {
         keyType: senderPublicKey.type,
       );
 
-      final crvPoint = getPublicKeyPoint(privateKey.publicKey);
+      final curvePoint = getPublicKeyPoint(privateKey.publicKey);
       return EphemeralKey(
         curve: curve,
         keyType: EphemeralKeyType.ec,
-        x: crvPoint.x,
-        y: crvPoint.y,
+        x: curvePoint.x,
+        y: curvePoint.y,
       );
     }
 
