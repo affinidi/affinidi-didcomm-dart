@@ -53,7 +53,7 @@ class EncryptedMessage extends DidcommMessage {
     DidcommMessage message, {
     required Wallet wallet,
     required String keyId,
-    required Jwks recipientJwks,
+    required List<Jwks> jwksPerRecipient,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
@@ -79,7 +79,7 @@ class EncryptedMessage extends DidcommMessage {
       keyId,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
-      recipientJwks: recipientJwks,
+      jwksPerRecipient: jwksPerRecipient,
       ephemeralPrivateKeyBytes: ephemeralKeyPair.privateKeyBytes,
       ephemeralPublicKeyBytes: ephemeralKeyPair.publicKeyBytes,
     );

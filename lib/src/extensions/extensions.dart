@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:ssi/ssi.dart';
+import 'package:ssi/ssi.dart' show KeyType;
+import 'package:collection/collection.dart';
 
 import '../curves/curve_type.dart';
 import '../errors/errors.dart';
+import '../jwks/jwks.dart';
 
 extension JsonBytesExtension on Object {
   Uint8List toJsonBytes() {
@@ -25,5 +27,11 @@ extension KeyTypeExtension on KeyType {
     }
 
     throw UnsupportedKeyTypeError(this);
+  }
+}
+
+extension JwksCurveExtension on Jwks {
+  Jwk? firstWithCurveOrNull(CurveType curve) {
+    return keys.firstWhereOrNull((jwk) => jwk.curve == curve);
   }
 }

@@ -1,6 +1,8 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'jwk.dart';
 
+export 'jwk.dart';
+
 part 'jwks.g.dart';
 
 @JsonSerializable()
