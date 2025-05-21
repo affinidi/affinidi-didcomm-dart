@@ -1,4 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:json_annotation/json_annotation.dart';
+
+import '../../converters/base64_url_converter.dart';
 import 'recipient_header.dart';
 
 part 'recipient.g.dart';
@@ -6,7 +10,8 @@ part 'recipient.g.dart';
 @JsonSerializable()
 class Recipient {
   @JsonKey(name: 'encrypted_key')
-  final String encryptedKey;
+  @Base64UrlConverter()
+  final Uint8List encryptedKey;
 
   final RecipientHeader header;
 

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto/crypto.dart' show sha256;
 import 'package:ssi/ssi.dart';
+
 import '../../common/crypto.dart';
 import '../../common/encoding.dart';
 import '../../errors/errors.dart';
@@ -171,7 +172,7 @@ class JweHeader {
         keyType: senderPublicKey.type,
       );
 
-      final curvePoint = getPublicKeyPoint(privateKey.publicKey);
+      final curvePoint = privateKey.publicKey.getCoordinatesAsBase64Url();
       return EphemeralKey(
         curve: curve,
         keyType: EphemeralKeyType.ec,
