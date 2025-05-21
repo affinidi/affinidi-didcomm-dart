@@ -46,36 +46,24 @@ extension JwksCurveExtension on Jwks {
   }
 }
 
-extension EllipticCurvePublicKeyExtension on ec.PublicKey {
-  ({String x, String y}) getCoordinatesAsBase64Url() {
-    final xBytes = _bigIntToUint8List(X, length: 32);
-    final yBytes = _bigIntToUint8List(Y, length: 32);
-
-    return (
-      x: base64UrlEncodeNoPadding(xBytes),
-      y: base64UrlEncodeNoPadding(yBytes),
-    );
-  }
-
-  Uint8List _bigIntToUint8List(BigInt value, {int? length}) {
+extension BigIntExtension on BigInt {
+  Uint8List toBytes({int length = 32}) {
     var bytes =
-        value < BigInt.zero
-            ? pointycastle_utils.encodeBigInt(value)
-            : pointycastle_utils.encodeBigIntAsUnsigned(value);
+        this < BigInt.zero
+            ? pointycastle_utils.encodeBigInt(this)
+            : pointycastle_utils.encodeBigIntAsUnsigned(this);
 
-    if (length != null) {
-      if (bytes.length > length) {
-        throw ArgumentError(
-          'The length of the byte array is greater than the specified length.',
-        );
-      }
+    if (bytes.length > length) {
+      throw ArgumentError(
+        'The length of the byte array is greater than the specified length.',
+      );
+    }
 
-      if (bytes.length < length) {
-        final padded = Uint8List(length);
+    if (bytes.length < length) {
+      final padded = Uint8List(length);
 
-        padded.setRange(length - bytes.length, length, bytes);
-        bytes = padded;
-      }
+      padded.setRange(length - bytes.length, length, bytes);
+      bytes = padded;
     }
 
     return bytes;

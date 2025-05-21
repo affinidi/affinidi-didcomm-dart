@@ -1,4 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:json_annotation/json_annotation.dart';
+
+import '../../converters/base64_url_converter.dart';
 import '../../curves/curve_type.dart';
 import '../../messages/jwm/ephemeral_key_type.dart';
 
@@ -11,8 +15,11 @@ class EphemeralKey {
   @JsonKey(name: 'crv')
   final CurveType curve;
 
-  final String x;
-  final String? y;
+  @Base64UrlConverter()
+  final Uint8List x;
+
+  @Base64UrlConverter()
+  final Uint8List? y;
 
   EphemeralKey({
     required this.keyType,
