@@ -1,9 +1,13 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+// ignore: implementation_imports
+import 'package:pointycastle/src/utils.dart' as pointycastle_utils;
 import 'package:ssi/ssi.dart' show KeyType;
 import 'package:collection/collection.dart';
+import 'package:elliptic/elliptic.dart' as ec;
 
+import '../common/encoding.dart';
 import '../curves/curve_type.dart';
 import '../errors/errors.dart';
 import '../jwks/jwks.dart';
@@ -39,5 +43,41 @@ extension JwksCurveExtension on Jwks {
     }
 
     return match;
+  }
+}
+
+extension EllipticCurvePublicKeyExtension on ec.PublicKey {
+  ({String x, String y}) getCoordinatesAsBase64Url() {
+    final xBytes = _bigIntToUint8List(X, length: 32);
+    final yBytes = _bigIntToUint8List(Y, length: 32);
+
+    return (
+      x: base64UrlEncodeNoPadding(xBytes),
+      y: base64UrlEncodeNoPadding(yBytes),
+    );
+  }
+
+  Uint8List _bigIntToUint8List(BigInt value, {int? length}) {
+    var bytes =
+        value < BigInt.zero
+            ? pointycastle_utils.encodeBigInt(value)
+            : pointycastle_utils.encodeBigIntAsUnsigned(value);
+
+    if (length != null) {
+      if (bytes.length > length) {
+        throw ArgumentError(
+          'The length of the byte array is greater than the specified length.',
+        );
+      }
+
+      if (bytes.length < length) {
+        final padded = Uint8List(length);
+
+        padded.setRange(length - bytes.length, length, bytes);
+        bytes = padded;
+      }
+    }
+
+    return bytes;
   }
 }
