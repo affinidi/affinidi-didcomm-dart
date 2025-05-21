@@ -172,12 +172,11 @@ class JweHeader {
         keyType: senderPublicKey.type,
       );
 
-      final curvePoint = privateKey.publicKey.getCoordinatesAsBase64Url();
       return EphemeralKey(
         curve: curve,
         keyType: EphemeralKeyType.ec,
-        x: curvePoint.x,
-        y: curvePoint.y,
+        x: privateKey.publicKey.X.toBytes(),
+        y: privateKey.publicKey.Y.toBytes(),
       );
     }
 
@@ -186,8 +185,11 @@ class JweHeader {
         throw Exception('ephemeralPublicKeyBytes is required for X curve');
       }
 
-      final x = base64UrlEncodeNoPadding(ephemeralPublicKeyBytes.toList());
-      return EphemeralKey(curve: curve, keyType: EphemeralKeyType.okp, x: x);
+      return EphemeralKey(
+        curve: curve,
+        keyType: EphemeralKeyType.okp,
+        x: ephemeralPublicKeyBytes,
+      );
     }
 
     throw UnsupportedCurveError(curve);
