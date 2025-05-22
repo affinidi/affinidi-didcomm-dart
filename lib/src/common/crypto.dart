@@ -1,11 +1,12 @@
 import 'dart:typed_data';
 
-import 'package:ssi/ssi.dart';
+import 'package:ssi/ssi.dart' show KeyType, Wallet;
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
 import 'package:elliptic/elliptic.dart' as ec;
 import 'package:x25519/x25519.dart' as x25519;
 
 import '../errors/errors.dart';
+import '../jwks/jwks.dart';
 import '../messages/algorithm_types/algorithms_types.dart';
 import '../messages/jwm/jwe_header.dart';
 
@@ -76,7 +77,7 @@ Future<Uint8List> encryptAsymmetricWithWalletKey(
   Uint8List data, {
   required Wallet wallet,
   required String keyId,
-  required Map<String, dynamic> recipientPublicKeyJwk,
+  required Jwk jwk,
   required KeyWrappingAlgorithm keyWrappingAlgorithm,
   required Uint8List ephemeralPrivateKeyBytes,
   required JweHeader jweHeader,

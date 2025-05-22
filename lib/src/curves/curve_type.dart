@@ -3,6 +3,8 @@ import 'package:json_annotation/json_annotation.dart';
 @JsonEnum(valueField: 'value')
 enum CurveType {
   p256('P-256'),
+  p384('P-384'),
+  p521('P-521'),
   secp256k1('secp256k1'),
   x25519('X25519');
 

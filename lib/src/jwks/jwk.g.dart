@@ -19,8 +19,14 @@ Jwk _$JwkFromJson(Map<String, dynamic> json) => Jwk(
   x509Thumbprint: json['x5t'] as String?,
   x509ThumbprintS256: json['x5t#S256'] as String?,
   curve: $enumDecodeNullable(_$CurveTypeEnumMap, json['crv']),
-  x: json['x'] as String?,
-  y: json['y'] as String?,
+  x: _$JsonConverterFromJson<String, Uint8List>(
+    json['x'],
+    const Base64UrlConverter().fromJson,
+  ),
+  y: _$JsonConverterFromJson<String, Uint8List>(
+    json['y'],
+    const Base64UrlConverter().fromJson,
+  ),
   d: json['d'] as String?,
   n: json['n'] as String?,
   e: json['e'] as String?,
@@ -47,8 +53,14 @@ Map<String, dynamic> _$JwkToJson(Jwk instance) => <String, dynamic>{
   'x5t': instance.x509Thumbprint,
   'x5t#S256': instance.x509ThumbprintS256,
   'crv': _$CurveTypeEnumMap[instance.curve],
-  'x': instance.x,
-  'y': instance.y,
+  'x': _$JsonConverterToJson<String, Uint8List>(
+    instance.x,
+    const Base64UrlConverter().toJson,
+  ),
+  'y': _$JsonConverterToJson<String, Uint8List>(
+    instance.y,
+    const Base64UrlConverter().toJson,
+  ),
   'd': instance.d,
   'n': instance.n,
   'e': instance.e,
@@ -63,6 +75,18 @@ Map<String, dynamic> _$JwkToJson(Jwk instance) => <String, dynamic>{
 
 const _$CurveTypeEnumMap = {
   CurveType.p256: 'P-256',
+  CurveType.p384: 'P-384',
+  CurveType.p521: 'P-521',
   CurveType.secp256k1: 'secp256k1',
   CurveType.x25519: 'X25519',
 };
+
+Value? _$JsonConverterFromJson<Json, Value>(
+  Object? json,
+  Value? Function(Json json) fromJson,
+) => json == null ? null : fromJson(json as Json);
+
+Json? _$JsonConverterToJson<Json, Value>(
+  Value? value,
+  Json? Function(Value value) toJson,
+) => value == null ? null : toJson(value);
