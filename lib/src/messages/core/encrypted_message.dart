@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
 import 'package:ssi/ssi.dart';
+
 import '../../converters/base64_url_converter.dart';
 import '../../converters/jwe_header_converter.dart';
 import '../../jwks/jwks.dart';
@@ -185,7 +186,7 @@ class EncryptedMessage extends DidcommMessage {
           contentEncryptionKey.keyValue,
           wallet: wallet,
           keyId: keyId,
-          recipientPublicKeyJwk: jwk.toJson(),
+          jwk: jwk,
           keyWrappingAlgorithm: keyWrappingAlgorithm,
           ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
           jweHeader: jweHeader,

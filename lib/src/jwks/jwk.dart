@@ -1,5 +1,9 @@
-import 'package:didcomm/src/curves/curve_type.dart';
+import 'dart:typed_data';
+
 import 'package:json_annotation/json_annotation.dart';
+
+import '../converters/base64_url_converter.dart';
+import '../curves/curve_type.dart';
 
 part 'jwk.g.dart';
 
@@ -28,8 +32,11 @@ class Jwk {
   // EC key fields
   @JsonKey(name: 'crv')
   final CurveType? curve;
-  final String? x;
-  final String? y;
+  @Base64UrlConverter()
+  final Uint8List? x;
+  @Base64UrlConverter()
+  final Uint8List? y;
+  @Base64UrlConverter()
   final String? d;
 
   // RSA key fields
