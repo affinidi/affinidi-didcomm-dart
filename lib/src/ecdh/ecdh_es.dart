@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:elliptic/elliptic.dart' as ec;
 import 'package:elliptic/ecdh.dart' as ecdh;
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
+import 'package:ssi/ssi.dart';
 import 'package:x25519/x25519.dart' as x25519;
 
 import '../common/encoding.dart';
@@ -16,15 +18,19 @@ abstract class ECDHES implements ECDHProfile {
 
   ECDHES({required this.jweHeader});
 
-  List<int> getEncryptionSecret(Uint8List walletPrivateKeyBytes);
-  List<int> getDecryptionSecret(Uint8List walletPrivateKeyBytes);
+  Future<Uint8List> getEncryptionSecret();
+  Future<Uint8List> getDecryptionSecret({
+    required Wallet wallet,
+    required String keyId,
+  });
 
   @override
-  encryptData({
-    required Uint8List walletPrivateKeyBytes,
+  Future<Uint8List> encryptData({
+    required Wallet wallet,
+    required String keyId,
     required Uint8List data,
-  }) {
-    final secret = getEncryptionSecret(walletPrivateKeyBytes);
+  }) async {
+    final secret = await getEncryptionSecret();
     final sharedSecret = _generateSharedSecret(secret);
 
     final kw = _getKeyWrapEncrypter(sharedSecret);
@@ -32,18 +38,19 @@ abstract class ECDHES implements ECDHProfile {
   }
 
   @override
-  Uint8List decryptData({
-    required Uint8List walletPrivateKeyBytes,
+  Future<Uint8List> decryptData({
+    required Wallet wallet,
+    required String keyId,
     required Uint8List data,
-  }) {
-    final secret = getDecryptionSecret(walletPrivateKeyBytes);
+  }) async {
+    final secret = await getDecryptionSecret(wallet: wallet, keyId: keyId);
     final sharedSecret = _generateSharedSecret(secret);
 
     final kw = _getKeyWrapEncrypter(sharedSecret);
     return kw.decrypt(ck.EncryptionResult(data));
   }
 
-  _generateSharedSecret(List<int> z) {
+  _generateSharedSecret(Uint8List z) {
     //Didcomm only uses A256KW
     final keyDataLen = 256;
     final suppPubInfo = _int32BigEndianBytes(keyDataLen);
@@ -108,7 +115,7 @@ class ECDHES_Elliptic extends ECDHES implements ECDHProfile {
   });
 
   @override
-  List<int> getEncryptionSecret(Uint8List _) {
+  Future<Uint8List> getEncryptionSecret() async {
     if (ephemeralPrivateKeyBytes == null) {
       throw Exception('Private key needed for encryption data.');
     }
@@ -117,21 +124,24 @@ class ECDHES_Elliptic extends ECDHES implements ECDHProfile {
       publicKey.curve,
       ephemeralPrivateKeyBytes!,
     );
-    return ecdh.computeSecret(privateKey, publicKey);
+
+    return Uint8List.fromList(ecdh.computeSecret(privateKey, publicKey));
   }
 
   @override
-  List<int> getDecryptionSecret(Uint8List privateKeyBytes) {
-    final privateKey = ec.PrivateKey.fromBytes(
-      publicKey.curve,
-      privateKeyBytes,
+  Future<Uint8List> getDecryptionSecret({
+    required Wallet wallet,
+    required String keyId,
+  }) async {
+    return await wallet.computeEcdhSecret(
+      keyId: keyId,
+      othersPublicKeyBytes: publicKey.toBytes(),
     );
-    return ecdh.computeSecret(privateKey, publicKey);
   }
 }
 
 class ECDHES_X25519 extends ECDHES implements ECDHProfile {
-  final List<int> publicKey;
+  final Uint8List publicKey;
   final Uint8List? ephemeralPrivateKeyBytes;
 
   ECDHES_X25519({
@@ -141,7 +151,7 @@ class ECDHES_X25519 extends ECDHES implements ECDHProfile {
   });
 
   @override
-  List<int> getEncryptionSecret(Uint8List _) {
+  Future<Uint8List> getEncryptionSecret() async {
     if (ephemeralPrivateKeyBytes == null) {
       throw Exception('Private key needed for encryption data.');
     }
@@ -149,7 +159,14 @@ class ECDHES_X25519 extends ECDHES implements ECDHProfile {
     return x25519.X25519(ephemeralPrivateKeyBytes!, publicKey);
   }
 
-  List<int> getDecryptionSecret(Uint8List privateKeyBytes) {
-    return x25519.X25519(privateKeyBytes.sublist(0, 32), publicKey);
+  @override
+  Future<Uint8List> getDecryptionSecret({
+    required Wallet wallet,
+    required String keyId,
+  }) async {
+    return await wallet.computeEcdhSecret(
+      keyId: keyId,
+      othersPublicKeyBytes: publicKey,
+    );
   }
 }
