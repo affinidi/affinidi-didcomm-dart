@@ -14,7 +14,14 @@ void main() async {
   final bobWallet = PersistentWallet(bobKeyStore);
 
   final aliceKeyId = 'alice-key-1';
-  await aliceWallet.generateKey(keyId: aliceKeyId, keyType: KeyType.p256);
+  final aliceKeyPair = await aliceWallet.generateKey(
+    keyId: aliceKeyId,
+    keyType: KeyType.p256,
+  );
+
+  final aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
+  print(aliceDidDocument.keyAgreement.first.asJwk().toJson());
+  print(aliceKeyPair.publicKey.bytes);
 
   final bobKeyId = 'bob-key-1';
   final bobKeyPair = await bobWallet.generateKey(
@@ -26,7 +33,7 @@ void main() async {
 
   // TODO: kid is not available in the Jwk anymore. clarify with the team
   final bobJwk = bobDidDocument.keyAgreement[0].asJwk().toJson();
-  bobJwk['kid'] = bobKeyId;
+  bobJwk['kid'] = '${bobDidDocument.id}#$bobKeyId';
 
   final plainMessage = PlaintextMessage.fromJson({
     'id': '123',
@@ -58,7 +65,6 @@ void main() async {
       await EncryptedMessage.unpack(
             EncryptedMessage.fromJson(jsonDecode(sentMessageByAlice)),
             wallet: bobWallet,
-            publicKeyBytes: (await aliceWallet.getPublicKey(aliceKeyId)).bytes,
           )
           as PlaintextMessage;
 
