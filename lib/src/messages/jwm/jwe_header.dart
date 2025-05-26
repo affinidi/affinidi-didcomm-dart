@@ -152,9 +152,15 @@ class JweHeader {
     // keys merged with comma and sorted alphabetically
 
     final keyIdsByCurve =
-        jwksPerRecipient
-            .map((jwks) => jwks.firstWithCurve(curve).keyId)
-            .toList();
+        jwksPerRecipient.map((jwks) {
+          final keyId = jwks.firstWithCurve(curve).keyId;
+
+          if (keyId == null) {
+            throw Exception('Jwks for curve $curve does not contain keyId');
+          }
+
+          return keyId;
+        }).toList();
 
     keyIdsByCurve.sort();
     return keyIdsByCurve;

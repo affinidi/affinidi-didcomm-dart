@@ -9,9 +9,8 @@ part 'jwk.g.dart';
 
 @JsonSerializable()
 class Jwk {
-  // it is optional in spec, but required in our library and many others
   @JsonKey(name: 'kid')
-  final String keyId;
+  final String? keyId;
   @JsonKey(name: 'kty')
   final String keyType;
   @JsonKey(name: 'use')
@@ -53,7 +52,7 @@ class Jwk {
   final String? k;
 
   Jwk({
-    required this.keyId,
+    this.keyId,
     required this.keyType,
     this.publicKeyUse,
     this.keyOperations,

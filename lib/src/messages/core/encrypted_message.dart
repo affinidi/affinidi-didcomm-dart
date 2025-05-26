@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:convert/convert.dart';
+import 'package:didcomm/didcomm.dart';
+import 'package:didcomm/src/ecdh/ecdh_1pu/ecdh_1pu_for_secp256_and_p.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
-import 'package:ssi/ssi.dart';
+import 'package:ssi/ssi.dart' hide Jwk;
 
 import '../../converters/base64_url_converter.dart';
 import '../../converters/jwe_header_converter.dart';
@@ -18,6 +21,8 @@ import '../didcomm_message.dart';
 import '../jwm/jwe_header.dart';
 import '../recipients/recipient.dart';
 import '../recipients/recipient_header.dart';
+
+import 'package:elliptic/elliptic.dart' as ec;
 
 part 'encrypted_message.g.dart';
 part 'encrypted_message.own_json_props.g.dart';
@@ -125,6 +130,8 @@ class EncryptedMessage extends DidcommMessage {
       encryptionAlgorithm,
     );
 
+    print(contentEncryptionKey.keyValue);
+
     final encryptedInnerMessage = _encryptMessage(
       message,
       encryptionKey: contentEncryptionKey,
@@ -158,6 +165,59 @@ class EncryptedMessage extends DidcommMessage {
       tag: encryptedInnerMessage.authenticationTag!,
       initializationVector: encryptedInnerMessage.initializationVector!,
     );
+  }
+
+  static Future<DidcommMessage> unpack(
+    EncryptedMessage message, {
+    required Wallet wallet,
+    required Uint8List publicKeyBytes,
+  }) async {
+    final self = await _findSelfAsRecipient(message, wallet);
+    final a = Ecdh1PuForSecp256AndP(
+      jweHeader: message.protected,
+      authenticationTag: message.tag,
+      publicKey1:
+          Jwk.fromJson(
+            message.protected.ephemeralKey.toJson(),
+          ).toPublicKeyFromPoint(),
+      publicKey2: ec.PublicKey.fromHex(
+        ec.getP256(),
+        hex.encode(publicKeyBytes),
+      ),
+    );
+
+    final contentEncryptionKey = await a.decryptData(
+      data: self.encryptedKey,
+      wallet: wallet,
+      keyId: self.header.keyId,
+    );
+    // final contentEncryptionKey = await Ecdh.decrypt(
+    //   self.encryptedKey,
+    //   wallet: wallet,
+    //   keyId: self.header.keyId,
+    //   // FIXME
+    //   jwk: Jwk.fromJson(message.protected.ephemeralKey.toJson()),
+    //   authenticationTag: message.tag,
+    //   jweHeader: message.protected,
+    // );
+
+    print(contentEncryptionKey);
+
+    return PlaintextMessage(id: '', type: Uri.parse('http://example.com/'));
+  }
+
+  static Future<Recipient> _findSelfAsRecipient(
+    EncryptedMessage message,
+    Wallet wallet,
+  ) async {
+    for (final recipient in message.recipients) {
+      // TODO: add check for DID
+      if (await wallet.hasKey(recipient.header.keyId)) {
+        return recipient;
+      }
+    }
+
+    throw Exception('No matching recipient found in the message');
   }
 
   factory EncryptedMessage.fromJson(Map<String, dynamic> json) {
@@ -216,13 +276,12 @@ class EncryptedMessage extends DidcommMessage {
       final jwk = jwks.firstWithCurve(curve);
 
       return Recipient(
-        header: RecipientHeader(keyId: jwk.keyId),
+        header: RecipientHeader(keyId: jwk.keyId!),
         encryptedKey: await Ecdh.encrypt(
           contentEncryptionKey.keyValue,
           wallet: wallet,
           keyId: keyId,
           jwk: jwk,
-          keyWrappingAlgorithm: keyWrappingAlgorithm,
           ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
           jweHeader: jweHeader,
           authenticationTag: authenticationTag,
