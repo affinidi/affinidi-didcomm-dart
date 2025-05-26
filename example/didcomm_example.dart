@@ -37,15 +37,26 @@ void main() async {
   final plainMessage = PlaintextMessage.fromJson({
     'id': '041b47d4-9c8f-4a24-ae85-b60ec91b025c',
     'from': aliceDidDocument.id,
+    'to': [bobDidDocument.id],
     'type': 'https://didcomm.org/example/1.0/message',
+    'body': {'content': 'Hello, Bob!'},
     'custom-header': 'custom-value',
   });
 
   print(plainMessage.toJson());
   print('');
 
-  final encryptedMessageByAlice = await EncryptedMessage.packWithAuthentication(
+  final signedMessageByAlice = await SignedMessage.pack(
     plainMessage,
+    wallet: aliceWallet,
+    keyId: aliceKeyId,
+  );
+
+  print(signedMessageByAlice.toJson());
+  print('');
+
+  final encryptedMessageByAlice = await EncryptedMessage.packWithAuthentication(
+    signedMessageByAlice,
     wallet: aliceWallet,
     keyId: aliceKeyId,
     jwksPerRecipient: [

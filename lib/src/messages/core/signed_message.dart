@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:didcomm/src/annotations/own_json_properties.dart';
+import 'package:didcomm/src/common/encoding.dart';
+import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:didcomm/src/messages/core/plaintext_message.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:ssi/ssi.dart';
@@ -19,12 +23,30 @@ class SignedMessage extends DidcommMessage {
 
   SignedMessage({required this.payload, required this.signatures});
 
-  factory SignedMessage.fromPlainTextMessage(
+  static Future<SignedMessage> pack(
     PlaintextMessage message, {
     required Wallet wallet,
-    required String walletKeyId,
-  }) {
-    return SignedMessage(payload: '', signatures: []);
+    required String keyId,
+  }) async {
+    return SignedMessage(
+      payload: base64UrlEncode(message.toJsonBytes()),
+      signatures: [],
+    );
+  }
+
+  Future<Map<String, dynamic>> unpack({required Wallet wallet}) async {
+    final payloadBytes = base64UrlDecodeWithPadding(payload);
+    return json.decode(utf8.decode(payloadBytes));
+  }
+
+  static bool isSignedMessage(Map<String, dynamic> message) {
+    for (final prop in _$ownJsonProperties) {
+      if (!message.containsKey(prop)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   factory SignedMessage.fromJson(Map<String, dynamic> json) {
