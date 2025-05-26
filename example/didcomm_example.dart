@@ -20,8 +20,6 @@ void main() async {
   );
 
   final aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
-  print(aliceDidDocument.keyAgreement.first.asJwk().toJson());
-  print(aliceKeyPair.publicKey.bytes);
 
   final bobKeyId = 'bob-key-1';
   final bobKeyPair = await bobWallet.generateKey(
@@ -36,8 +34,8 @@ void main() async {
   bobJwk['kid'] = '${bobDidDocument.id}#$bobKeyId';
 
   final plainMessage = PlaintextMessage.fromJson({
-    'id': '123',
-    'from': 'did:example:123',
+    'id': '041b47d4-9c8f-4a24-ae85-b60ec91b025c',
+    'from': aliceDidDocument.id,
     'type': 'https://didcomm.org/example/1.0/message',
     'custom-header': 'custom-value',
   });
