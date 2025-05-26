@@ -11,15 +11,18 @@ class DidcommMessage {
   dynamic operator [](String key) => _customHeaders[key];
   void operator []=(String key, dynamic value) => _customHeaders[key] = value;
 
-  static PlaintextMessage unpackPlainTextMessage({
-    required DidcommMessage message,
+  static Future<PlaintextMessage> unpackPlainTextMessage({
+    required Map<String, dynamic> message,
     required Wallet wallet,
-  }) {
-    if (message is PlaintextMessage) {
-      return message;
+  }) async {
+    var currentMessage = message;
+
+    if (EncryptedMessage.isEncryptedMessage(currentMessage)) {
+      final encryptedMessage = EncryptedMessage.fromJson(currentMessage);
+      currentMessage = await encryptedMessage.unpack(wallet: wallet);
     }
 
-    throw UnimplementedError();
+    return PlaintextMessage.fromJson(currentMessage);
   }
 
   static SignedMessage unpackSignedMessage({

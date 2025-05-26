@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/jwks/jwks.dart';
 import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
+import 'package:didcomm/src/messages/didcomm_message.dart';
 import 'package:ssi/ssi.dart';
 import 'package:ssi/src/wallet/key_store/in_memory_key_store.dart';
 
@@ -40,7 +41,7 @@ void main() async {
     'custom-header': 'custom-value',
   });
 
-  print(jsonEncode(plainMessage));
+  print(plainMessage.toJson());
   print('');
 
   final encryptedMessageByAlice = await EncryptedMessage.packWithAuthentication(
@@ -59,14 +60,12 @@ void main() async {
   print(sentMessageByAlice);
   print('');
 
-  final unpackedMessageByBod =
-      await EncryptedMessage.unpack(
-            EncryptedMessage.fromJson(jsonDecode(sentMessageByAlice)),
-            wallet: bobWallet,
-          )
-          as PlaintextMessage;
+  final unpackedMessageByBod = await DidcommMessage.unpackPlainTextMessage(
+    message: jsonDecode(sentMessageByAlice),
+    wallet: bobWallet,
+  );
 
-  print(jsonEncode(unpackedMessageByBod));
+  print(unpackedMessageByBod.toJson());
   print('');
 
   /*
