@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/jwks/jwks.dart';
 import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
-import 'package:didcomm/src/messages/algorithm_types/key_wrapping_algorithm.dart';
 import 'package:ssi/ssi.dart';
 import 'package:ssi/src/wallet/key_store/in_memory_key_store.dart';
 
@@ -38,7 +37,7 @@ void main() async {
 
   print(jsonEncode(plainMessage));
 
-  final encryptedMessage = await EncryptedMessage.pack(
+  final encryptedMessage = await EncryptedMessage.packWithAuthentication(
     plainMessage,
     wallet: aliceWallet,
     keyId: aliceKeyId,
@@ -47,7 +46,6 @@ void main() async {
         'keys': [bobJwk],
       }),
     ],
-    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
 
