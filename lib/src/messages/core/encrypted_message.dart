@@ -7,6 +7,7 @@ import 'package:ssi/ssi.dart';
 
 import '../../converters/base64_url_converter.dart';
 import '../../converters/jwe_header_converter.dart';
+import '../../ecdh/ecdh.dart';
 import '../../jwks/jwks.dart';
 import '../../annotations/own_json_properties.dart';
 import '../../common/crypto.dart';
@@ -59,7 +60,7 @@ class EncryptedMessage extends DidcommMessage {
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
-    if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1PU) {
+    if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
       final plainTextMessage = DidcommMessage.unpackPlainTextMessage(
         message: message,
         wallet: wallet,
@@ -105,7 +106,7 @@ class EncryptedMessage extends DidcommMessage {
       throw Exception('Authentication tag not set after encryption');
     }
 
-    final recipients = await _encryptContentEncryptionKey(
+    final recipients = await _createRecipients(
       wallet: wallet,
       keyId: keyId,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
@@ -164,7 +165,7 @@ class EncryptedMessage extends DidcommMessage {
     );
   }
 
-  static Future<List<Recipient>> _encryptContentEncryptionKey({
+  static Future<List<Recipient>> _createRecipients({
     required Wallet wallet,
     required String keyId,
     required List<Jwks> jwksPerRecipient,
@@ -182,7 +183,7 @@ class EncryptedMessage extends DidcommMessage {
 
       return Recipient(
         header: RecipientHeader(keyId: jwk.keyId),
-        encryptedKey: await encryptAsymmetricWithWalletKey(
+        encryptedKey: await Ecdh.encrypt(
           contentEncryptionKey.keyValue,
           wallet: wallet,
           keyId: keyId,
@@ -190,6 +191,7 @@ class EncryptedMessage extends DidcommMessage {
           keyWrappingAlgorithm: keyWrappingAlgorithm,
           ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
           jweHeader: jweHeader,
+          authenticationTag: authenticationTag,
         ),
       );
     });

@@ -199,7 +199,7 @@ class JweHeader {
     KeyWrappingAlgorithm keyWrapAlgorithm,
     String keyId,
   ) {
-    return keyWrapAlgorithm == KeyWrappingAlgorithm.ecdh1PU
+    return keyWrapAlgorithm == KeyWrappingAlgorithm.ecdh1Pu
         ? base64UrlEncodeNoPadding(utf8.encode(keyId))
         : null;
   }

@@ -5,6 +5,6 @@ import 'package:convert/convert.dart';
 
 extension PublicKeyExtension on ec.PublicKey {
   Uint8List toBytes() {
-    return Uint8List.fromList(hex.decode(toHex()));
+    return Uint8List.fromList(hex.decode(toCompressedHex()));
   }
 }
