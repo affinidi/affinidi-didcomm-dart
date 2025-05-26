@@ -96,19 +96,19 @@ class EncryptedMessage extends DidcommMessage {
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
-    if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
-      final plainTextMessage = DidcommMessage.unpackPlainTextMessage(
-        message: message,
-        wallet: wallet,
-      );
+    // if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
+    //   final plainTextMessage = DidcommMessage.unpackPlainTextMessage(
+    //     message: message,
+    //     wallet: wallet,
+    //   );
 
-      if (plainTextMessage.from == null) {
-        throw ArgumentError(
-          'authcrypt envelope requires from header to be set in the plaintext message',
-          'message',
-        );
-      }
-    }
+    //   if (plainTextMessage.from == null) {
+    //     throw ArgumentError(
+    //       'authcrypt envelope requires from header to be set in the plaintext message',
+    //       'message',
+    //     );
+    //   }
+    // }
 
     final publicKey = await wallet.getPublicKey(keyId);
     final ephemeralKeyPair = generateEphemeralKeyPair(publicKey.type);
@@ -162,13 +162,10 @@ class EncryptedMessage extends DidcommMessage {
     );
   }
 
-  static Future<DidcommMessage> unpack(
-    EncryptedMessage message, {
-    required Wallet wallet,
-  }) async {
-    final self = await _findSelfAsRecipient(message, wallet);
+  Future<Map<String, dynamic>> unpack({required Wallet wallet}) async {
+    final self = await _findSelfAsRecipient(wallet);
 
-    final senderKeyId = message.protected.resolveSubjectKeyId();
+    final senderKeyId = protected.resolveSubjectKeyId();
     final senderDidDocument = await UniversalDIDResolver.resolve(
       senderKeyId.split('#').first,
     );
@@ -179,12 +176,10 @@ class EncryptedMessage extends DidcommMessage {
 
     // TODO: use Ecdh class instead
     final a = Ecdh1PuForSecp256AndP(
-      jweHeader: message.protected,
-      authenticationTag: message.tag,
+      jweHeader: protected,
+      authenticationTag: tag,
       publicKey1:
-          Jwk.fromJson(
-            message.protected.ephemeralKey.toJson(),
-          ).toPublicKeyFromPoint(),
+          Jwk.fromJson(protected.ephemeralKey.toJson()).toPublicKeyFromPoint(),
       publicKey2: senderJwk.toPublicKeyFromPoint(),
     );
 
@@ -204,30 +199,26 @@ class EncryptedMessage extends DidcommMessage {
     // );
 
     final encrypter = createSymmetricEncrypter(
-      message.protected.encryptionAlgorithm,
+      protected.encryptionAlgorithm,
       ck.SymmetricKey(keyValue: contentEncryptionKey),
     );
 
     final decrypted = encrypter.decrypt(
       ck.EncryptionResult(
-        message.cipherText,
-        initializationVector: message.initializationVector,
-        authenticationTag: message.tag,
+        cipherText,
+        initializationVector: initializationVector,
+        authenticationTag: tag,
         additionalAuthenticatedData: ascii.encode(
-          base64UrlEncodeNoPadding(message.protected.toJsonBytes()),
+          base64UrlEncodeNoPadding(protected.toJsonBytes()),
         ),
       ),
     );
 
-    final json = jsonDecode(utf8.decode(decrypted));
-    return PlaintextMessage.fromJson(json);
+    return jsonDecode(utf8.decode(decrypted));
   }
 
-  static Future<Recipient> _findSelfAsRecipient(
-    EncryptedMessage message,
-    Wallet wallet,
-  ) async {
-    for (final recipient in message.recipients) {
+  Future<Recipient> _findSelfAsRecipient(Wallet wallet) async {
+    for (final recipient in recipients) {
       final String? did;
       final String keyId;
 
@@ -256,6 +247,16 @@ class EncryptedMessage extends DidcommMessage {
     }
 
     throw Exception('No matching recipient found in the message');
+  }
+
+  static bool isEncryptedMessage(Map<String, dynamic> message) {
+    for (final prop in _$ownJsonProperties) {
+      if (!message.containsKey(prop)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   factory EncryptedMessage.fromJson(Map<String, dynamic> json) {
