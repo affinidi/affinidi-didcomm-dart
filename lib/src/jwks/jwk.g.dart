@@ -7,7 +7,7 @@ part of 'jwk.dart';
 // **************************************************************************
 
 Jwk _$JwkFromJson(Map<String, dynamic> json) => Jwk(
-  keyId: json['kid'] as String,
+  keyId: json['kid'] as String?,
   keyType: json['kty'] as String,
   publicKeyUse: json['use'] as String?,
   keyOperations:
