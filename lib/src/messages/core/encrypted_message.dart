@@ -127,8 +127,6 @@ class EncryptedMessage extends DidcommMessage {
       encryptionAlgorithm,
     );
 
-    print(contentEncryptionKey.keyValue);
-
     final encryptedInnerMessage = _encryptMessage(
       message,
       encryptionKey: contentEncryptionKey,
@@ -179,9 +177,6 @@ class EncryptedMessage extends DidcommMessage {
       senderDidDocument.keyAgreement.first.asJwk().toJson(),
     );
 
-    print(senderJwk.toJson());
-    print(senderJwk.toPublicKeyFromPoint().toBytes());
-
     // TODO: use Ecdh class instead
     final a = Ecdh1PuForSecp256AndP(
       jweHeader: message.protected,
@@ -208,9 +203,24 @@ class EncryptedMessage extends DidcommMessage {
     //   jweHeader: message.protected,
     // );
 
-    print(contentEncryptionKey);
+    final encrypter = createSymmetricEncrypter(
+      message.protected.encryptionAlgorithm,
+      ck.SymmetricKey(keyValue: contentEncryptionKey),
+    );
 
-    return PlaintextMessage(id: '', type: Uri.parse('http://example.com/'));
+    final decrypted = encrypter.decrypt(
+      ck.EncryptionResult(
+        message.cipherText,
+        initializationVector: message.initializationVector,
+        authenticationTag: message.tag,
+        additionalAuthenticatedData: ascii.encode(
+          base64UrlEncodeNoPadding(message.protected.toJsonBytes()),
+        ),
+      ),
+    );
+
+    final json = jsonDecode(utf8.decode(decrypted));
+    return PlaintextMessage.fromJson(json);
   }
 
   static Future<Recipient> _findSelfAsRecipient(
