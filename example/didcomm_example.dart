@@ -36,8 +36,9 @@ void main() async {
   });
 
   print(jsonEncode(plainMessage));
+  print('');
 
-  final encryptedMessage = await EncryptedMessage.packWithAuthentication(
+  final encryptedMessageByAlice = await EncryptedMessage.packWithAuthentication(
     plainMessage,
     wallet: aliceWallet,
     keyId: aliceKeyId,
@@ -49,7 +50,20 @@ void main() async {
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
 
-  print(jsonEncode(encryptedMessage));
+  final sentMessageByAlice = jsonEncode(encryptedMessageByAlice);
+  print(sentMessageByAlice);
+  print('');
+
+  final unpackedMessageByBod =
+      await EncryptedMessage.unpack(
+            EncryptedMessage.fromJson(jsonDecode(sentMessageByAlice)),
+            wallet: bobWallet,
+            publicKeyBytes: (await aliceWallet.getPublicKey(aliceKeyId)).bytes,
+          )
+          as PlaintextMessage;
+
+  print(jsonEncode(unpackedMessageByBod));
+  print('');
 
   /*
   // --------------------------------------------------------------------
