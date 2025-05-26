@@ -27,8 +27,8 @@ Map<String, dynamic> _$JweHeaderToJson(JweHeader instance) => <String, dynamic>{
 };
 
 const _$KeyWrappingAlgorithmEnumMap = {
-  KeyWrappingAlgorithm.ecdhES: 'ECDH-ES+A256KW',
-  KeyWrappingAlgorithm.ecdh1PU: 'ECDH-1PU+A256KW',
+  KeyWrappingAlgorithm.ecdhEs: 'ECDH-ES+A256KW',
+  KeyWrappingAlgorithm.ecdh1Pu: 'ECDH-1PU+A256KW',
 };
 
 const _$EncryptionAlgorithmEnumMap = {

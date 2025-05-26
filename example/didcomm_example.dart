@@ -4,9 +4,6 @@ import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/jwks/jwks.dart';
 import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
 import 'package:didcomm/src/messages/algorithm_types/key_wrapping_algorithm.dart';
-import 'package:didcomm/src/messages/attachments/attachment.dart';
-import 'package:didcomm/src/messages/attachments/attachment_data.dart';
-import 'package:didcomm/src/messages/didcomm_message.dart';
 import 'package:ssi/ssi.dart';
 import 'package:ssi/src/wallet/key_store/in_memory_key_store.dart';
 
@@ -50,7 +47,7 @@ void main() async {
         'keys': [bobJwk],
       }),
     ],
-    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1PU,
+    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
 
