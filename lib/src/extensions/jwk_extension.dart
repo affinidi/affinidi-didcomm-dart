@@ -1,7 +1,7 @@
-import 'package:didcomm/src/curves/curve_type.dart';
-import 'package:didcomm/src/errors/unsupported_curve_error.dart';
 import 'package:elliptic/elliptic.dart' as ec;
 
+import '../curves/curve_type.dart';
+import '../errors/errors.dart';
 import '../jwks/jwk.dart';
 import 'uint8_list_extension.dart';
 
