@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:convert/convert.dart';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/ecdh/ecdh_1pu/ecdh_1pu_for_secp256_and_p.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -21,8 +20,6 @@ import '../didcomm_message.dart';
 import '../jwm/jwe_header.dart';
 import '../recipients/recipient.dart';
 import '../recipients/recipient_header.dart';
-
-import 'package:elliptic/elliptic.dart' as ec;
 
 part 'encrypted_message.g.dart';
 part 'encrypted_message.own_json_props.g.dart';
@@ -170,9 +167,22 @@ class EncryptedMessage extends DidcommMessage {
   static Future<DidcommMessage> unpack(
     EncryptedMessage message, {
     required Wallet wallet,
-    required Uint8List publicKeyBytes,
   }) async {
     final self = await _findSelfAsRecipient(message, wallet);
+
+    final senderKeyId = message.protected.resolveSubjectKeyId();
+    final senderDidDocument = await UniversalDIDResolver.resolve(
+      senderKeyId.split('#').first,
+    );
+
+    final senderJwk = Jwk.fromJson(
+      senderDidDocument.keyAgreement.first.asJwk().toJson(),
+    );
+
+    print(senderJwk.toJson());
+    print(senderJwk.toPublicKeyFromPoint().toBytes());
+
+    // TODO: use Ecdh class instead
     final a = Ecdh1PuForSecp256AndP(
       jweHeader: message.protected,
       authenticationTag: message.tag,
@@ -180,16 +190,13 @@ class EncryptedMessage extends DidcommMessage {
           Jwk.fromJson(
             message.protected.ephemeralKey.toJson(),
           ).toPublicKeyFromPoint(),
-      publicKey2: ec.PublicKey.fromHex(
-        ec.getP256(),
-        hex.encode(publicKeyBytes),
-      ),
+      publicKey2: senderJwk.toPublicKeyFromPoint(),
     );
 
     final contentEncryptionKey = await a.decryptData(
       data: self.encryptedKey,
       wallet: wallet,
-      keyId: self.header.keyId,
+      keyId: self.header.keyId.split('#').last,
     );
     // final contentEncryptionKey = await Ecdh.decrypt(
     //   self.encryptedKey,
@@ -211,8 +218,29 @@ class EncryptedMessage extends DidcommMessage {
     Wallet wallet,
   ) async {
     for (final recipient in message.recipients) {
-      // TODO: add check for DID
-      if (await wallet.hasKey(recipient.header.keyId)) {
+      final String? did;
+      final String keyId;
+
+      // TODO: make a reusable method for this
+      if (recipient.header.keyId.contains('#')) {
+        final parts = recipient.header.keyId.split('#');
+        did = parts[0];
+        keyId = parts[1];
+      } else {
+        did = null;
+        keyId = recipient.header.keyId;
+      }
+
+      if (await wallet.hasKey(keyId)) {
+        if (did != null) {
+          final publicKey = await wallet.getPublicKey(keyId);
+          final didDocument = DidKey.generateDocument(publicKey);
+
+          if (didDocument.id != did) {
+            continue;
+          }
+        }
+
         return recipient;
       }
     }
