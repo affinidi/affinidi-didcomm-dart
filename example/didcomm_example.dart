@@ -34,20 +34,21 @@ void main() async {
   final bobJwk = bobDidDocument.keyAgreement[0].asJwk().toJson();
   bobJwk['kid'] = '${bobDidDocument.id}#$bobKeyId';
 
-  final plainMessage = PlaintextMessage.fromJson({
-    'id': '041b47d4-9c8f-4a24-ae85-b60ec91b025c',
-    'from': aliceDidDocument.id,
-    'to': [bobDidDocument.id],
-    'type': 'https://didcomm.org/example/1.0/message',
-    'body': {'content': 'Hello, Bob!'},
-    'custom-header': 'custom-value',
-  });
+  final plainTextMassage = PlaintextMessage(
+    id: '041b47d4-9c8f-4a24-ae85-b60ec91b025c',
+    from: aliceDidDocument.id,
+    to: [bobDidDocument.id],
+    type: Uri.parse('https://didcomm.org/example/1.0/message'),
+    body: {'content': 'Hello, Bob!'},
+  );
 
-  print(plainMessage.toJson());
+  plainTextMassage['custom-header'] = 'custom-value';
+
+  print(plainTextMassage.toJson());
   print('');
 
   final signedMessageByAlice = await SignedMessage.pack(
-    plainMessage,
+    plainTextMassage,
     wallet: aliceWallet,
     keyId: aliceKeyId,
   );
