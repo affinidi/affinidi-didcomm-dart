@@ -52,6 +52,40 @@ class EncryptedMessage extends DidcommMessage {
     required this.initializationVector,
   });
 
+  static Future<EncryptedMessage> packAnonymously(
+    DidcommMessage message, {
+    required Wallet wallet,
+    required String keyId,
+    required List<Jwks> jwksPerRecipient,
+    required EncryptionAlgorithm encryptionAlgorithm,
+  }) async {
+    return await EncryptedMessage.pack(
+      message,
+      wallet: wallet,
+      keyId: keyId,
+      jwksPerRecipient: jwksPerRecipient,
+      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+      encryptionAlgorithm: encryptionAlgorithm,
+    );
+  }
+
+  static Future<EncryptedMessage> packWithAuthentication(
+    DidcommMessage message, {
+    required Wallet wallet,
+    required String keyId,
+    required List<Jwks> jwksPerRecipient,
+    required EncryptionAlgorithm encryptionAlgorithm,
+  }) async {
+    return await EncryptedMessage.pack(
+      message,
+      wallet: wallet,
+      keyId: keyId,
+      jwksPerRecipient: jwksPerRecipient,
+      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+      encryptionAlgorithm: encryptionAlgorithm,
+    );
+  }
+
   static Future<EncryptedMessage> pack(
     DidcommMessage message, {
     required Wallet wallet,
