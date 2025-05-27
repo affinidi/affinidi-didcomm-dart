@@ -34,7 +34,7 @@ abstract class Ecdh {
         authenticationTag: authenticationTag,
       );
     } else if (curveType.isXCurve()) {
-      ecdh = _createForXCurve(
+      ecdh = _createForXCurveForEncryption(
         jweHeader: jweHeader,
         ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
         recipientJwk: recipientJwk,
@@ -70,7 +70,7 @@ abstract class Ecdh {
       );
     } else if (curveType.isXCurve()) {
       throw UnsupportedCurveError(curveType);
-      // ecdh = _createForXCurve(
+      // ecdh = _createForXCurveForEncryption(
       //   jweHeader: jweHeader,
       //   recipientJwk: jwk,
       //   authenticationTag: authenticationTag,
@@ -121,7 +121,6 @@ abstract class Ecdh {
 
   static Ecdh _createForSecp256OrPCurveForDecryption({
     required JweHeader jweHeader,
-    Uint8List? ephemeralPrivateKeyBytes,
     required Jwk senderJwk,
     required Uint8List authenticationTag,
   }) {
@@ -130,8 +129,10 @@ abstract class Ecdh {
     if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdhEs) {
       return EcdhEsForSecpAndP(
         jweHeader: jweHeader,
-        ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
-        publicKey: senderJwk.toPublicKeyFromPoint(),
+        publicKey:
+            Jwk.fromJson(
+              jweHeader.ephemeralKey.toJson(),
+            ).toPublicKeyFromPoint(),
       );
     }
 
@@ -150,7 +151,7 @@ abstract class Ecdh {
     throw UnsupportedKeyWrappingAlgorithmError(keyWrappingAlgorithm);
   }
 
-  static Ecdh _createForXCurve({
+  static Ecdh _createForXCurveForEncryption({
     required JweHeader jweHeader,
     Uint8List? ephemeralPrivateKeyBytes,
     required Jwk recipientJwk,
