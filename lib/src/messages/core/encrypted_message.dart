@@ -38,8 +38,9 @@ class EncryptedMessage extends DidcommMessage {
 
   final List<Recipient> recipients;
 
+  @JsonKey(name: 'tag')
   @Base64UrlConverter()
-  final Uint8List tag;
+  final Uint8List authenticationTag;
 
   @JsonKey(name: 'iv')
   @Base64UrlConverter()
@@ -49,7 +50,7 @@ class EncryptedMessage extends DidcommMessage {
     required this.cipherText,
     required this.protected,
     required this.recipients,
-    required this.tag,
+    required this.authenticationTag,
     required this.initializationVector,
   });
 
@@ -62,8 +63,8 @@ class EncryptedMessage extends DidcommMessage {
   }) async {
     return await EncryptedMessage.pack(
       message,
-      wallet: wallet,
-      keyId: keyId,
+      senderWallet: wallet,
+      senderKeyId: keyId,
       jwksPerRecipient: jwksPerRecipient,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -79,8 +80,8 @@ class EncryptedMessage extends DidcommMessage {
   }) async {
     return await EncryptedMessage.pack(
       message,
-      wallet: wallet,
-      keyId: keyId,
+      senderWallet: wallet,
+      senderKeyId: keyId,
       jwksPerRecipient: jwksPerRecipient,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -89,8 +90,8 @@ class EncryptedMessage extends DidcommMessage {
 
   static Future<EncryptedMessage> pack(
     DidcommMessage message, {
-    required Wallet wallet,
-    required String keyId,
+    required Wallet senderWallet,
+    required String senderKeyId,
     required List<Jwks> jwksPerRecipient,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
@@ -109,12 +110,12 @@ class EncryptedMessage extends DidcommMessage {
     //   }
     // }
 
-    final publicKey = await wallet.getPublicKey(keyId);
+    final publicKey = await senderWallet.getPublicKey(senderKeyId);
     final ephemeralKeyPair = generateEphemeralKeyPair(publicKey.type);
 
     final jweHeader = await JweHeader.fromWalletKey(
-      wallet,
-      keyId,
+      senderWallet,
+      senderKeyId,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
       jwksPerRecipient: jwksPerRecipient,
@@ -142,8 +143,8 @@ class EncryptedMessage extends DidcommMessage {
     }
 
     final recipients = await _createRecipients(
-      wallet: wallet,
-      keyId: keyId,
+      senderWallet: senderWallet,
+      senderKeyId: senderKeyId,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       jwksPerRecipient: jwksPerRecipient,
       authenticationTag: encryptedInnerMessage.authenticationTag!,
@@ -156,13 +157,13 @@ class EncryptedMessage extends DidcommMessage {
       cipherText: encryptedInnerMessage.data,
       protected: jweHeader,
       recipients: recipients,
-      tag: encryptedInnerMessage.authenticationTag!,
+      authenticationTag: encryptedInnerMessage.authenticationTag!,
       initializationVector: encryptedInnerMessage.initializationVector!,
     );
   }
 
-  Future<Map<String, dynamic>> unpack({required Wallet wallet}) async {
-    final self = await _findSelfAsRecipient(wallet);
+  Future<Map<String, dynamic>> unpack({required Wallet recipientWallet}) async {
+    final self = await _findSelfAsRecipient(recipientWallet);
 
     final senderKeyId = protected.resolveSubjectKeyId();
     final senderDidDocument = await UniversalDIDResolver.resolve(
@@ -173,29 +174,14 @@ class EncryptedMessage extends DidcommMessage {
       senderDidDocument.keyAgreement.first.asJwk().toJson(),
     );
 
-    // TODO: use Ecdh class instead
-    final a = Ecdh1PuForSecp256AndP(
+    final contentEncryptionKey = await Ecdh.decrypt(
+      self.encryptedKey,
+      recipientWallet: recipientWallet,
       jweHeader: protected,
-      authenticationTag: tag,
-      publicKey1:
-          Jwk.fromJson(protected.ephemeralKey.toJson()).toPublicKeyFromPoint(),
-      publicKey2: senderJwk.toPublicKeyFromPoint(),
+      senderJwk: senderJwk,
+      self: self,
+      authenticationTag: authenticationTag,
     );
-
-    final contentEncryptionKey = await a.decryptData(
-      data: self.encryptedKey,
-      wallet: wallet,
-      keyId: self.header.keyId.split('#').last,
-    );
-    // final contentEncryptionKey = await Ecdh.decrypt(
-    //   self.encryptedKey,
-    //   wallet: wallet,
-    //   keyId: self.header.keyId,
-    //   // FIXME
-    //   jwk: Jwk.fromJson(message.protected.ephemeralKey.toJson()),
-    //   authenticationTag: message.tag,
-    //   jweHeader: message.protected,
-    // );
 
     final encrypter = createSymmetricEncrypter(
       protected.encryptionAlgorithm,
@@ -206,7 +192,7 @@ class EncryptedMessage extends DidcommMessage {
       ck.EncryptionResult(
         cipherText,
         initializationVector: initializationVector,
-        authenticationTag: tag,
+        authenticationTag: authenticationTag,
         additionalAuthenticatedData: ascii.encode(
           base64UrlEncodeNoPadding(protected.toJsonBytes()),
         ),
@@ -292,8 +278,8 @@ class EncryptedMessage extends DidcommMessage {
   }
 
   static Future<List<Recipient>> _createRecipients({
-    required Wallet wallet,
-    required String keyId,
+    required Wallet senderWallet,
+    required String senderKeyId,
     required List<Jwks> jwksPerRecipient,
     required JweHeader jweHeader,
     required ck.SymmetricKey contentEncryptionKey,
@@ -301,19 +287,19 @@ class EncryptedMessage extends DidcommMessage {
     required Uint8List authenticationTag,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
   }) async {
-    final publicKey = await wallet.getPublicKey(keyId);
+    final publicKey = await senderWallet.getPublicKey(senderKeyId);
 
     final futures = jwksPerRecipient.map((jwks) async {
       final curve = publicKey.type.asDidcommCompatibleCurve();
-      final jwk = jwks.firstWithCurve(curve);
+      final recipientJwk = jwks.firstWithCurve(curve);
 
       return Recipient(
-        header: RecipientHeader(keyId: jwk.keyId!),
+        header: RecipientHeader(keyId: recipientJwk.keyId!),
         encryptedKey: await Ecdh.encrypt(
           contentEncryptionKey.keyValue,
-          wallet: wallet,
-          keyId: keyId,
-          jwk: jwk,
+          senderWallet: senderWallet,
+          senderKeyId: senderKeyId,
+          recipientJwk: recipientJwk,
           ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
           jweHeader: jweHeader,
           authenticationTag: authenticationTag,
