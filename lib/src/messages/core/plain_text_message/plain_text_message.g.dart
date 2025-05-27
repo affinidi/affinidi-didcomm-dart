@@ -15,18 +15,13 @@ PlainTextMessage _$PlainTextMessageFromJson(Map<String, dynamic> json) =>
       threadId: json['thid'] as String?,
       parentThreadId: json['pthid'] as String?,
       createdTime: _$JsonConverterFromJson<int, DateTime>(
-        json['created_time'],
-        const EpochSecondsConverter().fromJson,
-      ),
+          json['created_time'], const EpochSecondsConverter().fromJson),
       expiresTime: _$JsonConverterFromJson<int, DateTime>(
-        json['expires_time'],
-        const EpochSecondsConverter().fromJson,
-      ),
+          json['expires_time'], const EpochSecondsConverter().fromJson),
       body: json['body'] as Map<String, dynamic>?,
-      attachments:
-          (json['attachments'] as List<dynamic>?)
-              ?.map((e) => Attachment.fromJson(e as Map<String, dynamic>))
-              .toList(),
+      attachments: (json['attachments'] as List<dynamic>?)
+          ?.map((e) => Attachment.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$PlainTextMessageToJson(PlainTextMessage instance) =>
@@ -38,15 +33,11 @@ Map<String, dynamic> _$PlainTextMessageToJson(PlainTextMessage instance) =>
       if (instance.threadId case final value?) 'thid': value,
       if (instance.parentThreadId case final value?) 'pthid': value,
       if (_$JsonConverterToJson<int, DateTime>(
-            instance.createdTime,
-            const EpochSecondsConverter().toJson,
-          )
+              instance.createdTime, const EpochSecondsConverter().toJson)
           case final value?)
         'created_time': value,
       if (_$JsonConverterToJson<int, DateTime>(
-            instance.expiresTime,
-            const EpochSecondsConverter().toJson,
-          )
+              instance.expiresTime, const EpochSecondsConverter().toJson)
           case final value?)
         'expires_time': value,
       if (instance.body case final value?) 'body': value,
@@ -56,9 +47,11 @@ Map<String, dynamic> _$PlainTextMessageToJson(PlainTextMessage instance) =>
 Value? _$JsonConverterFromJson<Json, Value>(
   Object? json,
   Value? Function(Json json) fromJson,
-) => json == null ? null : fromJson(json as Json);
+) =>
+    json == null ? null : fromJson(json as Json);
 
 Json? _$JsonConverterToJson<Json, Value>(
   Value? value,
   Json? Function(Value value) toJson,
-) => value == null ? null : toJson(value);
+) =>
+    value == null ? null : toJson(value);

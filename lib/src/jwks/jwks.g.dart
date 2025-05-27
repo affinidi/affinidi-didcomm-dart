@@ -7,12 +7,11 @@ part of 'jwks.dart';
 // **************************************************************************
 
 Jwks _$JwksFromJson(Map<String, dynamic> json) => Jwks(
-  keys:
-      (json['keys'] as List<dynamic>)
+      keys: (json['keys'] as List<dynamic>)
           .map((e) => Jwk.fromJson(e as Map<String, dynamic>))
           .toList(),
-);
+    );
 
 Map<String, dynamic> _$JwksToJson(Jwks instance) => <String, dynamic>{
-  'keys': instance.keys,
-};
+      'keys': instance.keys,
+    };

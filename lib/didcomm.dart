@@ -3,5 +3,5 @@
 /// More dartdocs go here.
 library;
 
-export 'src/messages/core/core.dart';
+export 'src/messages/core.dart';
 export 'src/errors/errors.dart';
