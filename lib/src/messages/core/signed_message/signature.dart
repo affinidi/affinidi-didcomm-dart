@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import '../recipients/recipient_header.dart';
+import '../encrypted_message/recipients/recipient_header.dart';
 
 part 'signature.g.dart';
 

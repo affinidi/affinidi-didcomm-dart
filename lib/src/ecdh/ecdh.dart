@@ -9,7 +9,7 @@ import '../../didcomm.dart';
 import '../jwks/jwks.dart';
 import '../messages/algorithm_types/algorithms_types.dart';
 import '../messages/jwm/jwe_header.dart';
-import '../messages/recipients/recipient.dart';
+import '../messages/core/core.dart';
 import 'ecdh_1pu/ecdh_1pu_for_secp256_and_p.dart';
 import 'ecdh_1pu/ecdh_1pu_for_x.dart';
 

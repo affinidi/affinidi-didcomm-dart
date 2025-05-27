@@ -1,8 +1,8 @@
 import 'package:didcomm/src/annotations/own_json_properties.dart';
 import 'package:didcomm/src/messages/attachments/attachment.dart';
 import 'package:json_annotation/json_annotation.dart';
-import '../../converters/epoch_seconds_converter.dart';
-import '../didcomm_message.dart';
+import '../../../converters/epoch_seconds_converter.dart';
+import '../../didcomm_message.dart';
 
 part 'plain_text_message.g.dart';
 part 'plain_text_message.own_json_props.g.dart';
