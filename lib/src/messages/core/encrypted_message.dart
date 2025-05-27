@@ -218,8 +218,19 @@ class EncryptedMessage extends DidcommMessage {
 
       if (await wallet.hasKey(keyId)) {
         if (did != null) {
-          final publicKey = await wallet.getPublicKey(keyId);
-          final didDocument = DidKey.generateDocument(publicKey);
+          final DidDocument didDocument;
+
+          // TODO: check if wallet can have common interface
+          if (wallet is Bip32Ed25519Wallet) {
+            final aliceX25519PublicKey = await wallet.getX25519PublicKey(keyId);
+
+            didDocument = DidKey.generateDocument(
+              PublicKey(keyId, aliceX25519PublicKey, KeyType.x25519),
+            );
+          } else {
+            final publicKey = await wallet.getPublicKey(keyId);
+            didDocument = DidKey.generateDocument(publicKey);
+          }
 
           if (didDocument.id != did) {
             continue;
@@ -292,17 +303,19 @@ class EncryptedMessage extends DidcommMessage {
       final curve = publicKey.type.asDidcommCompatibleCurve();
       final recipientJwk = jwks.firstWithCurve(curve);
 
+      final encryptedKey = await Ecdh.encrypt(
+        contentEncryptionKey.keyValue,
+        senderWallet: senderWallet,
+        senderKeyId: senderKeyId,
+        recipientJwk: recipientJwk,
+        ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
+        jweHeader: jweHeader,
+        authenticationTag: authenticationTag,
+      );
+
       return Recipient(
         header: RecipientHeader(keyId: recipientJwk.keyId!),
-        encryptedKey: await Ecdh.encrypt(
-          contentEncryptionKey.keyValue,
-          senderWallet: senderWallet,
-          senderKeyId: senderKeyId,
-          recipientJwk: recipientJwk,
-          ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
-          jweHeader: jweHeader,
-          authenticationTag: authenticationTag,
-        ),
+        encryptedKey: encryptedKey,
       );
     });
 
