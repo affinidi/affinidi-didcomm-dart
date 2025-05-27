@@ -17,22 +17,25 @@ abstract class Ecdh1Pu implements Ecdh {
   Ecdh1Pu({required this.authenticationTag, required this.jweHeader});
 
   Future<({Uint8List ze, Uint8List zs})> getEncryptionSecrets({
-    required Wallet wallet,
-    required String keyId,
+    required Wallet senderWallet,
+    required String senderKeyId,
   });
 
   Future<({Uint8List ze, Uint8List zs})> getDecryptionSecrets({
-    required Wallet wallet,
-    required String keyId,
+    required Wallet recipientWallet,
+    required String recipientKeyId,
   });
 
   @override
   Future<Uint8List> encryptData({
-    required Wallet wallet,
-    required String keyId,
+    required Wallet senderWallet,
+    required String senderKeyId,
     required Uint8List data,
   }) async {
-    final secrets = await getEncryptionSecrets(wallet: wallet, keyId: keyId);
+    final secrets = await getEncryptionSecrets(
+      senderWallet: senderWallet,
+      senderKeyId: senderKeyId,
+    );
     final sharedSecret = _generateSharedSecret(secrets.ze, secrets.zs);
 
     final kw = _getKeyWrappingEncrypter(sharedSecret);
@@ -41,14 +44,18 @@ abstract class Ecdh1Pu implements Ecdh {
 
   @override
   Future<Uint8List> decryptData({
-    required Wallet wallet,
-    required String keyId,
+    required Wallet recipientWallet,
+    required String recipientKeyId,
     required Uint8List data,
   }) async {
-    final secrets = await getDecryptionSecrets(wallet: wallet, keyId: keyId);
-    final sharedSecret = _generateSharedSecret(secrets.ze, secrets.zs);
+    final secrets = await getDecryptionSecrets(
+      recipientWallet: recipientWallet,
+      recipientKeyId: recipientKeyId,
+    );
 
+    final sharedSecret = _generateSharedSecret(secrets.ze, secrets.zs);
     final kw = _getKeyWrappingEncrypter(sharedSecret);
+
     return kw.decrypt(ck.EncryptionResult(data));
   }
 

@@ -74,7 +74,7 @@ void main() async {
 
   final unpackedMessageByBod = await DidcommMessage.unpackPlainTextMessage(
     message: jsonDecode(sentMessageByAlice),
-    wallet: bobWallet,
+    recipientWallet: bobWallet,
   );
 
   print(unpackedMessageByBod.toJson());

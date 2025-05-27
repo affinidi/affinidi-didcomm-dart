@@ -13,18 +13,20 @@ class DidcommMessage {
 
   static Future<PlainTextMessage> unpackPlainTextMessage({
     required Map<String, dynamic> message,
-    required Wallet wallet,
+    required Wallet recipientWallet,
   }) async {
     var currentMessage = message;
 
     if (EncryptedMessage.isEncryptedMessage(currentMessage)) {
       final encryptedMessage = EncryptedMessage.fromJson(currentMessage);
-      currentMessage = await encryptedMessage.unpack(wallet: wallet);
+      currentMessage = await encryptedMessage.unpack(
+        recipientWallet: recipientWallet,
+      );
     }
 
     if (SignedMessage.isSignedMessage(currentMessage)) {
       final signedMessage = SignedMessage.fromJson(currentMessage);
-      currentMessage = await signedMessage.unpack(wallet: wallet);
+      currentMessage = await signedMessage.unpack(wallet: recipientWallet);
     }
 
     return PlainTextMessage.fromJson(currentMessage);
