@@ -4,7 +4,7 @@ version: 0.0.1
 repository: https://github.com/affinidi/didcomm-dart
 
 environment:
-  sdk: ^3.7.2
+  sdk: ^3.6.0
 
 dependencies:
   analyzer: ^7.4.5

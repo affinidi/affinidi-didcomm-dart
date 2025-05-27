@@ -15,7 +15,7 @@ import '../../../common/encoding.dart';
 import '../../../extensions/extensions.dart';
 import '../../algorithm_types/algorithms_types.dart';
 import '../../didcomm_message.dart';
-import '../../jwm/jwe_header.dart';
+import '../../jwm.dart';
 import 'recipients/recipient.dart';
 import 'recipients/recipient_header.dart';
 

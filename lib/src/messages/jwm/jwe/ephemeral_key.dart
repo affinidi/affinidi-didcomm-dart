@@ -2,9 +2,9 @@ import 'dart:typed_data';
 
 import 'package:json_annotation/json_annotation.dart';
 
-import '../../converters/base64_url_converter.dart';
-import '../../curves/curve_type.dart';
-import '../../messages/jwm/ephemeral_key_type.dart';
+import '../../../converters/base64_url_converter.dart';
+import '../../../curves/curve_type.dart';
+import 'ephemeral_key_type.dart';
 
 part 'ephemeral_key.g.dart';
 

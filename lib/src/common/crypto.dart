@@ -1,18 +1,12 @@
 import 'dart:typed_data';
 
-import 'package:didcomm/src/ecdh/ecdh_es/ecdh_es_for_secp_and_p.dart';
-import 'package:didcomm/src/ecdh/ecdh_es/ecdh_es_for_x.dart';
-import 'package:ssi/ssi.dart' show KeyType, Wallet;
+import 'package:ssi/ssi.dart' show KeyType;
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
 import 'package:elliptic/elliptic.dart' as ec;
 import 'package:x25519/x25519.dart' as x25519;
 
-import '../ecdh/ecdh.dart';
 import '../errors/errors.dart';
-import '../jwks/jwks.dart';
 import '../messages/algorithm_types/algorithms_types.dart';
-import '../messages/jwm/jwe_header.dart';
-import '../extensions/extensions.dart';
 
 ({Uint8List privateKeyBytes, Uint8List? publicKeyBytes})
 generateEphemeralKeyPair(KeyType keyType) {
