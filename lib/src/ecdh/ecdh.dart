@@ -163,18 +163,15 @@ abstract class Ecdh {
       return EcdhEsForX(
         jweHeader: jweHeader,
         ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
-        publicKey: recipientJwk.x!,
+        publicKeyBytes: recipientJwk.x!,
       );
     }
 
     if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
-      final receiverPublicKeyBytes =
-          recipientJwk.toPublicKeyFromPoint().toBytes();
-
       return Ecdh1PuForX(
         jweHeader: jweHeader,
-        publicKeyBytes1: receiverPublicKeyBytes,
-        publicKeyBytes2: receiverPublicKeyBytes,
+        publicKeyBytes1: recipientJwk.x!,
+        publicKeyBytes2: recipientJwk.x!,
         privateKeyBytes1: ephemeralPrivateKeyBytes,
         authenticationTag: authenticationTag,
       );
