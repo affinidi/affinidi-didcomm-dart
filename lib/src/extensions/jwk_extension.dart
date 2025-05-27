@@ -20,12 +20,12 @@ extension JwkExtension on Jwk {
     }
 
     return ec.PublicKey.fromPoint(
-      _createCurveByType(curve!),
+      _createSecp256OrPCurveCurveByType(curve!),
       ec.AffinePoint.fromXY(x!.toBigInt(), y!.toBigInt()),
     );
   }
 
-  ec.Curve _createCurveByType(CurveType curveType) {
+  ec.Curve _createSecp256OrPCurveCurveByType(CurveType curveType) {
     if (curveType == CurveType.p256) {
       return ec.getP256();
     }
