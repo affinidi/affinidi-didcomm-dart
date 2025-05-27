@@ -4,12 +4,12 @@ import 'package:json_annotation/json_annotation.dart';
 import '../../converters/epoch_seconds_converter.dart';
 import '../didcomm_message.dart';
 
-part 'plaintext_message.g.dart';
-part 'plaintext_message.own_json_props.g.dart';
+part 'plain_text_message.g.dart';
+part 'plain_text_message.own_json_props.g.dart';
 
 @OwnJsonProperties()
 @JsonSerializable(includeIfNull: false)
-class PlaintextMessage extends DidcommMessage {
+class PlainTextMessage extends DidcommMessage {
   final String id;
   final Uri type;
   final String? from;
@@ -32,7 +32,7 @@ class PlaintextMessage extends DidcommMessage {
   final Map<String, dynamic>? body;
   final List<Attachment>? attachments;
 
-  PlaintextMessage({
+  PlainTextMessage({
     required this.id,
     required this.type,
     this.from,
@@ -45,13 +45,13 @@ class PlaintextMessage extends DidcommMessage {
     this.attachments,
   });
 
-  factory PlaintextMessage.fromJson(Map<String, dynamic> json) {
-    final message = _$PlaintextMessageFromJson(json)
+  factory PlainTextMessage.fromJson(Map<String, dynamic> json) {
+    final message = _$PlainTextMessageFromJson(json)
       ..assignCustomHeaders(json, _$ownJsonProperties);
 
     return message;
   }
 
   Map<String, dynamic> toJson() =>
-      withCustomHeaders(_$PlaintextMessageToJson(this));
+      withCustomHeaders(_$PlainTextMessageToJson(this));
 }

@@ -1,13 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'plaintext_message.dart';
+part of 'plain_text_message.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-PlaintextMessage _$PlaintextMessageFromJson(Map<String, dynamic> json) =>
-    PlaintextMessage(
+PlainTextMessage _$PlainTextMessageFromJson(Map<String, dynamic> json) =>
+    PlainTextMessage(
       id: json['id'] as String,
       type: Uri.parse(json['type'] as String),
       from: json['from'] as String?,
@@ -29,7 +29,7 @@ PlaintextMessage _$PlaintextMessageFromJson(Map<String, dynamic> json) =>
               .toList(),
     );
 
-Map<String, dynamic> _$PlaintextMessageToJson(PlaintextMessage instance) =>
+Map<String, dynamic> _$PlainTextMessageToJson(PlainTextMessage instance) =>
     <String, dynamic>{
       'id': instance.id,
       'type': instance.type.toString(),

@@ -11,7 +11,7 @@ class DidcommMessage {
   dynamic operator [](String key) => _customHeaders[key];
   void operator []=(String key, dynamic value) => _customHeaders[key] = value;
 
-  static Future<PlaintextMessage> unpackPlainTextMessage({
+  static Future<PlainTextMessage> unpackPlainTextMessage({
     required Map<String, dynamic> message,
     required Wallet wallet,
   }) async {
@@ -27,7 +27,7 @@ class DidcommMessage {
       currentMessage = await signedMessage.unpack(wallet: wallet);
     }
 
-    return PlaintextMessage.fromJson(currentMessage);
+    return PlainTextMessage.fromJson(currentMessage);
   }
 
   static SignedMessage unpackSignedMessage({
