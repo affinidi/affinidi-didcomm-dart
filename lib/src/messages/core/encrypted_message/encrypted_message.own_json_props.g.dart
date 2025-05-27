@@ -12,5 +12,5 @@ const _$ownJsonProperties = [
   'protected',
   'recipients',
   'tag',
-  'iv',
+  'iv'
 ];

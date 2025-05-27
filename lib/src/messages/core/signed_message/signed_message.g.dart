@@ -9,10 +9,9 @@ part of 'signed_message.dart';
 SignedMessage _$SignedMessageFromJson(Map<String, dynamic> json) =>
     SignedMessage(
       payload: json['payload'] as String,
-      signatures:
-          (json['signatures'] as List<dynamic>)
-              .map((e) => Signature.fromJson(e as Map<String, dynamic>))
-              .toList(),
+      signatures: (json['signatures'] as List<dynamic>)
+          .map((e) => Signature.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$SignedMessageToJson(SignedMessage instance) =>

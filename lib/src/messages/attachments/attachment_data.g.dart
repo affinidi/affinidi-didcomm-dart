@@ -10,10 +10,9 @@ AttachmentData _$AttachmentDataFromJson(Map<String, dynamic> json) =>
     AttachmentData(
       jws: json['jws'] as String?,
       hash: json['hash'] as String?,
-      links:
-          (json['links'] as List<dynamic>?)
-              ?.map((e) => Uri.parse(e as String))
-              .toList(),
+      links: (json['links'] as List<dynamic>?)
+          ?.map((e) => Uri.parse(e as String))
+          .toList(),
       base64: json['base64'] as String?,
       json: json['json'] as String?,
     );
