@@ -19,6 +19,7 @@ extension WalletExtension on Wallet {
       return await keyPair.computeEcdhSecret(othersPublicKeyBytes);
     }
 
+    // TODO: add secp from the latest SSI package
     throw UnsupportedKeyTypeError(keyPair.publicKey.type);
   }
 }
