@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:json_annotation/json_annotation.dart';
 
-import '../../converters/base64_url_converter.dart';
+import '../../../../converters/base64_url_converter.dart';
 import 'recipient_header.dart';
 
 part 'recipient.g.dart';
