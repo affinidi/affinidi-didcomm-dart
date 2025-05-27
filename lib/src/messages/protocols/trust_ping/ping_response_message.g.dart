@@ -10,5 +10,5 @@ PingResponseMessage _$PingResponseMessageFromJson(Map<String, dynamic> json) =>
     PingResponseMessage();
 
 Map<String, dynamic> _$PingResponseMessageToJson(
-  PingResponseMessage instance,
-) => <String, dynamic>{};
+        PingResponseMessage instance) =>
+    <String, dynamic>{};

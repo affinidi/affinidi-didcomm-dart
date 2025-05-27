@@ -7,9 +7,9 @@ part of 'problem_report_message.dart';
 // **************************************************************************
 
 ProblemReportMessage _$ProblemReportMessageFromJson(
-  Map<String, dynamic> json,
-) => ProblemReportMessage();
+        Map<String, dynamic> json) =>
+    ProblemReportMessage();
 
 Map<String, dynamic> _$ProblemReportMessageToJson(
-  ProblemReportMessage instance,
-) => <String, dynamic>{};
+        ProblemReportMessage instance) =>
+    <String, dynamic>{};
