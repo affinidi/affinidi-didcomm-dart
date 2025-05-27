@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:ssi/ssi.dart';
 
-import '../signatures/signature.dart';
-import '../didcomm_message.dart';
-import '../../annotations/own_json_properties.dart';
-import '../../common/encoding.dart';
-import '../../extensions/extensions.dart';
-import 'plain_text_message.dart';
+import 'signature.dart';
+import '../../didcomm_message.dart';
+import '../../../annotations/own_json_properties.dart';
+import '../../../common/encoding.dart';
+import '../../../extensions/extensions.dart';
+import '../plain_text_message/plain_text_message.dart';
 
 part 'signed_message.g.dart';
 part 'signed_message.own_json_props.g.dart';
