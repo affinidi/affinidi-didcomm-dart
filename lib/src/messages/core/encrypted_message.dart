@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:didcomm/src/ecdh/ecdh_1pu/ecdh_1pu_for_secp256_and_p.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
 import 'package:ssi/ssi.dart' hide Jwk;

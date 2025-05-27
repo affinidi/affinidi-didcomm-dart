@@ -6,11 +6,11 @@ import '../../extensions/extensions.dart';
 import 'ecdh_es.dart';
 
 class EcdhEsForX extends EcdhEs {
-  final Uint8List publicKey;
+  final Uint8List publicKeyBytes;
   final Uint8List? ephemeralPrivateKeyBytes;
 
   EcdhEsForX({
-    required this.publicKey,
+    required this.publicKeyBytes,
     this.ephemeralPrivateKeyBytes,
     required super.jweHeader,
   });
@@ -21,7 +21,7 @@ class EcdhEsForX extends EcdhEs {
       throw Exception('Private key needed for encryption data.');
     }
 
-    return x25519.X25519(ephemeralPrivateKeyBytes!, publicKey);
+    return x25519.X25519(ephemeralPrivateKeyBytes!, publicKeyBytes);
   }
 
   @override
@@ -31,7 +31,7 @@ class EcdhEsForX extends EcdhEs {
   }) async {
     return await recipientWallet.computeEcdhSecret(
       keyId: recipientKeyId,
-      othersPublicKeyBytes: publicKey,
+      othersPublicKeyBytes: publicKeyBytes,
     );
   }
 }
