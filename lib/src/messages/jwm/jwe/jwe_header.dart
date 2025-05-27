@@ -5,14 +5,14 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto/crypto.dart' show sha256;
 import 'package:ssi/ssi.dart';
 
-import '../../common/crypto.dart';
-import '../../common/encoding.dart';
-import '../../errors/errors.dart';
-import '../../jwks/jwks.dart';
-import '../../extensions/extensions.dart';
-import '../../curves/curve_type.dart';
-import '../../messages/jwm/ephemeral_key_type.dart';
-import '../algorithm_types/algorithms_types.dart';
+import '../../../common/crypto.dart';
+import '../../../common/encoding.dart';
+import '../../../errors/errors.dart';
+import '../../../jwks/jwks.dart';
+import '../../../extensions/extensions.dart';
+import '../../../curves/curve_type.dart';
+import 'ephemeral_key_type.dart';
+import '../../algorithm_types/algorithms_types.dart';
 import 'ephemeral_key.dart';
 
 part 'jwe_header.g.dart';

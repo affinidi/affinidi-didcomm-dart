@@ -7,7 +7,7 @@ import 'package:ssi/ssi.dart';
 
 import '../../common/encoding.dart';
 import '../../messages/algorithm_types/key_wrapping_algorithm.dart';
-import '../../messages/jwm/jwe_header.dart';
+import '../../messages/jwm.dart';
 import '../ecdh.dart';
 
 abstract class EcdhEs implements Ecdh {

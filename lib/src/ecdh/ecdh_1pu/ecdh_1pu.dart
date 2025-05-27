@@ -7,7 +7,7 @@ import 'package:ssi/ssi.dart';
 
 import '../../common/encoding.dart';
 import '../../messages/algorithm_types/algorithms_types.dart';
-import '../../messages/jwm/jwe_header.dart';
+import '../../messages/jwm.dart';
 import '../ecdh.dart';
 
 abstract class Ecdh1Pu implements Ecdh {
