@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/ecdh/ecdh_1pu/ecdh_1pu_for_secp256_and_p.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
@@ -250,13 +249,7 @@ class EncryptedMessage extends DidcommMessage {
   }
 
   static bool isEncryptedMessage(Map<String, dynamic> message) {
-    for (final prop in _$ownJsonProperties) {
-      if (!message.containsKey(prop)) {
-        return false;
-      }
-    }
-
-    return true;
+    return _$ownJsonProperties.every((prop) => message.containsKey(prop));
   }
 
   factory EncryptedMessage.fromJson(Map<String, dynamic> json) {

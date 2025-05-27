@@ -1,13 +1,14 @@
 import 'dart:convert';
 
-import 'package:didcomm/src/annotations/own_json_properties.dart';
-import 'package:didcomm/src/common/encoding.dart';
-import 'package:didcomm/src/extensions/extensions.dart';
-import 'package:didcomm/src/messages/core/plaintext_message.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:ssi/ssi.dart';
+
 import '../signatures/signature.dart';
 import '../didcomm_message.dart';
+import '../../annotations/own_json_properties.dart';
+import '../../common/encoding.dart';
+import '../../extensions/extensions.dart';
+import 'plain_text_message.dart';
 
 part 'signed_message.g.dart';
 part 'signed_message.own_json_props.g.dart';
@@ -24,7 +25,7 @@ class SignedMessage extends DidcommMessage {
   SignedMessage({required this.payload, required this.signatures});
 
   static Future<SignedMessage> pack(
-    PlaintextMessage message, {
+    PlainTextMessage message, {
     required Wallet wallet,
     required String keyId,
   }) async {
@@ -40,13 +41,7 @@ class SignedMessage extends DidcommMessage {
   }
 
   static bool isSignedMessage(Map<String, dynamic> message) {
-    for (final prop in _$ownJsonProperties) {
-      if (!message.containsKey(prop)) {
-        return false;
-      }
-    }
-
-    return true;
+    return _$ownJsonProperties.every((prop) => message.containsKey(prop));
   }
 
   factory SignedMessage.fromJson(Map<String, dynamic> json) {
