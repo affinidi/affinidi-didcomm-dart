@@ -21,8 +21,8 @@ class Ecdh1PuForX extends Ecdh1Pu {
 
   @override
   Future<({Uint8List ze, Uint8List zs})> getEncryptionSecrets({
-    required Wallet wallet,
-    required String keyId,
+    required Wallet senderWallet,
+    required String senderKeyId,
   }) async {
     if (privateKeyBytes1 == null) {
       throw Exception('Private key needed for encryption data.');
@@ -30,8 +30,8 @@ class Ecdh1PuForX extends Ecdh1Pu {
 
     final ze = x25519.X25519(privateKeyBytes1!.sublist(0, 32), publicKeyBytes1);
 
-    final zs = await wallet.computeEcdhSecret(
-      keyId: keyId,
+    final zs = await senderWallet.computeEcdhSecret(
+      keyId: senderKeyId,
       othersPublicKeyBytes: publicKeyBytes2,
     );
 
@@ -40,16 +40,16 @@ class Ecdh1PuForX extends Ecdh1Pu {
 
   @override
   Future<({Uint8List ze, Uint8List zs})> getDecryptionSecrets({
-    required Wallet wallet,
-    required String keyId,
+    required Wallet recipientWallet,
+    required String recipientKeyId,
   }) async {
-    final ze = await wallet.computeEcdhSecret(
-      keyId: keyId,
+    final ze = await recipientWallet.computeEcdhSecret(
+      keyId: recipientKeyId,
       othersPublicKeyBytes: publicKeyBytes1,
     );
 
-    final zs = await wallet.computeEcdhSecret(
-      keyId: keyId,
+    final zs = await recipientWallet.computeEcdhSecret(
+      keyId: recipientKeyId,
       othersPublicKeyBytes: publicKeyBytes2,
     );
 

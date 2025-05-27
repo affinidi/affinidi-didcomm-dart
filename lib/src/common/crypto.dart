@@ -76,34 +76,3 @@ ck.Encrypter createSymmetricEncrypter(
 
   throw UnsupportedEncryptionAlgorithmError(encryptionAlgorithm);
 }
-
-Future<Uint8List> anonymousEncryptWithEcdh(
-  Uint8List data, {
-  required Wallet wallet,
-  required String keyId,
-  required Jwk jwk,
-  required KeyWrappingAlgorithm keyWrappingAlgorithm,
-  required Uint8List ephemeralPrivateKeyBytes,
-  required JweHeader jweHeader,
-}) async {
-  final curve = jweHeader.ephemeralKey.curve;
-  final Ecdh ecdh;
-
-  if (curve.isSecp256OrPCurve()) {
-    ecdh = EcdhEsForSecpAndP(
-      jweHeader: jweHeader,
-      ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
-      publicKey: jwk.toPublicKeyFromPoint(),
-    );
-  } else if (curve.isXCurve()) {
-    ecdh = EcdhEsForX(
-      jweHeader: jweHeader,
-      ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
-      publicKey: jwk.x!,
-    );
-  } else {
-    throw UnsupportedCurveError(curve);
-  }
-
-  return ecdh.encryptData(wallet: wallet, keyId: keyId, data: data);
-}
