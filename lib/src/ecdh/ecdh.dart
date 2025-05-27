@@ -69,12 +69,11 @@ abstract class Ecdh {
         authenticationTag: authenticationTag,
       );
     } else if (curveType.isXCurve()) {
-      throw UnsupportedCurveError(curveType);
-      // ecdh = _createForXCurveForEncryption(
-      //   jweHeader: jweHeader,
-      //   recipientJwk: jwk,
-      //   authenticationTag: authenticationTag,
-      // );
+      ecdh = _createForXCurveForDecryption(
+        jweHeader: jweHeader,
+        senderJwk: senderJwk,
+        authenticationTag: authenticationTag,
+      );
     } else {
       throw UnsupportedCurveError(curveType);
     }
@@ -173,6 +172,37 @@ abstract class Ecdh {
         publicKeyBytes1: recipientJwk.x!,
         publicKeyBytes2: recipientJwk.x!,
         privateKeyBytes1: ephemeralPrivateKeyBytes,
+        authenticationTag: authenticationTag,
+      );
+    }
+
+    throw UnsupportedKeyWrappingAlgorithmError(keyWrappingAlgorithm);
+  }
+
+  static Ecdh _createForXCurveForDecryption({
+    required JweHeader jweHeader,
+    required Uint8List authenticationTag,
+    required Jwk senderJwk,
+  }) {
+    final keyWrappingAlgorithm = jweHeader.keyWrappingAlgorithm;
+
+    if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdhEs) {
+      return EcdhEsForX(
+        jweHeader: jweHeader,
+        publicKeyBytes: jweHeader.ephemeralKey.x,
+      );
+    }
+
+    // ecdhProfile = ECDHES_X25519(
+    // apv: protectedHeader.apv,
+    // enc: protectedHeader.enc,
+    // publicKey: publicKeyBytesFromJwk(protectedHeader.epk));
+
+    if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
+      return Ecdh1PuForX(
+        jweHeader: jweHeader,
+        publicKeyBytes1: jweHeader.ephemeralKey.x,
+        publicKeyBytes2: senderJwk.x!,
         authenticationTag: authenticationTag,
       );
     }
