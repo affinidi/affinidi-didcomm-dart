@@ -18,7 +18,7 @@ class EcdhEsForX extends EcdhEs {
   @override
   Future<Uint8List> getEncryptionSecret() async {
     if (ephemeralPrivateKeyBytes == null) {
-      throw Exception('Private key needed for encryption data.');
+      throw Exception('Private key is needed for encryption data.');
     }
 
     return x25519.X25519(ephemeralPrivateKeyBytes!, publicKeyBytes);

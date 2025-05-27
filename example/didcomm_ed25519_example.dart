@@ -37,7 +37,13 @@ void main() async {
     derivationPath: "m/44'/60'/0'/0'/0'",
   );
 
-  final aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
+  final aliceX25519PublicKey = await aliceWallet.getX25519PublicKey(
+    aliceKeyPair.id,
+  );
+
+  final aliceDidDocument = DidKey.generateDocument(
+    PublicKey(aliceKeyId, aliceX25519PublicKey, KeyType.x25519),
+  );
 
   final bobKeyId = 'bob-key-1';
   final bobKeyPair = await bobWallet.deriveKey(
@@ -46,7 +52,11 @@ void main() async {
     derivationPath: "m/44'/60'/0'/0'/0'",
   );
 
-  final bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
+  final bobX25519PublicKey = await bobWallet.getX25519PublicKey(bobKeyPair.id);
+
+  final bobDidDocument = DidKey.generateDocument(
+    PublicKey(bobKeyId, bobX25519PublicKey, KeyType.x25519),
+  );
 
   // TODO: kid is not available in the Jwk anymore. clarify with the team
   final bobJwk = bobDidDocument.keyAgreement[0].asJwk().toJson();

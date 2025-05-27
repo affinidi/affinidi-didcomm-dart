@@ -44,9 +44,10 @@ abstract class EcdhEs implements Ecdh {
       recipientWallet: recipientWallet,
       recipientKeyId: recipientKeyId,
     );
-    final sharedSecret = _generateSharedSecret(secret);
 
+    final sharedSecret = _generateSharedSecret(secret);
     final kw = _getKeyWrappingEncrypter(sharedSecret);
+
     return kw.decrypt(ck.EncryptionResult(data));
   }
 
