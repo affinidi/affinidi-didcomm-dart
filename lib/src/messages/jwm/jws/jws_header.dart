@@ -5,7 +5,7 @@ part 'jws_header.g.dart';
 @JsonSerializable()
 class JwsHeader {
   @JsonKey(name: 'alg')
-  final String? algorithm;
+  final String algorithm;
 
   @JsonKey(name: 'crv')
   final String? curve;
@@ -14,7 +14,7 @@ class JwsHeader {
   final String mimeType;
 
   JwsHeader({
-    this.algorithm,
+    required this.algorithm,
     this.curve,
     required this.mimeType,
   });
