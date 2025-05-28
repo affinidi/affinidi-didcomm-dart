@@ -45,6 +45,13 @@ void main() async {
     PublicKey(aliceKeyId, aliceX25519PublicKey, KeyType.x25519),
   );
 
+  final aliceSigner = DidSigner(
+    didDocument: aliceDidDocument,
+    keyPair: aliceKeyPair,
+    didKeyId: aliceDidDocument.verificationMethod[0].id,
+    signatureScheme: SignatureScheme.ed25519_sha256,
+  );
+
   final bobKeyId = 'bob-key-1';
   final bobKeyPair = await bobWallet.deriveKey(
     keyId: bobKeyId,
@@ -72,16 +79,15 @@ void main() async {
 
   plainTextMassage['custom-header'] = 'custom-value';
 
-  print(plainTextMassage.toJson());
+  print(jsonEncode(plainTextMassage));
   print('');
 
   final signedMessageByAlice = await SignedMessage.pack(
     plainTextMassage,
-    wallet: aliceWallet,
-    keyId: aliceKeyId,
+    signer: aliceSigner,
   );
 
-  print(signedMessageByAlice.toJson());
+  print(jsonEncode(signedMessageByAlice));
   print('');
 
   final encryptedMessageByAlice = await EncryptedMessage.packWithAuthentication(

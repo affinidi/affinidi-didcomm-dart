@@ -25,8 +25,7 @@ part 'encrypted_message.own_json_props.g.dart';
 @OwnJsonProperties()
 @JsonSerializable(includeIfNull: false)
 class EncryptedMessage extends DidcommMessage {
-  @override
-  String get mediaType => 'application/didcomm-encrypted+json';
+  static final mediaType = 'application/didcomm-encrypted+json';
 
   @JsonKey(name: 'ciphertext')
   @Base64UrlConverter()
