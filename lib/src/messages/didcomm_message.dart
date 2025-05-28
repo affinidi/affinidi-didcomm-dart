@@ -5,7 +5,7 @@ import 'package:meta/meta.dart';
 class DidcommMessage {
   DidcommMessage();
 
-  String get mediaType => 'application/didcomm-plain+json';
+  static final mediaType = 'application/didcomm-plain+json';
   final Map<String, dynamic> _customHeaders = {};
 
   dynamic operator [](String key) => _customHeaders[key];

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:ssi/ssi.dart';
 
+import '../../jwm.dart';
 import 'signature.dart';
 import '../../didcomm_message.dart';
 import '../../../annotations/own_json_properties.dart';
@@ -16,8 +17,7 @@ part 'signed_message.own_json_props.g.dart';
 @OwnJsonProperties()
 @JsonSerializable(includeIfNull: false)
 class SignedMessage extends DidcommMessage {
-  @override
-  String get mediaType => 'application/didcomm-signed+json';
+  static final mediaType = 'application/didcomm-signed+json';
 
   final String payload;
   final List<Signature> signatures;
@@ -26,12 +26,29 @@ class SignedMessage extends DidcommMessage {
 
   static Future<SignedMessage> pack(
     PlainTextMessage message, {
-    required Wallet wallet,
-    required String keyId,
+    required DidSigner signer,
   }) async {
+    final jwsHeader = JwsHeader(
+      mimeType: mediaType,
+      algorithm: signer.signatureScheme.alg,
+      curve: signer.signatureScheme.crv,
+    );
+
+    final encodedPayload = base64UrlEncodeNoPadding(message.toJsonBytes());
+    final encodedHeader = base64UrlEncodeNoPadding(jwsHeader.toJsonBytes());
+
+    final signingInput = ascii.encode('$encodedHeader.$encodedPayload');
+    final signature = await signer.sign(signingInput);
+
     return SignedMessage(
-      payload: base64UrlEncode(message.toJsonBytes()),
-      signatures: [],
+      payload: encodedPayload,
+      signatures: [
+        Signature(
+          signature: signature,
+          protected: jwsHeader.toJsonBytes(),
+          header: SignatureHeader(keyId: signer.keyId),
+        )
+      ],
     );
   }
 

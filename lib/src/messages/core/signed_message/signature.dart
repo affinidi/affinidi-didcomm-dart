@@ -1,13 +1,18 @@
+import 'dart:typed_data';
+
 import 'package:json_annotation/json_annotation.dart';
-import '../encrypted_message/recipients/recipient_header.dart';
+import '../../../converters/base64_url_converter.dart';
+import '../../jwm.dart';
 
 part 'signature.g.dart';
 
 @JsonSerializable()
 class Signature {
-  final String protected;
-  final String signature;
-  final RecipientHeader header;
+  @Base64UrlConverter()
+  final Uint8List protected;
+  @Base64UrlConverter()
+  final Uint8List signature;
+  final SignatureHeader header;
 
   Signature({
     required this.protected,
