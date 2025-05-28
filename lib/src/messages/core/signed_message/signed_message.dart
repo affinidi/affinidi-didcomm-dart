@@ -65,7 +65,7 @@ class SignedMessage extends DidcommMessage {
   Future<bool> areSignaturesValid() async {
     for (final signature in signatures) {
       final signatureScheme =
-          SignatureScheme.fromString(signature.protected.algorithm!);
+          SignatureScheme.fromString(signature.protected.algorithm);
 
       final verifier = await DidVerifier.create(
         algorithm: signatureScheme,
@@ -75,7 +75,7 @@ class SignedMessage extends DidcommMessage {
 
       final jwsHeader = JwsHeader(
         mimeType: mediaType,
-        algorithm: signature.protected.algorithm!,
+        algorithm: signature.protected.algorithm,
         curve: signature.protected.curve,
       );
 
