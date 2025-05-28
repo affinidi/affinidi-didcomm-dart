@@ -5,6 +5,7 @@
     "ciphertext",
     "didcomm",
     "ecdh",
+    "eddsa",
     "Encrypter",
     "Hmac",
     "lastmod",
