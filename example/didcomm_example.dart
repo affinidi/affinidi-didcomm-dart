@@ -22,6 +22,13 @@ void main() async {
 
   final aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
 
+  final aliceSigner = DidSigner(
+    didDocument: aliceDidDocument,
+    keyPair: aliceKeyPair,
+    didKeyId: aliceDidDocument.verificationMethod[0].id,
+    signatureScheme: SignatureScheme.ecdsa_p256_sha256,
+  );
+
   final bobKeyId = 'bob-key-1';
   final bobKeyPair = await bobWallet.generateKey(
     keyId: bobKeyId,
@@ -44,16 +51,15 @@ void main() async {
 
   plainTextMassage['custom-header'] = 'custom-value';
 
-  print(plainTextMassage.toJson());
+  print(jsonEncode(plainTextMassage));
   print('');
 
   final signedMessageByAlice = await SignedMessage.pack(
     plainTextMassage,
-    wallet: aliceWallet,
-    keyId: aliceKeyId,
+    signer: aliceSigner,
   );
 
-  print(signedMessageByAlice.toJson());
+  print(jsonEncode(signedMessageByAlice));
   print('');
 
   final encryptedMessageByAlice = await EncryptedMessage.packWithAuthentication(
