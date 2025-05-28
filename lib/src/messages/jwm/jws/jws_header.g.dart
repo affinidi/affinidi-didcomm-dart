@@ -7,7 +7,7 @@ part of 'jws_header.dart';
 // **************************************************************************
 
 JwsHeader _$JwsHeaderFromJson(Map<String, dynamic> json) => JwsHeader(
-      algorithm: json['alg'] as String?,
+      algorithm: json['alg'] as String,
       curve: json['crv'] as String?,
       mimeType: json['typ'] as String,
     );

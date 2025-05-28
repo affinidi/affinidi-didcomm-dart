@@ -106,7 +106,7 @@ void main() async {
   print(sentMessageByAlice);
   print('');
 
-  final unpackedMessageByBod = await DidcommMessage.unpackPlainTextMessage(
+  final unpackedMessageByBod = await DidcommMessage.unpackToPlainTextMessage(
     message: jsonDecode(sentMessageByAlice),
     recipientWallet: bobWallet,
   );
