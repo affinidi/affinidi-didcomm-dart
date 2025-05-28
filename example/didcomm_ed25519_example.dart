@@ -49,7 +49,7 @@ void main() async {
     didDocument: aliceDidDocument,
     keyPair: aliceKeyPair,
     didKeyId: aliceDidDocument.verificationMethod[0].id,
-    signatureScheme: SignatureScheme.ed25519_sha256,
+    signatureScheme: SignatureScheme.eddsa_sha512,
   );
 
   final bobKeyId = 'bob-key-1';
