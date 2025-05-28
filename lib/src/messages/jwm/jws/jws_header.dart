@@ -4,6 +4,7 @@ part 'jws_header.g.dart';
 
 @JsonSerializable()
 class JwsHeader {
+  // TODO: clarify with SSI why it is null here: https://github.com/affinidi/affinidi-ssi-dart/blob/main/lib/src/types.dart#L69
   @JsonKey(name: 'alg')
   final String algorithm;
 
