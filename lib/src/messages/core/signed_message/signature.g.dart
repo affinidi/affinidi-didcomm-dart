@@ -7,15 +7,14 @@ part of 'signature.dart';
 // **************************************************************************
 
 Signature _$SignatureFromJson(Map<String, dynamic> json) => Signature(
-      protected:
-          const Base64UrlConverter().fromJson(json['protected'] as String),
+      protected: JwsHeader.fromJson(json['protected'] as Map<String, dynamic>),
       signature:
           const Base64UrlConverter().fromJson(json['signature'] as String),
       header: SignatureHeader.fromJson(json['header'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$SignatureToJson(Signature instance) => <String, dynamic>{
-      'protected': const Base64UrlConverter().toJson(instance.protected),
+      'protected': instance.protected,
       'signature': const Base64UrlConverter().toJson(instance.signature),
       'header': instance.header,
     };
