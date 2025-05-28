@@ -30,7 +30,8 @@ class SignedMessage extends DidcommMessage {
   }) async {
     final jwsHeader = JwsHeader(
       mimeType: mediaType,
-      algorithm: signer.signatureScheme.alg,
+      // TODO: clarify alg with SSI
+      algorithm: signer.signatureScheme.alg!,
       curve: signer.signatureScheme.crv,
     );
 
