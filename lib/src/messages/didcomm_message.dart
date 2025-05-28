@@ -26,7 +26,7 @@ class DidcommMessage {
 
     if (SignedMessage.isSignedMessage(currentMessage)) {
       final signedMessage = SignedMessage.fromJson(currentMessage);
-      currentMessage = await signedMessage.unpack(wallet: recipientWallet);
+      currentMessage = await signedMessage.unpack();
     }
 
     return PlainTextMessage.fromJson(currentMessage);

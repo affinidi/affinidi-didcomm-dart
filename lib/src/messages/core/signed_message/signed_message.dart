@@ -45,16 +45,51 @@ class SignedMessage extends DidcommMessage {
       signatures: [
         Signature(
           signature: signature,
-          protected: jwsHeader.toJsonBytes(),
+          protected: jwsHeader,
           header: SignatureHeader(keyId: signer.keyId),
         )
       ],
     );
   }
 
-  Future<Map<String, dynamic>> unpack({required Wallet wallet}) async {
+  Future<Map<String, dynamic>> unpack() async {
+    if (!(await areSignaturesValid())) {
+      Exception('Invalid signature was found');
+    }
+
     final payloadBytes = base64UrlDecodeWithPadding(payload);
     return json.decode(utf8.decode(payloadBytes));
+  }
+
+  Future<bool> areSignaturesValid() async {
+    for (final signature in signatures) {
+      final signatureScheme =
+          SignatureScheme.fromString(signature.protected.algorithm!);
+
+      final verifier = await DidVerifier.create(
+        algorithm: signatureScheme,
+        issuerDid: signature.header.keyId.split('#').first,
+        kid: signature.header.keyId,
+      );
+
+      final jwsHeader = JwsHeader(
+        mimeType: mediaType,
+        algorithm: signature.protected.algorithm!,
+        curve: signature.protected.curve,
+      );
+
+      final encodedPayload = base64UrlEncodeNoPadding(toJsonBytes());
+      final encodedHeader = base64UrlEncodeNoPadding(jwsHeader.toJsonBytes());
+
+      final isValid = verifier.verify(
+          ascii.encode('$encodedHeader.$encodedPayload'), signature.signature);
+
+      if (!isValid) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   static bool isSignedMessage(Map<String, dynamic> message) {
