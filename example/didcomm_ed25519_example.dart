@@ -54,6 +54,7 @@ void main() async {
 
   final bobKeyId = 'bob-key-1';
   final bobKeyPair = await bobWallet.deriveKey(
+    // TODO: in the latest version of SSI keyId is derivationPath. Clarify, if it is ok to use deriviation path in kid
     keyId: bobKeyId,
     keyType: KeyType.ed25519,
     derivationPath: "m/44'/60'/0'/0'/0'",
