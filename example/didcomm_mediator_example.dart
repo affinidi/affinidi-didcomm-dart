@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/jwks/jwks.dart';
@@ -6,10 +8,19 @@ import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
 import 'package:didcomm/src/messages/attachments/attachment.dart';
 import 'package:didcomm/src/messages/attachments/attachment_data.dart';
 import 'package:didcomm/src/messages/protocols/routing/forward_message.dart';
+import 'package:pointycastle/asn1/asn1_parser.dart';
+import 'package:pointycastle/asn1/primitives/asn1_octet_string.dart';
+import 'package:pointycastle/asn1/primitives/asn1_sequence.dart';
 import 'package:ssi/ssi.dart';
 import 'package:ssi/src/wallet/key_store/in_memory_key_store.dart';
 
 void main() async {
+  // run commands below in your terminal to generate keys for alice and bob
+  // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/alice_private_key.pem
+  // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/bob_private_key.pem
+
+  // run the example and copy Alice and Bob DIDs from the terminal into mediator configuration, so it can authenticate their requests
+
   final aliceKeyStore = InMemoryKeyStore();
   final aliceWallet = PersistentWallet(aliceKeyStore);
 
@@ -17,12 +28,22 @@ void main() async {
   final bobWallet = PersistentWallet(bobKeyStore);
 
   final aliceKeyId = 'alice-key-1';
-  final aliceKeyPair = await aliceWallet.generateKey(
-    keyId: aliceKeyId,
-    keyType: KeyType.p256,
+  final alicePrivateKeyBytes =
+      await extractPrivateKeyBytes('./example/keys/alice_private_key.pem');
+
+  await aliceKeyStore.set(
+    aliceKeyId,
+    StoredKey.fromPrivateKey(
+      keyType: KeyType.p256,
+      keyBytes: alicePrivateKeyBytes,
+    ),
   );
 
+  final aliceKeyPair = await aliceWallet.getKeyPair(aliceKeyId);
   final aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
+
+  print('Alice DID: ${aliceDidDocument.id}');
+  print('');
 
   final aliceSigner = DidSigner(
     didDocument: aliceDidDocument,
@@ -32,12 +53,22 @@ void main() async {
   );
 
   final bobKeyId = 'bob-key-1';
-  final bobKeyPair = await bobWallet.generateKey(
-    keyId: bobKeyId,
-    keyType: KeyType.p256,
+  final bobPrivateKeyBytes =
+      await extractPrivateKeyBytes('./example/keys/bob_private_key.pem');
+
+  await bobKeyStore.set(
+    bobKeyId,
+    StoredKey.fromPrivateKey(
+      keyType: KeyType.p256,
+      keyBytes: bobPrivateKeyBytes,
+    ),
   );
 
+  final bobKeyPair = await bobWallet.getKeyPair(bobKeyId);
   final bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
+
+  print('Bob DID: ${bobDidDocument.id}');
+  print('');
 
   // TODO: kid is not available in the Jwk anymore. clarify with the team
   final bobJwk = bobDidDocument.keyAgreement[0].asJwk().toJson();
@@ -100,4 +131,21 @@ void main() async {
 
   // print(unpackedMessageByBod.toJson());
   // print('');
+}
+
+Future<Uint8List> extractPrivateKeyBytes(String pemPath) async {
+  final pem = await File(pemPath).readAsString();
+
+  final lines = pem.split('\n');
+  final base64Str = lines
+      .where((line) => !line.startsWith('-----') && line.trim().isNotEmpty)
+      .join('');
+
+  final derBytes = base64.decode(base64Str);
+
+  final asn1Parser = ASN1Parser(derBytes);
+  final sequence = asn1Parser.nextObject() as ASN1Sequence;
+
+  final privateKeyOctetString = sequence.elements![1] as ASN1OctetString;
+  return privateKeyOctetString.valueBytes!;
 }
