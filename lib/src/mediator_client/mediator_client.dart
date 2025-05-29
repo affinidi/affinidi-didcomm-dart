@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:ssi/ssi.dart';
 
 import '../extensions/extensions.dart';
+import '../messages/didcomm_message.dart';
 import 'mediator_service_type.dart';
 
 class MediatorClient {
@@ -20,5 +21,22 @@ class MediatorClient {
     return MediatorClient(
       didDocument: DidDocument.fromJson(response.data),
     );
+  }
+
+  Future<void> send({
+    required DidcommMessage message,
+    String? accessToken,
+  }) async {
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+
+    final response = await _dio.post(
+      '/inbound',
+      data: message,
+      options: Options(headers: headers),
+    );
+
+    print(response.statusCode);
+    print(response.data);
   }
 }
