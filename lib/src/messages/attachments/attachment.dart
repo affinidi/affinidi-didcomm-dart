@@ -5,7 +5,7 @@ import '../../converters/epoch_seconds_converter.dart';
 
 part 'attachment.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class Attachment {
   final String? id;
   final String? description;

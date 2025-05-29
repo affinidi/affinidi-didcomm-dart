@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'attachment_data.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class AttachmentData {
   final String? jws;
   final String? hash;

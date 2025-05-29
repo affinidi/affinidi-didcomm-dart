@@ -62,6 +62,7 @@ class SignedMessage extends DidcommMessage {
     return json.decode(utf8.decode(payloadBytes));
   }
 
+  // TODO: add issuer check
   Future<bool> areSignaturesValid() async {
     for (final signature in signatures) {
       final signatureScheme =

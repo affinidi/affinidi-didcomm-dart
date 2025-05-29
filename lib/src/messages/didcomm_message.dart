@@ -11,10 +11,11 @@ class DidcommMessage {
   dynamic operator [](String key) => _customHeaders[key];
   void operator []=(String key, dynamic value) => _customHeaders[key] = value;
 
-  static Future<PlainTextMessage> unpackToPlainTextMessage({
+  static Future<PlainTextMessage?> unpackToPlainTextMessage({
     required Map<String, dynamic> message,
     required Wallet recipientWallet,
   }) async {
+    // TODO: add recursiv check for cases when there multiple encryption or signed leyars
     var currentMessage = message;
 
     if (EncryptedMessage.isEncryptedMessage(currentMessage)) {
@@ -32,11 +33,25 @@ class DidcommMessage {
     return PlainTextMessage.fromJson(currentMessage);
   }
 
-  static SignedMessage unpackToSignedMessage({
-    required DidcommMessage message,
-    required Wallet wallet,
-  }) {
-    throw UnimplementedError();
+  static Future<SignedMessage?> unpackToSignedMessage({
+    required Map<String, dynamic> message,
+    required Wallet recipientWallet,
+  }) async {
+    // TODO: add recursiv check for cases when there multiple encryption or signed leyars
+    var currentMessage = message;
+
+    if (EncryptedMessage.isEncryptedMessage(currentMessage)) {
+      final encryptedMessage = EncryptedMessage.fromJson(currentMessage);
+      currentMessage = await encryptedMessage.unpack(
+        recipientWallet: recipientWallet,
+      );
+    }
+
+    if (SignedMessage.isSignedMessage(currentMessage)) {
+      return SignedMessage.fromJson(currentMessage);
+    }
+
+    return null;
   }
 
   @protected

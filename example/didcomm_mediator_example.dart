@@ -1,70 +1,43 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/jwks/jwks.dart';
 import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
-import 'package:didcomm/src/messages/didcomm_message.dart';
+import 'package:didcomm/src/messages/attachments/attachment.dart';
+import 'package:didcomm/src/messages/attachments/attachment_data.dart';
+import 'package:didcomm/src/messages/protocols/routing/forward_message.dart';
 import 'package:ssi/ssi.dart';
 import 'package:ssi/src/wallet/key_store/in_memory_key_store.dart';
-import 'package:convert/convert.dart';
 
 void main() async {
-  final aliceSeed = hex.decode(
-    'a1772b144344781f2a55fc4d5e49f3767bb0967205ad08454a09c76d96fd2ccd',
-  );
-
   final aliceKeyStore = InMemoryKeyStore();
-  final aliceWallet = await Bip32Ed25519Wallet.fromSeed(
-    Uint8List.fromList(aliceSeed),
-    aliceKeyStore,
-  );
-
-  final bobSeed = hex.decode(
-    'b2883c25545589203b66fc5e6f5a04878cc1078311be19525b10d87897fe3ddf',
-  );
+  final aliceWallet = PersistentWallet(aliceKeyStore);
 
   final bobKeyStore = InMemoryKeyStore();
-  final bobWallet = await Bip32Ed25519Wallet.fromSeed(
-    Uint8List.fromList(bobSeed),
-    bobKeyStore,
-  );
+  final bobWallet = PersistentWallet(bobKeyStore);
 
   final aliceKeyId = 'alice-key-1';
-  final aliceKeyPair = await aliceWallet.deriveKey(
+  final aliceKeyPair = await aliceWallet.generateKey(
     keyId: aliceKeyId,
-    keyType: KeyType.ed25519,
-    derivationPath: "m/44'/60'/0'/0'/0'",
+    keyType: KeyType.p256,
   );
 
-  final aliceX25519PublicKey = await aliceWallet.getX25519PublicKey(
-    aliceKeyPair.id,
-  );
-
-  final aliceDidDocument = DidKey.generateDocument(
-    PublicKey(aliceKeyId, aliceX25519PublicKey, KeyType.x25519),
-  );
+  final aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
 
   final aliceSigner = DidSigner(
     didDocument: aliceDidDocument,
     keyPair: aliceKeyPair,
     didKeyId: aliceDidDocument.verificationMethod[0].id,
-    signatureScheme: SignatureScheme.eddsa_sha512,
+    signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
   final bobKeyId = 'bob-key-1';
-  final bobKeyPair = await bobWallet.deriveKey(
-    // TODO: in the latest version of SSI keyId is derivationPath. Clarify, if it is ok to use deriviation path in kid
+  final bobKeyPair = await bobWallet.generateKey(
     keyId: bobKeyId,
-    keyType: KeyType.ed25519,
-    derivationPath: "m/44'/60'/0'/0'/0'",
+    keyType: KeyType.p256,
   );
 
-  final bobX25519PublicKey = await bobWallet.getX25519PublicKey(bobKeyPair.id);
-
-  final bobDidDocument = DidKey.generateDocument(
-    PublicKey(bobKeyId, bobX25519PublicKey, KeyType.x25519),
-  );
+  final bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
 
   // TODO: kid is not available in the Jwk anymore. clarify with the team
   final bobJwk = bobDidDocument.keyAgreement[0].asJwk().toJson();
@@ -103,15 +76,28 @@ void main() async {
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
 
-  final sentMessageByAlice = jsonEncode(encryptedMessageByAlice);
-  print(sentMessageByAlice);
-  print('');
-
-  final unpackedMessageByBod = await DidcommMessage.unpackToPlainTextMessage(
-    message: jsonDecode(sentMessageByAlice),
-    recipientWallet: bobWallet,
+  final forwardMessageMyAlice = ForwardMessage(
+    id: '48e09528-5495-4259-be68-d975e81671c3',
+    to: ['mediatorDid'],
+    next: bobDidDocument.id,
+    attachments: [
+      Attachment(
+        mediaType: 'application/json',
+        data: AttachmentData(
+          json: jsonEncode(encryptedMessageByAlice),
+        ),
+      ),
+    ],
   );
 
-  print(unpackedMessageByBod?.toJson());
+  print(jsonEncode(forwardMessageMyAlice));
   print('');
+
+  // final unpackedMessageByBod = await DidcommMessage.unpackToPlainTextMessage(
+  //   message: jsonDecode(sentMessageByAlice),
+  //   recipientWallet: bobWallet,
+  // );
+
+  // print(unpackedMessageByBod.toJson());
+  // print('');
 }

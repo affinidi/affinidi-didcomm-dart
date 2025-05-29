@@ -83,6 +83,6 @@ void main() async {
     recipientWallet: bobWallet,
   );
 
-  print(unpackedMessageByBod.toJson());
+  print(unpackedMessageByBod?.toJson());
   print('');
 }
