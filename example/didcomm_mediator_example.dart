@@ -134,6 +134,8 @@ void main() async {
     ],
   );
 
+  forwardMessageByAlice['ephemeral'] = true;
+
   print(jsonEncode(forwardMessageByAlice));
   print('');
 
