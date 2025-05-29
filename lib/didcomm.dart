@@ -6,3 +6,4 @@ library;
 export 'src/messages/core.dart';
 export 'src/errors/errors.dart';
 export 'src/mediator_client/mediator_client.dart';
+export 'src/extensions/affinidi_authenticator_extension.dart';
