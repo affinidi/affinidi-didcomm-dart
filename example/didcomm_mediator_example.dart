@@ -129,6 +129,9 @@ void main() async {
   print(jsonEncode(forwardMessageMyAlice));
   print('');
 
+  final mediatorClient = MediatorClient(didDocument: mediatorDidDocument);
+  await mediatorClient.authenticate(did: aliceDidDocument.id);
+
   // final unpackedMessageByBod = await DidcommMessage.unpackToPlainTextMessage(
   //   message: jsonDecode(sentMessageByAlice),
   //   recipientWallet: bobWallet,
