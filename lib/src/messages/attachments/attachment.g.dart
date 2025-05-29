@@ -22,15 +22,17 @@ Attachment _$AttachmentFromJson(Map<String, dynamic> json) => Attachment(
 
 Map<String, dynamic> _$AttachmentToJson(Attachment instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'description': instance.description,
-      'filename': instance.filename,
-      'media_type': instance.mediaType,
-      'format': instance.format,
-      'lastmod_time': _$JsonConverterToJson<int, DateTime>(
-          instance.lastModifiedTime, const EpochSecondsConverter().toJson),
-      'data': instance.data,
-      'byte_count': instance.byteCount,
+      if (instance.id case final value?) 'id': value,
+      if (instance.description case final value?) 'description': value,
+      if (instance.filename case final value?) 'filename': value,
+      if (instance.mediaType case final value?) 'media_type': value,
+      if (instance.format case final value?) 'format': value,
+      if (_$JsonConverterToJson<int, DateTime>(
+              instance.lastModifiedTime, const EpochSecondsConverter().toJson)
+          case final value?)
+        'lastmod_time': value,
+      if (instance.data case final value?) 'data': value,
+      if (instance.byteCount case final value?) 'byte_count': value,
     };
 
 Value? _$JsonConverterFromJson<Json, Value>(
