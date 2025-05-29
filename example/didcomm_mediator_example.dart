@@ -133,7 +133,12 @@ void main() async {
 
   // authenticate method is not direct part of mediatorClient, but it is extension method
   // this method is need for mediators, that require authentication
-  final token = await mediatorClient.authenticate(did: aliceDidDocument.id);
+  final token = await mediatorClient.authenticate(
+    senderWallet: aliceWallet,
+    senderKeyId: aliceKeyId,
+    mediatorDidDocument: mediatorDidDocument,
+  );
+
   print(token);
 
   // final unpackedMessageByBod = await DidcommMessage.unpackToPlainTextMessage(
