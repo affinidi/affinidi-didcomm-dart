@@ -15,11 +15,13 @@ import 'package:ssi/ssi.dart';
 import 'package:ssi/src/wallet/key_store/in_memory_key_store.dart';
 
 void main() async {
-  // run commands below in your terminal to generate keys for alice and bob
+  // Run commands below in your terminal to generate keys for Alice and Bob:
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/alice_private_key.pem
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/bob_private_key.pem
 
-  // run the example and copy Alice and Bob DIDs from the terminal into mediator configuration, so it can authenticate their requests
+  // Run the example and copy Alice and Bob DIDs from the terminal into mediator configuration, so it can authenticate their requests.
+
+  // Create and run a DIDComm mediator, for instance with https://portal.affinidi.com. Copy its DID Document into example/mediator/mediator_did_document.json.
 
   final aliceKeyStore = InMemoryKeyStore();
   final aliceWallet = PersistentWallet(aliceKeyStore);
@@ -74,6 +76,9 @@ void main() async {
   final bobJwk = bobDidDocument.keyAgreement[0].asJwk().toJson();
   bobJwk['kid'] = '${bobDidDocument.id}#$bobKeyId';
 
+  final mediatorDidDocument =
+      await readDidDocument('./example/mediator/mediator_did_document.json');
+
   final plainTextMassage = PlainTextMessage(
     id: '041b47d4-9c8f-4a24-ae85-b60ec91b025c',
     from: aliceDidDocument.id,
@@ -109,7 +114,7 @@ void main() async {
 
   final forwardMessageMyAlice = ForwardMessage(
     id: '48e09528-5495-4259-be68-d975e81671c3',
-    to: ['mediatorDid'],
+    to: [mediatorDidDocument.id],
     next: bobDidDocument.id,
     attachments: [
       Attachment(
@@ -148,4 +153,9 @@ Future<Uint8List> extractPrivateKeyBytes(String pemPath) async {
 
   final privateKeyOctetString = sequence.elements![1] as ASN1OctetString;
   return privateKeyOctetString.valueBytes!;
+}
+
+Future<DidDocument> readDidDocument(String didDocumentPath) async {
+  final json = await File(didDocumentPath).readAsString();
+  return DidDocument.fromJson(jsonDecode(json));
 }
