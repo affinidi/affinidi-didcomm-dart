@@ -151,16 +151,15 @@ class JweHeader {
     // https://identity.foundation/didcomm-messaging/spec/#ecdh-es-key-wrapping-and-common-protected-headers
     // keys merged with comma and sorted alphabetically
 
-    final keyIdsByCurve =
-        jwksPerRecipient.map((jwks) {
-          final keyId = jwks.firstWithCurve(curve).keyId;
+    final keyIdsByCurve = jwksPerRecipient.map((jwks) {
+      final key = jwks.firstWithCurve(curve);
 
-          if (keyId == null) {
-            throw Exception('Jwks for curve $curve does not contain keyId');
-          }
+      if (key.keyId == null) {
+        throw Exception('Jwk was found, but keyId is null');
+      }
 
-          return keyId;
-        }).toList();
+      return key.keyId!;
+    }).toList();
 
     keyIdsByCurve.sort();
     return keyIdsByCurve;
