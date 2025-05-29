@@ -1,14 +1,26 @@
-import 'package:json_annotation/json_annotation.dart';
-import '../../didcomm_message.dart';
+import '../../core.dart';
 
-part 'forward_message.g.dart';
+class ForwardMessage extends PlainTextMessage {
+  final String next;
 
-@JsonSerializable()
-class ForwardMessage extends DidcommMessage {
-  ForwardMessage();
+  ForwardMessage({
+    required super.id,
+    required super.to,
+    required super.attachments,
+    required this.next,
+    super.expiresTime,
+  }) : super(
+          type: Uri.parse('https://didcomm.org/routing/2.0/forward'),
+          body: {'next': next},
+        );
 
-  factory ForwardMessage.fromJson(Map<String, dynamic> json) =>
-      _$ForwardMessageFromJson(json);
-
-  Map<String, dynamic> toJson() => _$ForwardMessageToJson(this);
+  factory ForwardMessage.fromJson(Map<String, dynamic> json) {
+    final plainTextMessage = PlainTextMessage.fromJson(json);
+    return ForwardMessage(
+      id: plainTextMessage.id,
+      to: plainTextMessage.to,
+      next: plainTextMessage.body?['next'],
+      attachments: plainTextMessage.attachments,
+    );
+  }
 }
