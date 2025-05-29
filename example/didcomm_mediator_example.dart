@@ -114,10 +114,14 @@ void main() async {
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
 
+  final createdTime = DateTime.now().toUtc();
+  final expiresTime = createdTime.add(const Duration(seconds: 60));
+
   final forwardMessageByAlice = ForwardMessage(
     id: '48e09528-5495-4259-be68-d975e81671c3',
     to: [mediatorDidDocument.id],
     next: bobDidDocument.id,
+    expiresTime: expiresTime,
     attachments: [
       Attachment(
         mediaType: 'application/json',
