@@ -6,11 +6,12 @@ import '../extensions/extensions.dart';
 import '../mediator_client/mediator_service_type.dart';
 import '../messages/algorithm_types/encryption_algorithm.dart';
 import '../jwks/jwks.dart';
+import '../common/authentication_tokens/authentication_tokens.dart';
 
 /// Authentication by mediators are not covered by standard.
 /// This extension method provides authentication for the Affinidi mediator specifically.
 extension AffinidiAuthenticatorExtension on MediatorClient {
-  Future<String> authenticate({
+  Future<AuthenticationTokens> authenticate({
     required Wallet senderWallet,
     required String senderKeyId,
     required DidDocument mediatorDidDocument,
@@ -67,8 +68,6 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
       data: encryptedMessage,
     );
 
-    print(authenticateResponse.data);
-
-    return '';
+    return AuthenticationTokens.fromJson(authenticateResponse.data!['data']);
   }
 }
