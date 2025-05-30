@@ -223,11 +223,13 @@ class EncryptedMessage extends DidcommMessage {
           if (wallet is Bip32Ed25519Wallet) {
             final aliceX25519PublicKey = await wallet.getX25519PublicKey(keyId);
 
+            // TODO: check other DID types for match
             didDocument = DidKey.generateDocument(
               PublicKey(keyId, aliceX25519PublicKey, KeyType.x25519),
             );
           } else {
             final publicKey = await wallet.getPublicKey(keyId);
+            // TODO: check other DID types for match
             didDocument = DidKey.generateDocument(publicKey);
           }
 
