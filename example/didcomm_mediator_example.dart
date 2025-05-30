@@ -171,22 +171,38 @@ void main() async {
   print(jsonEncode(encryptedMessageToForward));
   print('');
 
-  final mediatorClient = MediatorClient(didDocument: mediatorDidDocument);
+  final aliceMediatorClient = MediatorClient(didDocument: mediatorDidDocument);
 
   // authenticate method is not direct part of mediatorClient, but it is extension method
   // this method is need for mediators, that require authentication like an Affinidi mediator
-  final tokens = await mediatorClient.authenticate(
+  final aliceTokens = await aliceMediatorClient.authenticate(
     senderWallet: aliceWallet,
     senderKeyId: aliceKeyId,
     mediatorDidDocument: mediatorDidDocument,
   );
 
-  print(tokens.accessToken);
-  print('');
+  final bobMediatorClient = MediatorClient(didDocument: mediatorDidDocument);
 
-  await mediatorClient.send(
-    message: encryptedMessageToForward,
-    accessToken: tokens.accessToken,
+  final bobTokens = await bobMediatorClient.authenticate(
+    senderWallet: aliceWallet,
+    senderKeyId: aliceKeyId,
+    mediatorDidDocument: mediatorDidDocument,
+  );
+
+  print('Bob waiting for a message...');
+
+  await bobMediatorClient.listenForIncomingMessages(
+    (data) async {
+      print(data);
+      await bobMediatorClient.disconnect();
+    },
+    onError: (error) => print(error),
+    accessToken: bobTokens.accessToken,
+  );
+
+  await aliceMediatorClient.sendMessage(
+    encryptedMessageToForward,
+    accessToken: aliceTokens.accessToken,
   );
 
   // final unpackedMessageByBod = await DidcommMessage.unpackToPlainTextMessage(
