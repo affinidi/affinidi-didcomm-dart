@@ -144,6 +144,9 @@ void main() async {
     signer: aliceSigner,
   );
 
+  print(jsonEncode(signedMessageToForward));
+  print('');
+
   final mediatorJwks = mediatorDidDocument.keyAgreement.map((keyAgreement) {
     final jwk = keyAgreement.asJwk().toJson();
     // TODO: kid is not available in the Jwk anymore. clarify with the team
@@ -178,14 +181,13 @@ void main() async {
     mediatorDidDocument: mediatorDidDocument,
   );
 
-  try {
-    await mediatorClient.send(
-      message: encryptedMessageToForward,
-      accessToken: tokens.accessToken,
-    );
-  } catch (error) {
-    throw error;
-  }
+  print(tokens.accessToken);
+  print('');
+
+  await mediatorClient.send(
+    message: encryptedMessageToForward,
+    accessToken: tokens.accessToken,
+  );
 
   // final unpackedMessageByBod = await DidcommMessage.unpackToPlainTextMessage(
   //   message: jsonDecode(sentMessageByAlice),
