@@ -9,10 +9,10 @@ part 'signature.g.dart';
 
 @JsonSerializable()
 class Signature {
+  @JwsHeaderConverter()
   final JwsHeader protected;
   @Base64UrlConverter()
   final Uint8List signature;
-  @JwsHeaderConverter()
   final SignatureHeader header;
 
   Signature({
