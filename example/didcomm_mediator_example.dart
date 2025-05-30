@@ -9,6 +9,7 @@ import 'package:didcomm/src/jwks/jwks.dart';
 import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
 import 'package:didcomm/src/messages/attachments/attachment.dart';
 import 'package:didcomm/src/messages/attachments/attachment_data.dart';
+import 'package:didcomm/src/messages/didcomm_message.dart';
 import 'package:didcomm/src/messages/protocols/routing/forward_message.dart';
 import 'package:pointycastle/asn1/asn1_parser.dart';
 import 'package:pointycastle/asn1/primitives/asn1_octet_string.dart';
@@ -171,7 +172,9 @@ void main() async {
   print(jsonEncode(encryptedMessageToForward));
   print('');
 
-  final aliceMediatorClient = MediatorClient(didDocument: mediatorDidDocument);
+  final aliceMediatorClient = MediatorClient(
+    mediatorDidDocument: mediatorDidDocument,
+  );
 
   // authenticate method is not direct part of mediatorClient, but it is extension method
   // this method is need for mediators, that require authentication like an Affinidi mediator
@@ -181,7 +184,9 @@ void main() async {
     mediatorDidDocument: mediatorDidDocument,
   );
 
-  final bobMediatorClient = MediatorClient(didDocument: mediatorDidDocument);
+  final bobMediatorClient = MediatorClient(
+    mediatorDidDocument: mediatorDidDocument,
+  );
 
   final bobTokens = await bobMediatorClient.authenticate(
     senderWallet: aliceWallet,
@@ -192,26 +197,28 @@ void main() async {
   print('Bob waiting for a message...');
 
   await bobMediatorClient.listenForIncomingMessages(
-    (data) async {
-      print(data);
+    (message) async {
+      // final unpackedMessageByBod =
+      //     await DidcommMessage.unpackToPlainTextMessage(
+      //   message: message,
+      //   recipientWallet: bobWallet,
+      // );
+
+      print(jsonEncode(message));
+      print('');
+
       await bobMediatorClient.disconnect();
     },
     onError: (error) => print(error),
     accessToken: bobTokens.accessToken,
+    recipientWallet: bobWallet,
+    recipientKeyId: bobKeyId,
   );
 
   await aliceMediatorClient.sendMessage(
     encryptedMessageToForward,
     accessToken: aliceTokens.accessToken,
   );
-
-  // final unpackedMessageByBod = await DidcommMessage.unpackToPlainTextMessage(
-  //   message: jsonDecode(sentMessageByAlice),
-  //   recipientWallet: bobWallet,
-  // );
-
-  // print(unpackedMessageByBod.toJson());
-  // print('');
 }
 
 Future<Uint8List> extractPrivateKeyBytes(String pemPath) async {
