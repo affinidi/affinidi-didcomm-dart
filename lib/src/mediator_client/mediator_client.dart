@@ -27,16 +27,15 @@ class MediatorClient {
     required DidcommMessage message,
     String? accessToken,
   }) async {
+    // TODO: create exception to wrap errors
+
     final headers =
         accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
 
-    final response = await _dio.post(
+    await _dio.post(
       '/inbound',
       data: message,
       options: Options(headers: headers),
     );
-
-    print(response.statusCode);
-    print(response.data);
   }
 }
