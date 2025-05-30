@@ -99,6 +99,7 @@ class JweHeader {
     throw Exception('Ether skid or apu is required');
   }
 
+  // TODO: add support for DID web and peer
   static Future<(String, CurveType, PublicKey)> _buildHeaderParts(
     Wallet wallet,
     String keyId,
