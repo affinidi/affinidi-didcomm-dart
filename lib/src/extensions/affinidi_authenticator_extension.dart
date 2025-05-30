@@ -17,7 +17,7 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
     required DidDocument mediatorDidDocument,
     EncryptionAlgorithm encryptionAlgorithm = EncryptionAlgorithm.a256cbc,
   }) async {
-    final dio = didDocument.toDio(
+    final dio = mediatorDidDocument.toDio(
       mediatorServiceType: MediatorServiceType.authentication,
     );
 
