@@ -12,8 +12,8 @@ import '../common/authentication_tokens/authentication_tokens.dart';
 /// This extension method provides authentication for the Affinidi mediator specifically.
 extension AffinidiAuthenticatorExtension on MediatorClient {
   Future<AuthenticationTokens> authenticate({
-    required Wallet senderWallet,
-    required String senderKeyId,
+    required Wallet wallet,
+    required String keyId,
     required DidDocument mediatorDidDocument,
     EncryptionAlgorithm encryptionAlgorithm = EncryptionAlgorithm.a256cbc,
   }) async {
@@ -21,12 +21,12 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
       mediatorServiceType: MediatorServiceType.authentication,
     );
 
-    final senderPublicKey = await senderWallet.getPublicKey(senderKeyId);
-    final senderDidDocument = DidKey.generateDocument(senderPublicKey);
+    final publicKey = await wallet.getPublicKey(keyId);
+    final didDocument = DidKey.generateDocument(publicKey);
 
     final challengeResponse = await dio.post(
       '/challenge',
-      data: {'did': senderDidDocument.id},
+      data: {'did': didDocument.id},
     );
 
     final createdTime = DateTime.now().toUtc();
@@ -38,7 +38,7 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
       type: Uri.parse('https://affinidi.com/atm/1.0/authenticate'),
       createdTime: createdTime,
       expiresTime: expiresTime,
-      from: senderDidDocument.id,
+      from: didDocument.id,
       to: [mediatorDidDocument.id],
       body: challengeResponse.data['data'],
     );
@@ -53,8 +53,8 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
 
     final encryptedMessage = await EncryptedMessage.packWithAuthentication(
       plainTextMessage,
-      wallet: senderWallet,
-      keyId: senderKeyId,
+      wallet: wallet,
+      keyId: keyId,
       jwksPerRecipient: [
         Jwks.fromJson({
           'keys': mediatorJwks,

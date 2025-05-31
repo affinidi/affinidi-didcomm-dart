@@ -163,13 +163,19 @@ class EncryptedMessage extends DidcommMessage {
   Future<Map<String, dynamic>> unpack({required Wallet recipientWallet}) async {
     final self = await _findSelfAsRecipient(recipientWallet);
 
-    final senderKeyId = protected.resolveSubjectKeyId();
-    final senderDidDocument = await UniversalDIDResolver.resolve(
-      senderKeyId.split('#').first,
+    final subjectKeyId = protected.resolveSubjectKeyId();
+    final senderDid = subjectKeyId.split('#').first;
+
+    final senderDidDocument = await UniversalDIDResolver.resolve(senderDid);
+
+    final keyAgreement = senderDidDocument.keyAgreement.firstWhere(
+      (keyAgreement) => keyAgreement.id == subjectKeyId,
+      orElse: () =>
+          throw Exception('Can not find a key agreement for subject ID'),
     );
 
     final senderJwk = Jwk.fromJson(
-      senderDidDocument.keyAgreement.first.asJwk().toJson(),
+      keyAgreement.asJwk().toJson(),
     );
 
     final contentEncryptionKey = await Ecdh.decrypt(
@@ -202,42 +208,9 @@ class EncryptedMessage extends DidcommMessage {
 
   Future<Recipient> _findSelfAsRecipient(Wallet wallet) async {
     for (final recipient in recipients) {
-      final String? did;
-      final String keyId;
+      final keyId = wallet.getKeyIdByJwkId(recipient.header.keyId);
 
-      // TODO: make a reusable method for this
-      if (recipient.header.keyId.contains('#')) {
-        final parts = recipient.header.keyId.split('#');
-        did = parts[0];
-        keyId = parts[1];
-      } else {
-        did = null;
-        keyId = recipient.header.keyId;
-      }
-
-      if (await wallet.hasKey(keyId)) {
-        if (did != null) {
-          final DidDocument didDocument;
-
-          // TODO: check if wallet can have common interface
-          if (wallet is Bip32Ed25519Wallet) {
-            final aliceX25519PublicKey = await wallet.getX25519PublicKey(keyId);
-
-            // TODO: check other DID types for match
-            didDocument = DidKey.generateDocument(
-              PublicKey(keyId, aliceX25519PublicKey, KeyType.x25519),
-            );
-          } else {
-            final publicKey = await wallet.getPublicKey(keyId);
-            // TODO: check other DID types for match
-            didDocument = DidKey.generateDocument(publicKey);
-          }
-
-          if (didDocument.id != did) {
-            continue;
-          }
-        }
-
+      if (keyId != null && await wallet.hasKey(keyId)) {
         return recipient;
       }
     }

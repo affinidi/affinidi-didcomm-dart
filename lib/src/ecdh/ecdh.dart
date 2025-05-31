@@ -77,10 +77,16 @@ abstract class Ecdh {
       throw UnsupportedCurveError(curveType);
     }
 
+    final recipientKeyId = recipientWallet.getKeyIdByJwkId(self.header.keyId);
+
+    if (recipientKeyId == null) {
+      Exception('JWK kid is not linked with any Key ID in the Wallet');
+    }
+
     return await ecdh.decryptData(
       data: self.encryptedKey,
       recipientWallet: recipientWallet,
-      recipientKeyId: self.header.keyId.split('#').last,
+      recipientKeyId: recipientKeyId!,
     );
   }
 
@@ -127,10 +133,9 @@ abstract class Ecdh {
     if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdhEs) {
       return EcdhEsForSecpAndP(
         jweHeader: jweHeader,
-        publicKey:
-            Jwk.fromJson(
-              jweHeader.ephemeralKey.toJson(),
-            ).toPublicKeyFromPoint(),
+        publicKey: Jwk.fromJson(
+          jweHeader.ephemeralKey.toJson(),
+        ).toPublicKeyFromPoint(),
       );
     }
 
@@ -138,10 +143,9 @@ abstract class Ecdh {
       return Ecdh1PuForSecp256AndP(
         jweHeader: jweHeader,
         authenticationTag: authenticationTag,
-        publicKey1:
-            Jwk.fromJson(
-              jweHeader.ephemeralKey.toJson(),
-            ).toPublicKeyFromPoint(),
+        publicKey1: Jwk.fromJson(
+          jweHeader.ephemeralKey.toJson(),
+        ).toPublicKeyFromPoint(),
         publicKey2: senderJwk.toPublicKeyFromPoint(),
       );
     }
