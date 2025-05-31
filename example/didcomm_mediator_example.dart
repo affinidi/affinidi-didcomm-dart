@@ -16,6 +16,7 @@ import 'package:pointycastle/asn1/primitives/asn1_octet_string.dart';
 import 'package:pointycastle/asn1/primitives/asn1_sequence.dart';
 import 'package:ssi/ssi.dart';
 import 'package:ssi/src/wallet/key_store/in_memory_key_store.dart';
+import 'package:uuid/uuid.dart';
 
 void main() async {
   // Run commands below in your terminal to generate keys for Alice and Bob:
@@ -87,7 +88,7 @@ void main() async {
       await readDidDocument('./example/mediator/mediator_did_document.json');
 
   final plainTextMassage = PlainTextMessage(
-    id: '041b47d4-9c8f-4a24-ae85-b60ec91b025c',
+    id: Uuid().v4(),
     from: aliceDidDocument.id,
     to: [bobDidDocument.id],
     type: Uri.parse('https://didcomm.org/example/1.0/message'),
@@ -123,7 +124,7 @@ void main() async {
   final expiresTime = createdTime.add(const Duration(seconds: 60));
 
   final forwardMessageByAlice = ForwardMessage(
-    id: '48e09528-5495-4259-be68-d975e81671c3',
+    id: Uuid().v4(),
     to: [mediatorDidDocument.id],
     next: bobDidDocument.id,
     expiresTime: expiresTime,
@@ -138,8 +139,6 @@ void main() async {
       ),
     ],
   );
-
-  forwardMessageByAlice['ephemeral'] = true;
 
   print(jsonEncode(forwardMessageByAlice));
   print('');
@@ -178,6 +177,8 @@ void main() async {
 
   final aliceMediatorClient = MediatorClient(
     mediatorDidDocument: mediatorDidDocument,
+    wallet: aliceWallet,
+    keyId: aliceKeyId,
   );
 
   // authenticate method is not direct part of mediatorClient, but it is extension method
@@ -190,6 +191,8 @@ void main() async {
 
   final bobMediatorClient = MediatorClient(
     mediatorDidDocument: mediatorDidDocument,
+    wallet: bobWallet,
+    keyId: bobKeyId,
   );
 
   final bobTokens = await bobMediatorClient.authenticate(
@@ -198,33 +201,54 @@ void main() async {
     mediatorDidDocument: mediatorDidDocument,
   );
 
-  print('Bob is waiting for a message...');
-
-  await bobMediatorClient.listenForIncomingMessages(
-    (message) async {
-      print(jsonEncode(message));
-
-      final unpackedMessageByBod =
-          await DidcommMessage.unpackToPlainTextMessage(
-        message: message,
-        recipientWallet: bobWallet,
-      );
-
-      print(jsonEncode(unpackedMessageByBod));
-      print('');
-
-      await bobMediatorClient.disconnect();
-    },
-    onError: (error) => print(error),
-    accessToken: bobTokens.accessToken,
-    recipientWallet: bobWallet,
-    recipientKeyId: bobKeyId,
-  );
+  print('Alice is sending a message...');
 
   await aliceMediatorClient.sendMessage(
     encryptedMessageToForward,
     accessToken: aliceTokens.accessToken,
   );
+
+  print('Bob is waiting for a message...');
+
+  final messageIds = await bobMediatorClient.listInboxMessageIds(
+    accessToken: bobTokens.accessToken,
+  );
+
+  final messages = await bobMediatorClient.receiveMessages(
+    messageIds: messageIds,
+    accessToken: bobTokens.accessToken,
+  );
+
+  for (final message in messages) {
+    final originalPlainTextMessageFromAlice =
+        await DidcommMessage.unpackToPlainTextMessage(
+      message: message,
+      recipientWallet: bobWallet,
+    );
+
+    print(jsonEncode(originalPlainTextMessageFromAlice));
+  }
+
+  // await bobMediatorClient.listenForIncomingMessages(
+  //   (message) async {
+  //     print(jsonEncode(message));
+
+  //     final unpackedMessageByBod =
+  //         await DidcommMessage.unpackToPlainTextMessage(
+  //       message: message,
+  //       recipientWallet: bobWallet,
+  //     );
+
+  //     print(jsonEncode(unpackedMessageByBod));
+  //     print('');
+
+  //     await bobMediatorClient.disconnect();
+  //   },
+  //   onError: (error) => print(error),
+  //   accessToken: bobTokens.accessToken,
+  //   recipientWallet: bobWallet,
+  //   recipientKeyId: bobKeyId,
+  // );
 }
 
 Future<Uint8List> extractPrivateKeyBytes(String pemPath) async {
