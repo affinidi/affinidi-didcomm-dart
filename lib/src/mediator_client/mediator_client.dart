@@ -132,6 +132,7 @@ class MediatorClient {
 
     final actorDidDocument = await _getActorDidDocument();
 
+    // TODO: create a class StatusRuest and place it to lib/src/messages/protocols
     final setupMessage = PlainTextMessage(
       id: Uuid().v4(),
       type: Uri.parse('https://didcomm.org/messagepickup/3.0/status-request'),
