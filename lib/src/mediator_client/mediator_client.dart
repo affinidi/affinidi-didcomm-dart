@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:didcomm/src/messages/core/encrypted_message/encrypted_message.dart';
 import 'package:didcomm/src/messages/core/plain_text_message/plain_text_message.dart';
 import 'package:dio/dio.dart';
@@ -17,21 +18,34 @@ import 'mediator_service_type.dart';
 
 class MediatorClient {
   final DidDocument mediatorDidDocument;
+
   final Dio _dio;
+  final Wallet _wallet;
+  final String _keyId;
 
   late final IOWebSocketChannel? _channel;
 
   MediatorClient({
     required this.mediatorDidDocument,
-  }) : _dio = mediatorDidDocument.toDio(
+    required Wallet wallet,
+    required String keyId,
+  })  : _dio = mediatorDidDocument.toDio(
           mediatorServiceType: MediatorServiceType.didCommMessaging,
-        );
+        ),
+        _wallet = wallet,
+        _keyId = keyId;
 
-  static Future<MediatorClient> fromDidDocumentUri(Uri didDocumentUrl) async {
+  static Future<MediatorClient> fromMediatorDidDocumentUri(
+    Uri didDocumentUrl, {
+    required Wallet wallet,
+    required String keyId,
+  }) async {
     final response = await Dio().getUri(didDocumentUrl);
 
     return MediatorClient(
       mediatorDidDocument: DidDocument.fromJson(response.data),
+      wallet: wallet,
+      keyId: keyId,
     );
   }
 
@@ -51,20 +65,58 @@ class MediatorClient {
     );
   }
 
+  Future<List<String>> listInboxMessageIds({
+    String? accessToken,
+  }) async {
+    // TODO: create exception to wrap errors
+
+    final actorDidDocument = await _getActorDidDocument();
+
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+
+    final response = await _dio.get(
+      '/list/${sha256.convert(utf8.encode(actorDidDocument.id)).toString()}/inbox',
+      options: Options(headers: headers),
+    );
+
+    return (response.data['data'] as List<dynamic>)
+        .map(
+          (item) => item['msg_id'] as String,
+        )
+        .toList();
+  }
+
+  Future<List<Map<String, dynamic>>> receiveMessages({
+    required List<String> messageIds,
+    bool deleteOnMediator = true,
+    String? accessToken,
+  }) async {
+    // TODO: create exception to wrap errors
+
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+
+    final response = await _dio.post(
+      '/outbound',
+      data: {'message_ids': messageIds, 'delete': deleteOnMediator},
+      options: Options(headers: headers),
+    );
+
+    return (response.data['data']['success'] as List<dynamic>)
+        .map(
+          (item) => jsonDecode(item['msg'] as String) as Map<String, dynamic>,
+        )
+        .toList();
+  }
+
   Future<StreamSubscription> listenForIncomingMessages(
     void Function(Map<String, dynamic>) onMessage, {
     Function? onError,
     void Function()? onDone,
     bool? cancelOnError,
     String? accessToken,
-    required Wallet recipientWallet,
-    required String recipientKeyId,
   }) async {
-    final recipientKeyPair = await recipientWallet.getKeyPair(recipientKeyId);
-    final recipientDidDocument = DidKey.generateDocument(
-      recipientKeyPair.publicKey,
-    );
-
     _channel = mediatorDidDocument.toWebSocketChannel(
       accessToken: accessToken,
     );
@@ -78,12 +130,14 @@ class MediatorClient {
       cancelOnError: cancelOnError,
     );
 
+    final actorDidDocument = await _getActorDidDocument();
+
     final setupMessage = PlainTextMessage(
       id: Uuid().v4(),
       type: Uri.parse('https://didcomm.org/messagepickup/3.0/status-request'),
-      // body: {'recipient_did': sdk.alias.did},
+      body: {'recipient_did': actorDidDocument.id},
       to: [mediatorDidDocument.id],
-      from: recipientDidDocument.id,
+      from: actorDidDocument.id,
     );
 
     final mediatorJwks = mediatorDidDocument.keyAgreement.map((keyAgreement) {
@@ -96,8 +150,8 @@ class MediatorClient {
 
     final encryptedSetupMessage = await EncryptedMessage.packWithAuthentication(
       setupMessage,
-      wallet: recipientWallet,
-      keyId: recipientKeyId,
+      wallet: _wallet,
+      keyId: _keyId,
       jwksPerRecipient: [
         Jwks.fromJson({
           'keys': mediatorJwks,
@@ -105,6 +159,10 @@ class MediatorClient {
       ],
       encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     );
+
+    print('------------');
+    print(jsonEncode(encryptedSetupMessage));
+    print('------------');
 
     _channel.sink.add(
       jsonEncode(encryptedSetupMessage),
@@ -117,5 +175,13 @@ class MediatorClient {
     if (_channel != null) {
       await _channel.sink.close(status.normalClosure);
     }
+  }
+
+  Future<DidDocument> _getActorDidDocument() async {
+    final recipientKeyPair = await _wallet.getKeyPair(_keyId);
+
+    return DidKey.generateDocument(
+      recipientKeyPair.publicKey,
+    );
   }
 }
