@@ -203,10 +203,10 @@ class JweHeader {
 
   static String? _buildAgreementPartyUInfo(
     KeyWrappingAlgorithm keyWrapAlgorithm,
-    String keyId,
+    String subjectKeyId,
   ) {
     return keyWrapAlgorithm == KeyWrappingAlgorithm.ecdh1Pu
-        ? base64UrlEncodeNoPadding(utf8.encode(keyId))
+        ? base64UrlEncodeNoPadding(utf8.encode(subjectKeyId))
         : null;
   }
 }
