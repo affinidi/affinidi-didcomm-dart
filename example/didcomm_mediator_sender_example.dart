@@ -15,7 +15,7 @@ import 'package:uuid/uuid.dart';
 import 'helpers.dart';
 
 void main() async {
-  // Run commands below in your terminal to generate keys for Alice:
+  // Run commands below in your terminal to generate keys for your sender:
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/alice_private_key.pem
 
   // Create and run a DIDComm mediator, for instance with https://portal.affinidi.com. Copy its DID Document into example/mediator/mediator_did_document.json.
