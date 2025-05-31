@@ -68,7 +68,11 @@ void main() async {
 
   // TODO: kid is not available in the Jwk anymore. clarify with the team
   final bobJwk = bobDidDocument.keyAgreement[0].asJwk().toJson();
-  bobJwk['kid'] = '${bobDidDocument.id}#$bobKeyId';
+  bobJwk['kid'] =
+      '${bobDidDocument.id}#${bobDidDocument.id.replaceFirst('did:key:', '')}';
+
+  // Important! link JWK, so the wallet should be able to find the key pair by JWK
+  bobWallet.linkJwkKeyIdKeyWithKeyId(bobJwk['kid']!, bobKeyId);
 
   final plainTextMassage = PlainTextMessage(
     id: '041b47d4-9c8f-4a24-ae85-b60ec91b025c',

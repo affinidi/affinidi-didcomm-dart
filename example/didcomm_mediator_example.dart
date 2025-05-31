@@ -77,7 +77,11 @@ void main() async {
 
   // TODO: kid is not available in the Jwk anymore. clarify with the team
   final bobJwk = bobDidDocument.keyAgreement[0].asJwk().toJson();
-  bobJwk['kid'] = '${bobDidDocument.id}#$bobKeyId';
+  bobJwk['kid'] =
+      '${bobDidDocument.id}#${bobDidDocument.id.replaceFirst('did:key:', '')}';
+
+  // Important! link JWK, so the wallet should be able to find the key pair by JWK
+  bobWallet.linkJwkKeyIdKeyWithKeyId(bobJwk['kid']!, bobKeyId);
 
   final mediatorDidDocument =
       await readDidDocument('./example/mediator/mediator_did_document.json');
@@ -179,8 +183,8 @@ void main() async {
   // authenticate method is not direct part of mediatorClient, but it is extension method
   // this method is need for mediators, that require authentication like an Affinidi mediator
   final aliceTokens = await aliceMediatorClient.authenticate(
-    senderWallet: aliceWallet,
-    senderKeyId: aliceKeyId,
+    wallet: aliceWallet,
+    keyId: aliceKeyId,
     mediatorDidDocument: mediatorDidDocument,
   );
 
@@ -189,22 +193,24 @@ void main() async {
   );
 
   final bobTokens = await bobMediatorClient.authenticate(
-    senderWallet: aliceWallet,
-    senderKeyId: aliceKeyId,
+    wallet: bobWallet,
+    keyId: bobKeyId,
     mediatorDidDocument: mediatorDidDocument,
   );
 
-  print('Bob waiting for a message...');
+  print('Bob is waiting for a message...');
 
   await bobMediatorClient.listenForIncomingMessages(
     (message) async {
-      // final unpackedMessageByBod =
-      //     await DidcommMessage.unpackToPlainTextMessage(
-      //   message: message,
-      //   recipientWallet: bobWallet,
-      // );
-
       print(jsonEncode(message));
+
+      final unpackedMessageByBod =
+          await DidcommMessage.unpackToPlainTextMessage(
+        message: message,
+        recipientWallet: bobWallet,
+      );
+
+      print(jsonEncode(unpackedMessageByBod));
       print('');
 
       await bobMediatorClient.disconnect();
