@@ -10,7 +10,6 @@ import 'package:didcomm/src/messages/attachments/attachment_data.dart';
 import 'package:didcomm/src/messages/didcomm_message.dart';
 import 'package:didcomm/src/messages/protocols/routing/forward_message.dart';
 import 'package:ssi/ssi.dart';
-import 'package:ssi/src/wallet/key_store/in_memory_key_store.dart';
 import 'package:uuid/uuid.dart';
 
 import 'helpers.dart';
@@ -34,9 +33,9 @@ void main() async {
 
   await aliceKeyStore.set(
     aliceKeyId,
-    StoredKey.fromPrivateKey(
+    StoredKey(
       keyType: KeyType.p256,
-      keyBytes: alicePrivateKeyBytes,
+      privateKeyBytes: alicePrivateKeyBytes,
     ),
   );
 
@@ -59,9 +58,9 @@ void main() async {
 
   await bobKeyStore.set(
     bobKeyId,
-    StoredKey.fromPrivateKey(
+    StoredKey(
       keyType: KeyType.p256,
-      keyBytes: bobPrivateKeyBytes,
+      privateKeyBytes: bobPrivateKeyBytes,
     ),
   );
 

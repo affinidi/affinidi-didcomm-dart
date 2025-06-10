@@ -13,7 +13,9 @@ extension WalletExtension on Wallet {
     required String keyId,
     required Uint8List othersPublicKeyBytes,
   }) async {
-    final keyPair = await getKeyPair(keyId);
+    final keyPair = await generateKey(
+      keyId: keyId,
+    );
 
     if (keyPair is P256KeyPair) {
       return await keyPair.computeEcdhSecret(othersPublicKeyBytes);
