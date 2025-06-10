@@ -186,6 +186,7 @@ void main() async {
     mediatorDidDocument: mediatorDidDocument,
     wallet: senderWallet,
     keyId: senderKeyId,
+    didSigner: senderSigner,
   );
 
   // authenticate method is not direct part of mediatorClient, but it is extension method

@@ -34,6 +34,13 @@ void main() async {
   print('Receiver DID: ${receiverDidDocument.id}');
   print('');
 
+  final receiverSigner = DidSigner(
+    didDocument: receiverDidDocument,
+    keyPair: receiverKeyPair,
+    didKeyId: receiverDidDocument.verificationMethod[0].id,
+    signatureScheme: SignatureScheme.ecdsa_p256_sha256,
+  );
+
   // TODO: kid is not available in the Jwk anymore. clarify with the team
   final receiverJwk = receiverDidDocument.keyAgreement[0].asJwk().toJson();
   receiverJwk['kid'] =
@@ -49,6 +56,7 @@ void main() async {
     mediatorDidDocument: mediatorDidDocument,
     wallet: receiverWallet,
     keyId: receiverKeyId,
+    didSigner: receiverSigner,
   );
 
   final receiverTokens = await receiverMediatorClient.authenticate(

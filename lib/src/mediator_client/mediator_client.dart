@@ -2,8 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:didcomm/src/messages/core/encrypted_message/encrypted_message.dart';
-import 'package:didcomm/src/messages/core/plain_text_message/plain_text_message.dart';
+import 'package:didcomm/didcomm.dart';
 import 'package:dio/dio.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
@@ -22,6 +21,7 @@ class MediatorClient {
   final Dio _dio;
   final Wallet _wallet;
   final String _keyId;
+  final DidSigner _didSigner;
 
   late final IOWebSocketChannel? _channel;
 
@@ -29,16 +29,19 @@ class MediatorClient {
     required this.mediatorDidDocument,
     required Wallet wallet,
     required String keyId,
+    required DidSigner didSigner,
   })  : _dio = mediatorDidDocument.toDio(
           mediatorServiceType: MediatorServiceType.didCommMessaging,
         ),
         _wallet = wallet,
-        _keyId = keyId;
+        _keyId = keyId,
+        _didSigner = didSigner;
 
   static Future<MediatorClient> fromMediatorDidDocumentUri(
     Uri didDocumentUrl, {
     required Wallet wallet,
     required String keyId,
+    required DidSigner didSigner,
   }) async {
     final response = await Dio().getUri(didDocumentUrl);
 
@@ -46,6 +49,7 @@ class MediatorClient {
       mediatorDidDocument: DidDocument.fromJson(response.data),
       wallet: wallet,
       keyId: keyId,
+      didSigner: didSigner,
     );
   }
 
@@ -141,6 +145,18 @@ class MediatorClient {
       from: actorDidDocument.id,
     );
 
+    setupMessage['return_route'] = 'all';
+
+    //     DidcommEncryptedMessage liveDelivery = await DidcommHelpers.pack(
+    //   sdk.wallet,
+    //   DidcommMessageTypes.LiveDeliveryChange,
+    //   {'live_delivery': true},
+    //   [sdk.mediator.value.did],
+    //   sdk.alias.did,
+    //   sdk.mediator.value.keyAgreements,
+    //   returnRoute: ReturnRouteValue.all,
+    // );
+
     final mediatorJwks = mediatorDidDocument.keyAgreement.map((keyAgreement) {
       final jwk = keyAgreement.asJwk().toJson();
       // TODO: kid is not available in the Jwk anymore. clarify with the team
@@ -149,8 +165,13 @@ class MediatorClient {
       return jwk;
     }).toList();
 
-    final encryptedSetupMessage = await EncryptedMessage.packWithAuthentication(
+    final signedSetupMessage = await SignedMessage.pack(
       setupMessage,
+      signer: _didSigner,
+    );
+
+    final encryptedSetupMessage = await EncryptedMessage.packWithAuthentication(
+      signedSetupMessage,
       wallet: _wallet,
       keyId: _keyId,
       jwksPerRecipient: [
@@ -161,9 +182,38 @@ class MediatorClient {
       encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     );
 
-    print('------------');
-    print(jsonEncode(encryptedSetupMessage));
-    print('------------');
+    final liveDeliveryMessage = PlainTextMessage(
+      id: Uuid().v4(),
+      type: Uri.parse(
+          'https://didcomm.org/messagepickup/3.0/live-delivery-change'),
+      body: {'live_delivery': true},
+      to: [mediatorDidDocument.id],
+      from: actorDidDocument.id,
+    );
+
+    liveDeliveryMessage['return_route'] = 'all';
+
+    final liveDeliverySignedMessage = await SignedMessage.pack(
+      liveDeliveryMessage,
+      signer: _didSigner,
+    );
+
+    final liveDeliveryEncryptedMessage =
+        await EncryptedMessage.packWithAuthentication(
+      liveDeliverySignedMessage,
+      wallet: _wallet,
+      keyId: _keyId,
+      jwksPerRecipient: [
+        Jwks.fromJson({
+          'keys': mediatorJwks,
+        }),
+      ],
+      encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+    );
+
+    _channel.sink.add(
+      jsonEncode(liveDeliveryEncryptedMessage),
+    );
 
     _channel.sink.add(
       jsonEncode(encryptedSetupMessage),
