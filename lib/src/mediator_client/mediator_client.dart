@@ -136,27 +136,6 @@ class MediatorClient {
 
     final actorDidDocument = await _getActorDidDocument();
 
-    // TODO: create a class StatusRuest and place it to lib/src/messages/protocols
-    final setupMessage = PlainTextMessage(
-      id: Uuid().v4(),
-      type: Uri.parse('https://didcomm.org/messagepickup/3.0/status-request'),
-      body: {'recipient_did': actorDidDocument.id},
-      to: [mediatorDidDocument.id],
-      from: actorDidDocument.id,
-    );
-
-    setupMessage['return_route'] = 'all';
-
-    //     DidcommEncryptedMessage liveDelivery = await DidcommHelpers.pack(
-    //   sdk.wallet,
-    //   DidcommMessageTypes.LiveDeliveryChange,
-    //   {'live_delivery': true},
-    //   [sdk.mediator.value.did],
-    //   sdk.alias.did,
-    //   sdk.mediator.value.keyAgreements,
-    //   returnRoute: ReturnRouteValue.all,
-    // );
-
     final mediatorJwks = mediatorDidDocument.keyAgreement.map((keyAgreement) {
       final jwk = keyAgreement.asJwk().toJson();
       // TODO: kid is not available in the Jwk anymore. clarify with the team
@@ -165,8 +144,55 @@ class MediatorClient {
       return jwk;
     }).toList();
 
+    // TODO: clarify if setup request is required only by Affinidi mediator
+    final setupRequestMessage = StatusRequestMessage(
+      id: Uuid().v4(),
+      to: [mediatorDidDocument.id],
+      from: actorDidDocument.id,
+      recipientDid: actorDidDocument.id,
+    );
+
+    // TODO: clarify if return_route is required only by Affinidi mediator
+    setupRequestMessage['return_route'] = 'all';
+
+    // TODO: clarify if live delivery is required only by Affinidi mediator
+    final liveDeliveryMessage = LiveDeliveryChangeMessage(
+      id: Uuid().v4(),
+      to: [mediatorDidDocument.id],
+      from: actorDidDocument.id,
+      liveDelivery: true,
+    );
+
+    // TODO: clarify if return_route is required only by Affinidi mediator
+    liveDeliveryMessage['return_route'] = 'all';
+
+    final liveDeliveryEncryptedMessage = await _signAndEncryptMessage(
+      liveDeliveryMessage,
+      mediatorJwks: mediatorJwks,
+    );
+
+    final signedAndEncryptedSetupMessage = await _signAndEncryptMessage(
+      setupRequestMessage,
+      mediatorJwks: mediatorJwks,
+    );
+
+    _channel.sink.add(
+      jsonEncode(liveDeliveryEncryptedMessage),
+    );
+
+    _channel.sink.add(
+      jsonEncode(signedAndEncryptedSetupMessage),
+    );
+
+    return subscription;
+  }
+
+  Future<EncryptedMessage> _signAndEncryptMessage(
+    PlainTextMessage message, {
+    required List<Map<String, String>> mediatorJwks,
+  }) async {
     final signedSetupMessage = await SignedMessage.pack(
-      setupMessage,
+      message,
       signer: _didSigner,
     );
 
@@ -182,44 +208,7 @@ class MediatorClient {
       encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     );
 
-    final liveDeliveryMessage = PlainTextMessage(
-      id: Uuid().v4(),
-      type: Uri.parse(
-          'https://didcomm.org/messagepickup/3.0/live-delivery-change'),
-      body: {'live_delivery': true},
-      to: [mediatorDidDocument.id],
-      from: actorDidDocument.id,
-    );
-
-    liveDeliveryMessage['return_route'] = 'all';
-
-    final liveDeliverySignedMessage = await SignedMessage.pack(
-      liveDeliveryMessage,
-      signer: _didSigner,
-    );
-
-    final liveDeliveryEncryptedMessage =
-        await EncryptedMessage.packWithAuthentication(
-      liveDeliverySignedMessage,
-      wallet: _wallet,
-      keyId: _keyId,
-      jwksPerRecipient: [
-        Jwks.fromJson({
-          'keys': mediatorJwks,
-        }),
-      ],
-      encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-    );
-
-    _channel.sink.add(
-      jsonEncode(liveDeliveryEncryptedMessage),
-    );
-
-    _channel.sink.add(
-      jsonEncode(encryptedSetupMessage),
-    );
-
-    return subscription;
+    return encryptedSetupMessage;
   }
 
   Future<void> disconnect() async {

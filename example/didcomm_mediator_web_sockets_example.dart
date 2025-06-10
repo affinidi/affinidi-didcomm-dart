@@ -9,7 +9,6 @@ import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
 import 'package:didcomm/src/messages/attachments/attachment.dart';
 import 'package:didcomm/src/messages/attachments/attachment_data.dart';
 import 'package:didcomm/src/messages/didcomm_message.dart';
-import 'package:didcomm/src/messages/protocols/routing/forward_message.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 
@@ -205,33 +204,7 @@ void main() async {
     mediatorDidDocument: mediatorDidDocument,
   );
 
-  print('Alice is sending a message...');
-
-  await aliceMediatorClient.sendMessage(
-    encryptedMessageToForward,
-    accessToken: aliceTokens.accessToken,
-  );
-
   print('Bob is waiting for a message...');
-
-  // final messageIds = await bobMediatorClient.listInboxMessageIds(
-  //   accessToken: bobTokens.accessToken,
-  // );
-
-  // final messages = await bobMediatorClient.receiveMessages(
-  //   messageIds: messageIds,
-  //   accessToken: bobTokens.accessToken,
-  // );
-
-  // for (final message in messages) {
-  //   final originalPlainTextMessageFromAlice =
-  //       await DidcommMessage.unpackToPlainTextMessage(
-  //     message: message,
-  //     recipientWallet: bobWallet,
-  //   );
-
-  //   print(jsonEncode(originalPlainTextMessageFromAlice));
-  // }
 
   await bobMediatorClient.listenForIncomingMessages(
     (message) async {
@@ -243,6 +216,8 @@ void main() async {
 
       print(jsonEncode(unpackedMessageByBod));
       print('');
+
+      // TODO: handle mediator service messages and disonnect instead of exit
       exit(0);
       // await bobMediatorClient.disconnect();
     },

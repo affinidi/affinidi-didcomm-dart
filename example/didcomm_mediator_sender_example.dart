@@ -7,7 +7,6 @@ import 'package:didcomm/src/jwks/jwks.dart';
 import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
 import 'package:didcomm/src/messages/attachments/attachment.dart';
 import 'package:didcomm/src/messages/attachments/attachment_data.dart';
-import 'package:didcomm/src/messages/protocols/routing/forward_message.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 

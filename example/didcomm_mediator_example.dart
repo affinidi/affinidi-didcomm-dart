@@ -8,7 +8,6 @@ import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
 import 'package:didcomm/src/messages/attachments/attachment.dart';
 import 'package:didcomm/src/messages/attachments/attachment_data.dart';
 import 'package:didcomm/src/messages/didcomm_message.dart';
-import 'package:didcomm/src/messages/protocols/routing/forward_message.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 
@@ -211,7 +210,7 @@ void main() async {
     accessToken: aliceTokens.accessToken,
   );
 
-  print('Bob is waiting for a message...');
+  print('Bob is fetching messages...');
 
   final messageIds = await bobMediatorClient.listInboxMessageIds(
     accessToken: bobTokens.accessToken,
@@ -231,25 +230,4 @@ void main() async {
 
     print(jsonEncode(originalPlainTextMessageFromAlice));
   }
-
-  // await bobMediatorClient.listenForIncomingMessages(
-  //   (message) async {
-  //     print(jsonEncode(message));
-
-  //     final unpackedMessageByBod =
-  //         await DidcommMessage.unpackToPlainTextMessage(
-  //       message: message,
-  //       recipientWallet: bobWallet,
-  //     );
-
-  //     print(jsonEncode(unpackedMessageByBod));
-  //     print('');
-
-  //     await bobMediatorClient.disconnect();
-  //   },
-  //   onError: (error) => print(error),
-  //   accessToken: bobTokens.accessToken,
-  //   recipientWallet: bobWallet,
-  //   recipientKeyId: bobKeyId,
-  // );
 }
