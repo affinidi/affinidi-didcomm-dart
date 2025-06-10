@@ -179,7 +179,7 @@ class MediatorClient {
   }
 
   Future<DidDocument> _getActorDidDocument() async {
-    final recipientKeyPair = await _wallet.getKeyPair(_keyId);
+    final recipientKeyPair = await _wallet.generateKey(keyId: _keyId);
 
     return DidKey.generateDocument(
       recipientKeyPair.publicKey,

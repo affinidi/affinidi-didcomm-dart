@@ -209,9 +209,10 @@ class EncryptedMessage extends DidcommMessage {
   Future<Recipient> _findSelfAsRecipient(Wallet wallet) async {
     for (final recipient in recipients) {
       final keyId = wallet.getKeyIdByJwkId(recipient.header.keyId);
-
-      if (keyId != null && await wallet.hasKey(keyId)) {
+      if (keyId != null) {
         return recipient;
+      } else {
+        continue;
       }
     }
 
@@ -294,5 +295,18 @@ class EncryptedMessage extends DidcommMessage {
     });
 
     return Future.wait(futures);
+  }
+
+  String _getRecipientDid(String keyId) {
+    final keyIdParts = keyId.split('#');
+    if (keyIdParts.length < 2) {
+      throw ArgumentError('Invalid key ID format: $keyId');
+    }
+    return keyIdParts.first;
+  }
+
+  Future<bool> _isRecipientDid(PublicKey publicKey, String did) async {
+    final didDocument = DidKey.generateDocument(publicKey);
+    return didDocument.id == did;
   }
 }

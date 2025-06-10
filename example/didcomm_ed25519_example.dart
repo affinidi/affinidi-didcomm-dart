@@ -6,7 +6,6 @@ import 'package:didcomm/src/jwks/jwks.dart';
 import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
 import 'package:didcomm/src/messages/didcomm_message.dart';
 import 'package:ssi/ssi.dart';
-import 'package:ssi/src/wallet/key_store/in_memory_key_store.dart';
 import 'package:convert/convert.dart';
 
 void main() async {
@@ -14,27 +13,22 @@ void main() async {
     'a1772b144344781f2a55fc4d5e49f3767bb0967205ad08454a09c76d96fd2ccd',
   );
 
-  final aliceKeyStore = InMemoryKeyStore();
-  final aliceWallet = await Bip32Ed25519Wallet.fromSeed(
+  final aliceWallet = Bip32Ed25519Wallet.fromSeed(
     Uint8List.fromList(aliceSeed),
-    aliceKeyStore,
   );
 
   final bobSeed = hex.decode(
     'b2883c25545589203b66fc5e6f5a04878cc1078311be19525b10d87897fe3ddf',
   );
 
-  final bobKeyStore = InMemoryKeyStore();
-  final bobWallet = await Bip32Ed25519Wallet.fromSeed(
+  final bobWallet = Bip32Ed25519Wallet.fromSeed(
     Uint8List.fromList(bobSeed),
-    bobKeyStore,
   );
 
-  final aliceKeyId = 'alice-key-1';
-  final aliceKeyPair = await aliceWallet.deriveKey(
+  final aliceKeyId = "m/44'/60'/0'/0'/0'";
+  final aliceKeyPair = await aliceWallet.generateKey(
     keyId: aliceKeyId,
     keyType: KeyType.ed25519,
-    derivationPath: "m/44'/60'/0'/0'/0'",
   );
 
   final aliceX25519PublicKey = await aliceWallet.getX25519PublicKey(
@@ -52,12 +46,10 @@ void main() async {
     signatureScheme: SignatureScheme.eddsa_sha512,
   );
 
-  final bobKeyId = 'bob-key-1';
-  final bobKeyPair = await bobWallet.deriveKey(
-    // TODO: in the latest version of SSI keyId is derivationPath. Clarify, if it is ok to use deriviation path in kid
+  final bobKeyId = "m/44'/60'/0'/0'/0'";
+  final bobKeyPair = await bobWallet.generateKey(
     keyId: bobKeyId,
     keyType: KeyType.ed25519,
-    derivationPath: "m/44'/60'/0'/0'/0'",
   );
 
   final bobX25519PublicKey = await bobWallet.getX25519PublicKey(bobKeyPair.id);
