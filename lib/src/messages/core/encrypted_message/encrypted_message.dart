@@ -207,15 +207,12 @@ class EncryptedMessage extends DidcommMessage {
   }
 
   Future<Recipient> _findSelfAsRecipient(Wallet wallet) async {
-    for (final recipient in recipients) {
-      final keyId = wallet.getKeyIdByJwkId(recipient.header.keyId);
+    final self = recipients.firstWhere(
+      (recipient) => wallet.getKeyIdByJwkId(recipient.header.keyId) != null,
+      orElse: () => throw Exception('Self recipient not found'),
+    );
 
-      if (keyId != null && await wallet.hasKey(keyId)) {
-        return recipient;
-      }
-    }
-
-    throw Exception('No matching recipient found in the message');
+    return self;
   }
 
   static bool isEncryptedMessage(Map<String, dynamic> message) {

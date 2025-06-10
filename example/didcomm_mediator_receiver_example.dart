@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/messages/didcomm_message.dart';
 import 'package:ssi/ssi.dart';
-import 'package:ssi/src/wallet/key_store/in_memory_key_store.dart';
 
 import 'helpers.dart';
 
@@ -22,9 +21,9 @@ void main() async {
 
   await receiverKeyStore.set(
     receiverKeyId,
-    StoredKey.fromPrivateKey(
+    StoredKey(
       keyType: KeyType.p256,
-      keyBytes: receiverPrivateKeyBytes,
+      privateKeyBytes: receiverPrivateKeyBytes,
     ),
   );
 
