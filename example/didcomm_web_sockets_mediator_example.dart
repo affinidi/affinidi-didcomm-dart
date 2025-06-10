@@ -213,43 +213,47 @@ void main() async {
 
   print('Bob is waiting for a message...');
 
-  final messageIds = await bobMediatorClient.listInboxMessageIds(
-    accessToken: bobTokens.accessToken,
-  );
-
-  final messages = await bobMediatorClient.receiveMessages(
-    messageIds: messageIds,
-    accessToken: bobTokens.accessToken,
-  );
-
-  for (final message in messages) {
-    final originalPlainTextMessageFromAlice =
-        await DidcommMessage.unpackToPlainTextMessage(
-      message: message,
-      recipientWallet: bobWallet,
-    );
-
-    print(jsonEncode(originalPlainTextMessageFromAlice));
-  }
-
-  // await bobMediatorClient.listenForIncomingMessages(
-  //   (message) async {
-  //     print(jsonEncode(message));
-
-  //     final unpackedMessageByBod =
-  //         await DidcommMessage.unpackToPlainTextMessage(
-  //       message: message,
-  //       recipientWallet: bobWallet,
-  //     );
-
-  //     print(jsonEncode(unpackedMessageByBod));
-  //     print('');
-
-  //     await bobMediatorClient.disconnect();
-  //   },
-  //   onError: (error) => print(error),
+  // final messageIds = await bobMediatorClient.listInboxMessageIds(
   //   accessToken: bobTokens.accessToken,
-  //   recipientWallet: bobWallet,
-  //   recipientKeyId: bobKeyId,
   // );
+
+  // final messages = await bobMediatorClient.receiveMessages(
+  //   messageIds: messageIds,
+  //   accessToken: bobTokens.accessToken,
+  // );
+
+  // for (final message in messages) {
+  //   final originalPlainTextMessageFromAlice =
+  //       await DidcommMessage.unpackToPlainTextMessage(
+  //     message: message,
+  //     recipientWallet: bobWallet,
+  //   );
+
+  //   print(jsonEncode(originalPlainTextMessageFromAlice));
+  // }
+
+  await bobMediatorClient.listenForIncomingMessages(
+    (message) async {
+      final unpackedMessageByBod =
+          await DidcommMessage.unpackToPlainTextMessage(
+        message: message,
+        recipientWallet: bobWallet,
+      );
+
+      print(jsonEncode(unpackedMessageByBod));
+      print('');
+
+      await Future.delayed(Duration(seconds: 3));
+      // await bobMediatorClient.disconnect();
+    },
+    onError: (error) => print(error),
+    onDone: () => print('done'),
+    accessToken: bobTokens.accessToken,
+    cancelOnError: false,
+  );
+
+  await aliceMediatorClient.sendMessage(
+    encryptedMessageToForward,
+    accessToken: aliceTokens.accessToken,
+  );
 }
