@@ -14,7 +14,9 @@ class StatusRequestMessage extends PlainTextMessage {
             'https://didcomm.org/messagepickup/3.0/status-request',
           ),
           body: {'recipient_did': recipientDid},
-        );
+        ) {
+    this['return_route'] = 'all';
+  }
 
   factory StatusRequestMessage.fromJson(Map<String, dynamic> json) {
     final plainTextMessage = PlainTextMessage.fromJson(json);

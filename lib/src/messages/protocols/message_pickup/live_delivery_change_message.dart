@@ -14,7 +14,9 @@ class LiveDeliveryChangeMessage extends PlainTextMessage {
             'https://didcomm.org/messagepickup/3.0/live-delivery-change',
           ),
           body: {'live_delivery': liveDelivery},
-        );
+        ) {
+    this['return_route'] = 'all';
+  }
 
   factory LiveDeliveryChangeMessage.fromJson(Map<String, dynamic> json) {
     final plainTextMessage = PlainTextMessage.fromJson(json);
