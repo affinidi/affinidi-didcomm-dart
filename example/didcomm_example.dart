@@ -81,11 +81,11 @@ void main() async {
   print(sentMessageByAlice);
   print('');
 
-  final unpackedMessageByBod = await DidcommMessage.unpackToPlainTextMessage(
+  final unpackedMessageByBob = await DidcommMessage.unpackToPlainTextMessage(
     message: jsonDecode(sentMessageByAlice),
     recipientWallet: bobWallet,
   );
 
-  print(unpackedMessageByBod?.toJson());
+  print(unpackedMessageByBob?.toJson());
   print('');
 }
