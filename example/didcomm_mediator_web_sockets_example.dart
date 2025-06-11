@@ -208,13 +208,13 @@ void main() async {
 
   await bobMediatorClient.listenForIncomingMessages(
     (message) async {
-      final unpackedMessageByBod =
+      final unpackedMessageByBob =
           await DidcommMessage.unpackToPlainTextMessage(
         message: message,
         recipientWallet: bobWallet,
       );
 
-      print(jsonEncode(unpackedMessageByBod));
+      print(jsonEncode(unpackedMessageByBob));
       print('');
 
       // TODO: handle mediator service messages and disonnect instead of exit
