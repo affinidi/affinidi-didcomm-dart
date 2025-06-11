@@ -61,8 +61,8 @@ class EncryptedMessage extends DidcommMessage {
   }) async {
     return await EncryptedMessage.pack(
       message,
-      senderWallet: wallet,
-      senderKeyId: keyId,
+      wallet: wallet,
+      keyId: keyId,
       jwksPerRecipient: jwksPerRecipient,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -78,8 +78,8 @@ class EncryptedMessage extends DidcommMessage {
   }) async {
     return await EncryptedMessage.pack(
       message,
-      senderWallet: wallet,
-      senderKeyId: keyId,
+      wallet: wallet,
+      keyId: keyId,
       jwksPerRecipient: jwksPerRecipient,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -88,8 +88,8 @@ class EncryptedMessage extends DidcommMessage {
 
   static Future<EncryptedMessage> pack(
     DidcommMessage message, {
-    required Wallet senderWallet,
-    required String senderKeyId,
+    required Wallet wallet,
+    required String keyId,
     required List<Jwks> jwksPerRecipient,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
@@ -108,12 +108,12 @@ class EncryptedMessage extends DidcommMessage {
     //   }
     // }
 
-    final publicKey = await senderWallet.getPublicKey(senderKeyId);
+    final publicKey = await wallet.getPublicKey(keyId);
     final ephemeralKeyPair = generateEphemeralKeyPair(publicKey.type);
 
     final jweHeader = await JweHeader.fromWalletKey(
-      senderWallet,
-      senderKeyId,
+      wallet,
+      keyId,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
       jwksPerRecipient: jwksPerRecipient,
@@ -141,8 +141,8 @@ class EncryptedMessage extends DidcommMessage {
     }
 
     final recipients = await _createRecipients(
-      senderWallet: senderWallet,
-      senderKeyId: senderKeyId,
+      senderWallet: wallet,
+      senderKeyId: keyId,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       jwksPerRecipient: jwksPerRecipient,
       authenticationTag: encryptedInnerMessage.authenticationTag!,
