@@ -5,7 +5,6 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
 import 'package:ssi/ssi.dart' hide Jwk;
 
-import '../../../common/did.dart';
 import '../../../converters/base64_url_converter.dart';
 import '../../../converters/jwe_header_converter.dart';
 import '../../../ecdh/ecdh.dart';
@@ -171,26 +170,22 @@ class EncryptedMessage extends DidcommMessage {
     final self = await _findSelfAsRecipient(recipientWallet);
     final jweHeader = JweHeaderConverter().fromJson(protected);
 
-    final subjectKeyId = jweHeader.resolveSubjectKeyId();
-    final senderDid = getDidFromId(subjectKeyId);
+    final subjectKeyId = jweHeader.subjectKeyId;
 
-    final senderDidDocument = await UniversalDIDResolver.resolve(senderDid);
-
-    final keyAgreement = senderDidDocument.keyAgreement.firstWhere(
-      (keyAgreement) => keyAgreement.id == subjectKeyId,
-      orElse: () =>
-          throw Exception('Can not find a key agreement for subject ID'),
-    );
-
-    final senderJwk = Jwk.fromJson(
-      keyAgreement.asJwk().toJson(),
-    );
+    if (subjectKeyId == null &&
+        jweHeader.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
+      throw ArgumentError(
+        'skid is required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
+      );
+    }
 
     final contentEncryptionKey = await Ecdh.decrypt(
       self.encryptedKey,
       recipientWallet: recipientWallet,
       jweHeader: jweHeader,
-      senderJwk: senderJwk,
+      senderJwk: jweHeader.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu
+          ? await _getSenderJwk(subjectKeyId!)
+          : null,
       self: self,
       authenticationTag: authenticationTag,
     );
@@ -212,6 +207,23 @@ class EncryptedMessage extends DidcommMessage {
     );
 
     return jsonDecode(utf8.decode(decrypted));
+  }
+
+  Future<Jwk> _getSenderJwk(String subjectKeyId) async {
+    final senderDid = subjectKeyId.split('#').first;
+    final senderDidDocument = await UniversalDIDResolver.resolve(senderDid);
+
+    final keyAgreement = senderDidDocument.keyAgreement.firstWhere(
+      (keyAgreement) => keyAgreement.id == subjectKeyId,
+      orElse: () =>
+          throw Exception('Can not find a key agreement for subject ID'),
+    );
+
+    final senderJwk = Jwk.fromJson(
+      keyAgreement.asJwk().toJson(),
+    );
+
+    return senderJwk;
   }
 
   Future<Recipient> _findSelfAsRecipient(Wallet wallet) async {

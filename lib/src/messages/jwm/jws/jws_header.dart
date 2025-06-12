@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'jws_header.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class JwsHeader {
   // TODO: clarify with SSI why it is null here: https://github.com/affinidi/affinidi-ssi-dart/blob/main/lib/src/types.dart#L69
   @JsonKey(name: 'alg')

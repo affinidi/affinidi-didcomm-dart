@@ -20,12 +20,12 @@ JweHeader _$JweHeaderFromJson(Map<String, dynamic> json) => JweHeader(
 
 Map<String, dynamic> _$JweHeaderToJson(JweHeader instance) => <String, dynamic>{
       'typ': instance.type,
-      'skid': instance.subjectKeyId,
+      if (instance.subjectKeyId case final value?) 'skid': value,
       'alg': _$KeyWrappingAlgorithmEnumMap[instance.keyWrappingAlgorithm]!,
       'enc': _$EncryptionAlgorithmEnumMap[instance.encryptionAlgorithm]!,
       'epk': instance.ephemeralKey,
-      'apu': instance.agreementPartyUInfo,
-      'apv': instance.agreementPartyVInfo,
+      if (instance.agreementPartyUInfo case final value?) 'apu': value,
+      if (instance.agreementPartyVInfo case final value?) 'apv': value,
     };
 
 const _$KeyWrappingAlgorithmEnumMap = {
