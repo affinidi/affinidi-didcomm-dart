@@ -68,9 +68,11 @@ void main() async {
               ]) {
                 group(encryptionAlgorithm.value, () {
                   test(
-                    'Pack and unpack encrypted message with authentication successfully',
+                    'Pack and unpack encrypted message successfully',
                     () async {
                       // Act: create, sign, and encrypt the message
+
+                      // TODO: create a helper function to create a message so it can be reused
                       final plainTextMessage = PlainTextMessage(
                         id: 'test-id',
                         from: aliceDidDocument.id,
@@ -114,6 +116,8 @@ void main() async {
 
                       expect(actual, isNotNull);
                       expect(actual!.body?['content'], expectedBodyContent);
+
+                      // TODO: check if there is no any user identifiable information in the unpacked message for anonymous messages
                     },
                   );
 
@@ -146,6 +150,7 @@ void main() async {
 
                       // Assert: unpack and check success
 
+                      // Simulate a missing key by modifying the recipient's key ID
                       final receivedMessage =
                           jsonDecode(sharedMessageToBobInJson);
                       receivedMessage['recipients'][0]['header']['kid'] =
@@ -161,6 +166,10 @@ void main() async {
                           actualFuture, throwsA(isA<Exception>()));
                     },
                   );
+
+                  // TODO: find all places, which throw generic Exception and relace them with more specific exceptions
+                  // TODO: add tests to capture those exceptions
+                  // TODO: wrap failed decryption that throw 'Invalid ' with own exception
                 });
               }
             });
