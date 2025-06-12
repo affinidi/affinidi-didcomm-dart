@@ -162,27 +162,22 @@ class EncryptedMessage extends DidcommMessage {
 
   Future<Map<String, dynamic>> unpack({required Wallet recipientWallet}) async {
     final self = await _findSelfAsRecipient(recipientWallet);
+    final subjectKeyId = protected.subjectKeyId;
 
-    final subjectKeyId = protected.resolveSubjectKeyId();
-    final senderDid = subjectKeyId.split('#').first;
-
-    final senderDidDocument = await UniversalDIDResolver.resolve(senderDid);
-
-    final keyAgreement = senderDidDocument.keyAgreement.firstWhere(
-      (keyAgreement) => keyAgreement.id == subjectKeyId,
-      orElse: () =>
-          throw Exception('Can not find a key agreement for subject ID'),
-    );
-
-    final senderJwk = Jwk.fromJson(
-      keyAgreement.asJwk().toJson(),
-    );
+    if (subjectKeyId == null &&
+        protected.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
+      throw ArgumentError(
+        'skid is required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
+      );
+    }
 
     final contentEncryptionKey = await Ecdh.decrypt(
       self.encryptedKey,
       recipientWallet: recipientWallet,
       jweHeader: protected,
-      senderJwk: senderJwk,
+      senderJwk: protected.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu
+          ? await _getSenderJwk(subjectKeyId!)
+          : null,
       self: self,
       authenticationTag: authenticationTag,
     );
@@ -204,6 +199,23 @@ class EncryptedMessage extends DidcommMessage {
     );
 
     return jsonDecode(utf8.decode(decrypted));
+  }
+
+  Future<Jwk> _getSenderJwk(String subjectKeyId) async {
+    final senderDid = subjectKeyId.split('#').first;
+
+    final senderDidDocument = await UniversalDIDResolver.resolve(senderDid);
+
+    final keyAgreement = senderDidDocument.keyAgreement.firstWhere(
+      (keyAgreement) => keyAgreement.id == subjectKeyId,
+      orElse: () =>
+          throw Exception('Can not find a key agreement for subject ID'),
+    );
+
+    final senderJwk = Jwk.fromJson(
+      keyAgreement.asJwk().toJson(),
+    );
+    return senderJwk;
   }
 
   Future<Recipient> _findSelfAsRecipient(Wallet wallet) async {

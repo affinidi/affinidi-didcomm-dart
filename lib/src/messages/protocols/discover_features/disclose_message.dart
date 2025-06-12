@@ -3,7 +3,7 @@ import '../../didcomm_message.dart';
 
 part 'disclose_message.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class DiscloseMessage extends DidcommMessage {
   DiscloseMessage();
 

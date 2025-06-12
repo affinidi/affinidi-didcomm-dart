@@ -7,7 +7,7 @@ import '../curves/curve_type.dart';
 
 part 'jwk.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class Jwk {
   @JsonKey(name: 'kid')
   final String? keyId;

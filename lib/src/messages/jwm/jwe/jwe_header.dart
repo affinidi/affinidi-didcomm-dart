@@ -17,7 +17,7 @@ import 'ephemeral_key.dart';
 
 part 'jwe_header.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class JweHeader {
   @JsonKey(name: 'typ')
   final String type;
@@ -60,6 +60,7 @@ class JweHeader {
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
     final (subjectKeyId, curve, senderPublicKey) = await _buildHeaderParts(
+      keyWrappingAlgorithm,
       wallet,
       keyId,
     );
@@ -87,20 +88,9 @@ class JweHeader {
 
   Map<String, dynamic> toJson() => _$JweHeaderToJson(this);
 
-  String resolveSubjectKeyId() {
-    if (subjectKeyId != null) {
-      return subjectKeyId!;
-    }
-
-    if (agreementPartyUInfo != null) {
-      return base64DecodeToUtf8(agreementPartyUInfo!);
-    }
-
-    throw Exception('Ether skid or apu is required');
-  }
-
   // TODO: add support for DID web and peer
-  static Future<(String, CurveType, PublicKey)> _buildHeaderParts(
+  static Future<(String?, CurveType, PublicKey)> _buildHeaderParts(
+    KeyWrappingAlgorithm keyWrapAlgorithm,
     Wallet wallet,
     String keyId,
   ) async {
@@ -127,8 +117,11 @@ class JweHeader {
     }
 
     // TODO: revisit taking the first key agreement
-    // TODO: key arrangement can be a string https://identity.foundation/didcomm-messaging/spec/#key-ids
-    final subjectKeyId = didDocument.keyAgreement.first.id;
+
+    final subjectKeyId = keyWrapAlgorithm == KeyWrappingAlgorithm.ecdh1Pu
+        ? didDocument.keyAgreement.first.id
+        : null;
+
     return (subjectKeyId, curve, publicKey);
   }
 
@@ -203,10 +196,18 @@ class JweHeader {
 
   static String? _buildAgreementPartyUInfo(
     KeyWrappingAlgorithm keyWrapAlgorithm,
-    String subjectKeyId,
+    String? subjectKeyId,
   ) {
+    if (keyWrapAlgorithm == KeyWrappingAlgorithm.ecdh1Pu &&
+        subjectKeyId == null) {
+      throw ArgumentError(
+        'subjectKeyId is required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
+        'subjectKeyId',
+      );
+    }
+
     return keyWrapAlgorithm == KeyWrappingAlgorithm.ecdh1Pu
-        ? base64UrlEncodeNoPadding(utf8.encode(subjectKeyId))
+        ? base64UrlEncodeNoPadding(utf8.encode(subjectKeyId!))
         : null;
   }
 }

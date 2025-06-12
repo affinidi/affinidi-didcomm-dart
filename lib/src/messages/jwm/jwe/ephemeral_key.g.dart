@@ -19,8 +19,10 @@ Map<String, dynamic> _$EphemeralKeyToJson(EphemeralKey instance) =>
       'kty': _$EphemeralKeyTypeEnumMap[instance.keyType]!,
       'crv': _$CurveTypeEnumMap[instance.curve]!,
       'x': const Base64UrlConverter().toJson(instance.x),
-      'y': _$JsonConverterToJson<String, Uint8List>(
-          instance.y, const Base64UrlConverter().toJson),
+      if (_$JsonConverterToJson<String, Uint8List>(
+              instance.y, const Base64UrlConverter().toJson)
+          case final value?)
+        'y': value,
     };
 
 const _$EphemeralKeyTypeEnumMap = {

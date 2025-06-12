@@ -7,7 +7,7 @@ import 'recipient_header.dart';
 
 part 'recipient.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class Recipient {
   @JsonKey(name: 'encrypted_key')
   @Base64UrlConverter()

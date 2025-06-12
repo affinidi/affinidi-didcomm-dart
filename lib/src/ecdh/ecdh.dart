@@ -54,9 +54,9 @@ abstract class Ecdh {
     Uint8List data, {
     required Recipient self,
     required JweHeader jweHeader,
-    required Jwk senderJwk,
     required Wallet recipientWallet,
     required Uint8List authenticationTag,
+    Jwk? senderJwk,
   }) async {
     final curveType = jweHeader.ephemeralKey.curve;
     final Ecdh ecdh;
@@ -125,8 +125,8 @@ abstract class Ecdh {
 
   static Ecdh _createForSecp256OrPCurveForDecryption({
     required JweHeader jweHeader,
-    required Jwk senderJwk,
     required Uint8List authenticationTag,
+    Jwk? senderJwk,
   }) {
     final keyWrappingAlgorithm = jweHeader.keyWrappingAlgorithm;
 
@@ -140,6 +140,10 @@ abstract class Ecdh {
     }
 
     if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
+      if (senderJwk == null) {
+        throw ArgumentError('senderJwk is required for ecdh1Pu', 'senderJwk');
+      }
+
       return Ecdh1PuForSecp256AndP(
         jweHeader: jweHeader,
         authenticationTag: authenticationTag,
@@ -185,7 +189,7 @@ abstract class Ecdh {
   static Ecdh _createForXCurveForDecryption({
     required JweHeader jweHeader,
     required Uint8List authenticationTag,
-    required Jwk senderJwk,
+    Jwk? senderJwk,
   }) {
     final keyWrappingAlgorithm = jweHeader.keyWrappingAlgorithm;
 
@@ -196,12 +200,11 @@ abstract class Ecdh {
       );
     }
 
-    // ecdhProfile = ECDHES_X25519(
-    // apv: protectedHeader.apv,
-    // enc: protectedHeader.enc,
-    // publicKey: publicKeyBytesFromJwk(protectedHeader.epk));
-
     if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
+      if (senderJwk == null) {
+        throw ArgumentError('senderJwk is required for ecdh1Pu', 'senderJwk');
+      }
+
       return Ecdh1PuForX(
         jweHeader: jweHeader,
         publicKeyBytes1: jweHeader.ephemeralKey.x,
