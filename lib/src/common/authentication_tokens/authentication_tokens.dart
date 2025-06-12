@@ -4,7 +4,6 @@ import '../../converters/epoch_seconds_converter.dart';
 
 part 'authentication_tokens.g.dart';
 
-// TODO: should be eventually moved to TDK
 @JsonSerializable(includeIfNull: false)
 class AuthenticationTokens {
   @JsonKey(name: 'access_token')
