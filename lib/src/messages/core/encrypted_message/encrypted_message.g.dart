@@ -10,8 +10,7 @@ EncryptedMessage _$EncryptedMessageFromJson(Map<String, dynamic> json) =>
     EncryptedMessage(
       cipherText:
           const Base64UrlConverter().fromJson(json['ciphertext'] as String),
-      protected:
-          const JweHeaderConverter().fromJson(json['protected'] as String),
+      protected: json['protected'] as String,
       recipients: (json['recipients'] as List<dynamic>)
           .map((e) => Recipient.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -24,7 +23,7 @@ EncryptedMessage _$EncryptedMessageFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$EncryptedMessageToJson(EncryptedMessage instance) =>
     <String, dynamic>{
       'ciphertext': const Base64UrlConverter().toJson(instance.cipherText),
-      'protected': const JweHeaderConverter().toJson(instance.protected),
+      'protected': instance.protected,
       'recipients': instance.recipients,
       'tag': const Base64UrlConverter().toJson(instance.authenticationTag),
       'iv': const Base64UrlConverter().toJson(instance.initializationVector),

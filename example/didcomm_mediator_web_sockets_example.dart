@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/encoding.dart';
@@ -217,9 +216,7 @@ void main() async {
       print(jsonEncode(unpackedMessageByBob));
       print('');
 
-      // TODO: handle mediator service messages and disonnect instead of exit
-      exit(0);
-      // await bobMediatorClient.disconnect();
+      await bobMediatorClient.disconnect();
     },
     onError: (error) => print(error),
     onDone: () => print('done'),

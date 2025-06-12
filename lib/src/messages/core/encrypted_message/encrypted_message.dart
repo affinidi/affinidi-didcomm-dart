@@ -11,7 +11,6 @@ import '../../../ecdh/ecdh.dart';
 import '../../../jwks/jwks.dart';
 import '../../../annotations/own_json_properties.dart';
 import '../../../common/crypto.dart';
-import '../../../common/encoding.dart';
 import '../../../extensions/extensions.dart';
 import '../../algorithm_types/algorithms_types.dart';
 import '../../didcomm_message.dart';
@@ -31,8 +30,13 @@ class EncryptedMessage extends DidcommMessage {
   @Base64UrlConverter()
   final Uint8List cipherText;
 
-  @JweHeaderConverter()
-  final JweHeader protected;
+  // this is base64Url encoded JWE Header.
+  // we can't use JweHeaderConverter annotation here,
+  // because raw protected field is needed for decryption (additionalAuthenticatedData).
+  // if during serialization/deserialization it looses or gains some fields,
+  // decryption fails.
+  // this is why it is important to keep the original value from JSON
+  final String protected;
 
   final List<Recipient> recipients;
 
@@ -61,8 +65,8 @@ class EncryptedMessage extends DidcommMessage {
   }) async {
     return await EncryptedMessage.pack(
       message,
-      senderWallet: wallet,
-      senderKeyId: keyId,
+      wallet: wallet,
+      keyId: keyId,
       jwksPerRecipient: jwksPerRecipient,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -78,8 +82,8 @@ class EncryptedMessage extends DidcommMessage {
   }) async {
     return await EncryptedMessage.pack(
       message,
-      senderWallet: wallet,
-      senderKeyId: keyId,
+      wallet: wallet,
+      keyId: keyId,
       jwksPerRecipient: jwksPerRecipient,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -88,8 +92,8 @@ class EncryptedMessage extends DidcommMessage {
 
   static Future<EncryptedMessage> pack(
     DidcommMessage message, {
-    required Wallet senderWallet,
-    required String senderKeyId,
+    required Wallet wallet,
+    required String keyId,
     required List<Jwks> jwksPerRecipient,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
@@ -108,18 +112,20 @@ class EncryptedMessage extends DidcommMessage {
     //   }
     // }
 
-    final publicKey = await senderWallet.getPublicKey(senderKeyId);
+    final publicKey = await wallet.getPublicKey(keyId);
     final ephemeralKeyPair = generateEphemeralKeyPair(publicKey.type);
 
     final jweHeader = await JweHeader.fromWalletKey(
-      senderWallet,
-      senderKeyId,
+      wallet,
+      keyId,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
       jwksPerRecipient: jwksPerRecipient,
       ephemeralPrivateKeyBytes: ephemeralKeyPair.privateKeyBytes,
       ephemeralPublicKeyBytes: ephemeralKeyPair.publicKeyBytes,
     );
+
+    final protected = JweHeaderConverter().toJson(jweHeader);
 
     final contentEncryptionKey = _createContentEncryptionKey(
       encryptionAlgorithm,
@@ -129,7 +135,7 @@ class EncryptedMessage extends DidcommMessage {
       message,
       encryptionKey: contentEncryptionKey,
       encryptionAlgorithm: encryptionAlgorithm,
-      jweHeader: jweHeader,
+      protected: protected,
     );
 
     if (encryptedInnerMessage.initializationVector == null) {
@@ -141,8 +147,8 @@ class EncryptedMessage extends DidcommMessage {
     }
 
     final recipients = await _createRecipients(
-      senderWallet: senderWallet,
-      senderKeyId: senderKeyId,
+      wallet: wallet,
+      keyId: keyId,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       jwksPerRecipient: jwksPerRecipient,
       authenticationTag: encryptedInnerMessage.authenticationTag!,
@@ -153,7 +159,7 @@ class EncryptedMessage extends DidcommMessage {
 
     return EncryptedMessage(
       cipherText: encryptedInnerMessage.data,
-      protected: jweHeader,
+      protected: protected,
       recipients: recipients,
       authenticationTag: encryptedInnerMessage.authenticationTag!,
       initializationVector: encryptedInnerMessage.initializationVector!,
@@ -162,8 +168,9 @@ class EncryptedMessage extends DidcommMessage {
 
   Future<Map<String, dynamic>> unpack({required Wallet recipientWallet}) async {
     final self = await _findSelfAsRecipient(recipientWallet);
+    final jweHeader = JweHeaderConverter().fromJson(protected);
 
-    final subjectKeyId = protected.resolveSubjectKeyId();
+    final subjectKeyId = jweHeader.resolveSubjectKeyId();
     final senderDid = subjectKeyId.split('#').first;
 
     final senderDidDocument = await UniversalDIDResolver.resolve(senderDid);
@@ -181,14 +188,14 @@ class EncryptedMessage extends DidcommMessage {
     final contentEncryptionKey = await Ecdh.decrypt(
       self.encryptedKey,
       recipientWallet: recipientWallet,
-      jweHeader: protected,
+      jweHeader: jweHeader,
       senderJwk: senderJwk,
       self: self,
       authenticationTag: authenticationTag,
     );
 
     final encrypter = createSymmetricEncrypter(
-      protected.encryptionAlgorithm,
+      jweHeader.encryptionAlgorithm,
       ck.SymmetricKey(keyValue: contentEncryptionKey),
     );
 
@@ -198,7 +205,7 @@ class EncryptedMessage extends DidcommMessage {
         initializationVector: initializationVector,
         authenticationTag: authenticationTag,
         additionalAuthenticatedData: ascii.encode(
-          base64UrlEncodeNoPadding(protected.toJsonBytes()),
+          protected,
         ),
       ),
     );
@@ -242,15 +249,14 @@ class EncryptedMessage extends DidcommMessage {
     DidcommMessage message, {
     required ck.SymmetricKey encryptionKey,
     required EncryptionAlgorithm encryptionAlgorithm,
-    required JweHeader jweHeader,
+    required String protected,
   }) {
     final encrypter = createSymmetricEncrypter(
       encryptionAlgorithm,
       encryptionKey,
     );
 
-    final headerBase64Url = base64UrlEncodeNoPadding(jweHeader.toJsonBytes());
-    final headerBytes = ascii.encode(headerBase64Url);
+    final headerBytes = ascii.encode(protected);
 
     return encrypter.encrypt(
       message.toJsonBytes(),
@@ -259,8 +265,8 @@ class EncryptedMessage extends DidcommMessage {
   }
 
   static Future<List<Recipient>> _createRecipients({
-    required Wallet senderWallet,
-    required String senderKeyId,
+    required Wallet wallet,
+    required String keyId,
     required List<Jwks> jwksPerRecipient,
     required JweHeader jweHeader,
     required ck.SymmetricKey contentEncryptionKey,
@@ -268,7 +274,7 @@ class EncryptedMessage extends DidcommMessage {
     required Uint8List authenticationTag,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
   }) async {
-    final publicKey = await senderWallet.getPublicKey(senderKeyId);
+    final publicKey = await wallet.getPublicKey(keyId);
 
     final futures = jwksPerRecipient.map((jwks) async {
       final curve = publicKey.type.asDidcommCompatibleCurve();
@@ -276,8 +282,8 @@ class EncryptedMessage extends DidcommMessage {
 
       final encryptedKey = await Ecdh.encrypt(
         contentEncryptionKey.keyValue,
-        senderWallet: senderWallet,
-        senderKeyId: senderKeyId,
+        senderWallet: wallet,
+        senderKeyId: keyId,
         recipientJwk: recipientJwk,
         ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
         jweHeader: jweHeader,
