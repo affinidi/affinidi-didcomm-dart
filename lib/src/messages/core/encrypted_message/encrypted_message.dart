@@ -168,12 +168,10 @@ class EncryptedMessage extends DidcommMessage {
 
   Future<Map<String, dynamic>> unpack({required Wallet recipientWallet}) async {
     final self = await _findSelfAsRecipient(recipientWallet);
-    final jweHeader = JweHeaderConverter().fromJson(protected);
-
-    final subjectKeyId = jweHeader.subjectKeyId;
+    final subjectKeyId = protected.subjectKeyId;
 
     if (subjectKeyId == null &&
-        jweHeader.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
+        protected.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
       throw ArgumentError(
         'skid is required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
       );
@@ -182,8 +180,8 @@ class EncryptedMessage extends DidcommMessage {
     final contentEncryptionKey = await Ecdh.decrypt(
       self.encryptedKey,
       recipientWallet: recipientWallet,
-      jweHeader: jweHeader,
-      senderJwk: jweHeader.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu
+      jweHeader: protected,
+      senderJwk: protected.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu
           ? await _getSenderJwk(subjectKeyId!)
           : null,
       self: self,
@@ -211,6 +209,7 @@ class EncryptedMessage extends DidcommMessage {
 
   Future<Jwk> _getSenderJwk(String subjectKeyId) async {
     final senderDid = subjectKeyId.split('#').first;
+
     final senderDidDocument = await UniversalDIDResolver.resolve(senderDid);
 
     final keyAgreement = senderDidDocument.keyAgreement.firstWhere(
@@ -222,7 +221,6 @@ class EncryptedMessage extends DidcommMessage {
     final senderJwk = Jwk.fromJson(
       keyAgreement.asJwk().toJson(),
     );
-
     return senderJwk;
   }
 
