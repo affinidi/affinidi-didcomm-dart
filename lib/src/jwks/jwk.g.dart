@@ -38,30 +38,34 @@ Jwk _$JwkFromJson(Map<String, dynamic> json) => Jwk(
     );
 
 Map<String, dynamic> _$JwkToJson(Jwk instance) => <String, dynamic>{
-      'kid': instance.keyId,
+      if (instance.keyId case final value?) 'kid': value,
       'kty': instance.keyType,
-      'use': instance.publicKeyUse,
-      'key_ops': instance.keyOperations,
-      'alg': instance.algorithm,
-      'x5u': instance.x509Url,
-      'x5c': instance.x509CertificateChain,
-      'x5t': instance.x509Thumbprint,
-      'x5t#S256': instance.x509ThumbprintS256,
-      'crv': _$CurveTypeEnumMap[instance.curve],
-      'x': _$JsonConverterToJson<String, Uint8List>(
-          instance.x, const Base64UrlConverter().toJson),
-      'y': _$JsonConverterToJson<String, Uint8List>(
-          instance.y, const Base64UrlConverter().toJson),
-      'd': instance.d,
-      'n': instance.n,
-      'e': instance.e,
-      'p': instance.p,
-      'q': instance.q,
-      'dp': instance.dp,
-      'dq': instance.dq,
-      'qi': instance.qi,
-      'oth': instance.oth,
-      'k': instance.k,
+      if (instance.publicKeyUse case final value?) 'use': value,
+      if (instance.keyOperations case final value?) 'key_ops': value,
+      if (instance.algorithm case final value?) 'alg': value,
+      if (instance.x509Url case final value?) 'x5u': value,
+      if (instance.x509CertificateChain case final value?) 'x5c': value,
+      if (instance.x509Thumbprint case final value?) 'x5t': value,
+      if (instance.x509ThumbprintS256 case final value?) 'x5t#S256': value,
+      if (_$CurveTypeEnumMap[instance.curve] case final value?) 'crv': value,
+      if (_$JsonConverterToJson<String, Uint8List>(
+              instance.x, const Base64UrlConverter().toJson)
+          case final value?)
+        'x': value,
+      if (_$JsonConverterToJson<String, Uint8List>(
+              instance.y, const Base64UrlConverter().toJson)
+          case final value?)
+        'y': value,
+      if (instance.d case final value?) 'd': value,
+      if (instance.n case final value?) 'n': value,
+      if (instance.e case final value?) 'e': value,
+      if (instance.p case final value?) 'p': value,
+      if (instance.q case final value?) 'q': value,
+      if (instance.dp case final value?) 'dp': value,
+      if (instance.dq case final value?) 'dq': value,
+      if (instance.qi case final value?) 'qi': value,
+      if (instance.oth case final value?) 'oth': value,
+      if (instance.k case final value?) 'k': value,
     };
 
 const _$CurveTypeEnumMap = {

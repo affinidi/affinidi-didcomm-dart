@@ -14,6 +14,6 @@ JwsHeader _$JwsHeaderFromJson(Map<String, dynamic> json) => JwsHeader(
 
 Map<String, dynamic> _$JwsHeaderToJson(JwsHeader instance) => <String, dynamic>{
       'alg': instance.algorithm,
-      'crv': instance.curve,
+      if (instance.curve case final value?) 'crv': value,
       'typ': instance.mimeType,
     };

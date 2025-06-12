@@ -3,7 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'out_of_band_message.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class OutOfBandMessage extends DidcommMessage {
   OutOfBandMessage();
 

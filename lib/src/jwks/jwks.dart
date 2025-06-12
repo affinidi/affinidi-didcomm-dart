@@ -5,7 +5,7 @@ export 'jwk.dart';
 
 part 'jwks.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class Jwks {
   final List<Jwk> keys;
 

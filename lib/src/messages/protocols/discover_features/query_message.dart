@@ -3,7 +3,7 @@ import '../../didcomm_message.dart';
 
 part 'query_message.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class QueryMessage extends DidcommMessage {
   QueryMessage();
 
