@@ -32,3 +32,17 @@ Future<DidDocument> readDidDocument(String didDocumentPath) async {
 Future<String> readDid(String didPath) async {
   return await File(didPath).readAsString();
 }
+
+void prettyPrint(String name, Object? object) {
+  if (object is String) {
+    print('$name: $object\n');
+  } else {
+    final prettyString = const JsonEncoder.withIndent('  ').convert(object);
+    print('$name:\n$prettyString\n${formatBytes(prettyString.length)}\n');
+  }
+}
+
+String formatBytes(int bytes) {
+  final kbs = bytes / 1024;
+  return '${kbs.toStringAsFixed(2)}kb';
+}
