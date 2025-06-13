@@ -2,7 +2,7 @@ import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/did_document_service_type.dart';
 import 'package:didcomm/src/common/encoding.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
-import 'package:didcomm/src/jwks/jwks.dart';
+import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
 import 'package:didcomm/src/messages/attachments/attachment.dart';
 import 'package:didcomm/src/messages/attachments/attachment_data.dart';
@@ -89,13 +89,12 @@ void main() async {
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
-  // TODO: kid is not available in the Jwk anymore. clarify with the team
-  final bobJwk = bobDidDocument.keyAgreement[0].asJwk().toJson();
-  bobJwk['kid'] =
-      '${bobDidDocument.id}#${bobDidDocument.id.replaceFirst('did:key:', '')}';
+  final bobJwks = bobDidDocument.keyAgreement.toJwks();
 
-  // Important! link JWK, so the wallet should be able to find the key pair by JWK
-  bobWallet.linkJwkKeyIdKeyWithKeyId(bobJwk['kid']!, bobKeyId);
+  for (var jwk in bobJwks.keys) {
+    // Important! link JWK, so the wallet should be able to find the key pair by JWK
+    bobWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
+  }
 
   final plainTextMassage = PlainTextMessage(
     id: Uuid().v4(),
@@ -119,11 +118,7 @@ void main() async {
     signedMessageByAlice,
     wallet: aliceWallet,
     keyId: aliceKeyId,
-    jwksPerRecipient: [
-      Jwks.fromJson({
-        'keys': [bobJwk],
-      }),
-    ],
+    jwksPerRecipient: [bobJwks],
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
 
@@ -161,24 +156,12 @@ void main() async {
 
   prettyPrint('Singed Forward Message', signedMessageToForward);
 
-  final bobMediatorJwks = bobMediatorDocument.keyAgreement.map((keyAgreement) {
-    final jwk = keyAgreement.asJwk().toJson();
-    // TODO: kid is not available in the Jwk anymore. clarify with the team
-    jwk['kid'] = keyAgreement.id;
-
-    return jwk;
-  }).toList();
-
   final encryptedMessageToForward =
       await EncryptedMessage.packWithAuthentication(
     signedMessageToForward,
     wallet: aliceWallet,
     keyId: aliceKeyId,
-    jwksPerRecipient: [
-      Jwks.fromJson({
-        'keys': bobMediatorJwks,
-      }),
-    ],
+    jwksPerRecipient: [bobMediatorDocument.keyAgreement.toJwks()],
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
 
