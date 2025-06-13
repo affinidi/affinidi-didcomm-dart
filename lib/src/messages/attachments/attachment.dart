@@ -1,7 +1,7 @@
-import 'package:didcomm/src/messages/attachments/attachment_data.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../../converters/epoch_seconds_converter.dart';
+import 'attachment_data.dart';
 
 part 'attachment.g.dart';
 

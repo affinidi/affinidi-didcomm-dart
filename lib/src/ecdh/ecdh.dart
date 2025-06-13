@@ -1,16 +1,16 @@
 import 'dart:typed_data';
 
-import 'package:didcomm/src/ecdh/ecdh_es/ecdh_es_for_secp_and_p.dart';
-import 'package:didcomm/src/ecdh/ecdh_es/ecdh_es_for_x.dart';
-import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:ssi/ssi.dart' show Wallet;
 
 import '../../didcomm.dart';
 import '../jwks/jwks.dart';
 import '../messages/algorithm_types/algorithms_types.dart';
 import '../messages/jwm.dart';
+import '../extensions/extensions.dart';
 import 'ecdh_1pu/ecdh_1pu_for_secp256_and_p.dart';
 import 'ecdh_1pu/ecdh_1pu_for_x.dart';
+import 'ecdh_es/ecdh_es_for_secp_and_p.dart';
+import 'ecdh_es/ecdh_es_for_x.dart';
 
 abstract class Ecdh {
   static Future<Uint8List> encrypt(

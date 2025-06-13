@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:didcomm/src/common/encoding.dart';
 import 'package:json_annotation/json_annotation.dart';
+import '../common/encoding.dart';
 import '../extensions/extensions.dart';
 import '../messages/jwm.dart';
 
