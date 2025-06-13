@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/did_document_service_type.dart';
 import 'package:didcomm/src/common/encoding.dart';
@@ -41,8 +39,7 @@ void main() async {
   final aliceKeyPair = await aliceWallet.getKeyPair(aliceKeyId);
   final aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
 
-  print('Alice DID: ${aliceDidDocument.id}');
-  print('');
+  prettyPrint('Alice DID', aliceDidDocument.id);
 
   final aliceSigner = DidSigner(
     didDocument: aliceDidDocument,
@@ -82,9 +79,8 @@ void main() async {
         .getFirstServiceDidByType(DidDocumentServiceType.didCommMessaging)!,
   );
 
-  print('Bob DID: ${bobDidDocument.id}');
-  print('Bob Mediator DID: ${bobMediatorDocument.id}');
-  print('');
+  prettyPrint('Bob DID', bobDidDocument.id);
+  prettyPrint('Bob Mediator DID', bobMediatorDocument.id);
 
   final bobSigner = DidSigner(
     didDocument: bobDidDocument,
@@ -111,16 +107,13 @@ void main() async {
 
   plainTextMassage['custom-header'] = 'custom-value';
 
-  print(jsonEncode(plainTextMassage));
-  print('');
+  prettyPrint('Plain Text Message for Bob', plainTextMassage);
 
   final signedMessageByAlice = await SignedMessage.pack(
     plainTextMassage,
     signer: aliceSigner,
   );
-
-  print(jsonEncode(signedMessageByAlice));
-  print('');
+  prettyPrint('Signed Message for Bob', signedMessageByAlice);
 
   final encryptedMessageByAlice = await EncryptedMessage.packWithAuthentication(
     signedMessageByAlice,
@@ -133,6 +126,8 @@ void main() async {
     ],
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
+
+  prettyPrint('Encrypted Message for Bob', encryptedMessageByAlice);
 
   final createdTime = DateTime.now().toUtc();
   final expiresTime = createdTime.add(const Duration(seconds: 60));
@@ -154,16 +149,17 @@ void main() async {
     ],
   );
 
-  print(jsonEncode(forwardMessageByAlice));
-  print('');
+  prettyPrint(
+    'Forward Message for Mediator wrapping the Encrypted Message for Bob',
+    forwardMessageByAlice,
+  );
 
   final signedMessageToForward = await SignedMessage.pack(
     forwardMessageByAlice,
     signer: aliceSigner,
   );
 
-  print(jsonEncode(signedMessageToForward));
-  print('');
+  prettyPrint('Singed Forward Message', signedMessageToForward);
 
   final bobMediatorJwks = bobMediatorDocument.keyAgreement.map((keyAgreement) {
     final jwk = keyAgreement.asJwk().toJson();
@@ -186,8 +182,7 @@ void main() async {
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
 
-  print(jsonEncode(encryptedMessageToForward));
-  print('');
+  prettyPrint('Encrypted Forward Message', encryptedMessageToForward);
 
   // Alice is going to use Bob's Mediator to send him a message
 
@@ -236,6 +231,9 @@ void main() async {
       recipientWallet: bobWallet,
     );
 
-    print(jsonEncode(originalPlainTextMessageFromAlice));
+    prettyPrint(
+      'Unpacked Plain Text Message received by Bob via Mediator',
+      originalPlainTextMessageFromAlice,
+    );
   }
 }
