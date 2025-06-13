@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:didcomm/didcomm.dart';
+import 'package:didcomm/src/common/did_document_service_type.dart';
 import 'package:didcomm/src/common/encoding.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:didcomm/src/jwks/jwks.dart';
@@ -19,7 +20,6 @@ void main() async {
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/bob_private_key.pem
 
   // Create and run a DIDComm mediator, for instance with https://portal.affinidi.com. Copy its DID Document into example/mediator/mediator_did_document.json.
-
   final aliceKeyStore = InMemoryKeyStore();
   final aliceWallet = PersistentWallet(aliceKeyStore);
 
@@ -66,7 +66,24 @@ void main() async {
   final bobKeyPair = await bobWallet.getKeyPair(bobKeyId);
   final bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
 
+  await bobDidDocument.copyServicesByTypeFromResolvedDid(
+    DidDocumentServiceType.didCommMessaging,
+    await readDid('./example/mediator/mediator_did.txt'),
+  );
+
+  // TODO: authentication service is temporary needed until Affinidi Mediator is updated
+  bobDidDocument.copyServicesByTypeFromResolvedDid(
+    DidDocumentServiceType.authentication,
+    await readDid('./example/mediator/mediator_did.txt'),
+  );
+
+  final bobMediatorDocument = await UniversalDIDResolver.resolve(
+    bobDidDocument
+        .getFirstServiceDidByType(DidDocumentServiceType.didCommMessaging)!,
+  );
+
   print('Bob DID: ${bobDidDocument.id}');
+  print('Bob Mediator DID: ${bobMediatorDocument.id}');
   print('');
 
   final bobSigner = DidSigner(
@@ -83,9 +100,6 @@ void main() async {
 
   // Important! link JWK, so the wallet should be able to find the key pair by JWK
   bobWallet.linkJwkKeyIdKeyWithKeyId(bobJwk['kid']!, bobKeyId);
-
-  final mediatorDidDocument =
-      await readDidDocument('./example/mediator/mediator_did_document.json');
 
   final plainTextMassage = PlainTextMessage(
     id: Uuid().v4(),
@@ -125,7 +139,7 @@ void main() async {
 
   final forwardMessageByAlice = ForwardMessage(
     id: Uuid().v4(),
-    to: [mediatorDidDocument.id],
+    to: [bobMediatorDocument.id],
     next: bobDidDocument.id,
     expiresTime: expiresTime,
     attachments: [
@@ -151,7 +165,7 @@ void main() async {
   print(jsonEncode(signedMessageToForward));
   print('');
 
-  final mediatorJwks = mediatorDidDocument.keyAgreement.map((keyAgreement) {
+  final bobMediatorJwks = bobMediatorDocument.keyAgreement.map((keyAgreement) {
     final jwk = keyAgreement.asJwk().toJson();
     // TODO: kid is not available in the Jwk anymore. clarify with the team
     jwk['kid'] = keyAgreement.id;
@@ -166,7 +180,7 @@ void main() async {
     keyId: aliceKeyId,
     jwksPerRecipient: [
       Jwks.fromJson({
-        'keys': mediatorJwks,
+        'keys': bobMediatorJwks,
       }),
     ],
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
@@ -175,8 +189,10 @@ void main() async {
   print(jsonEncode(encryptedMessageToForward));
   print('');
 
+  // Alice is going to use Bob's Mediator to send him a message
+
   final aliceMediatorClient = MediatorClient(
-    mediatorDidDocument: mediatorDidDocument,
+    mediatorDidDocument: bobMediatorDocument,
     wallet: aliceWallet,
     keyId: aliceKeyId,
     didSigner: aliceSigner,
@@ -184,24 +200,16 @@ void main() async {
 
   // authenticate method is not direct part of mediatorClient, but it is extension method
   // this method is need for mediators, that require authentication like an Affinidi mediator
-  final aliceTokens = await aliceMediatorClient.authenticate(
-    wallet: aliceWallet,
-    keyId: aliceKeyId,
-    mediatorDidDocument: mediatorDidDocument,
-  );
+  final aliceTokens = await aliceMediatorClient.authenticate();
 
   final bobMediatorClient = MediatorClient(
-    mediatorDidDocument: mediatorDidDocument,
+    mediatorDidDocument: bobMediatorDocument,
     wallet: bobWallet,
     keyId: bobKeyId,
     didSigner: bobSigner,
   );
 
-  final bobTokens = await bobMediatorClient.authenticate(
-    wallet: bobWallet,
-    keyId: bobKeyId,
-    mediatorDidDocument: mediatorDidDocument,
-  );
+  final bobTokens = await bobMediatorClient.authenticate();
 
   print('Alice is sending a message...');
 

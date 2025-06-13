@@ -1,7 +1,7 @@
-enum MediatorServiceType {
+enum DidDocumentServiceType {
   didCommMessaging('DIDCommMessaging'),
   authentication('Authentication');
 
   final String value;
-  const MediatorServiceType(this.value);
+  const DidDocumentServiceType(this.value);
 }

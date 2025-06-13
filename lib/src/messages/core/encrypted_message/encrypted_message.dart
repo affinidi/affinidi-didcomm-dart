@@ -5,6 +5,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
 import 'package:ssi/ssi.dart' hide Jwk;
 
+import '../../../common/did.dart';
 import '../../../converters/base64_url_converter.dart';
 import '../../../converters/jwe_header_converter.dart';
 import '../../../ecdh/ecdh.dart';
@@ -171,7 +172,7 @@ class EncryptedMessage extends DidcommMessage {
     final jweHeader = JweHeaderConverter().fromJson(protected);
 
     final subjectKeyId = jweHeader.resolveSubjectKeyId();
-    final senderDid = subjectKeyId.split('#').first;
+    final senderDid = getDidFromId(subjectKeyId);
 
     final senderDidDocument = await UniversalDIDResolver.resolve(senderDid);
 

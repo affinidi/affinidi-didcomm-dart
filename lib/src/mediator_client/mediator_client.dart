@@ -9,32 +9,30 @@ import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
 
+import '../common/did_document_service_type.dart';
 import '../extensions/extensions.dart';
 import '../jwks/jwks.dart';
 import '../messages/algorithm_types/encryption_algorithm.dart';
 import '../messages/didcomm_message.dart';
-import 'mediator_service_type.dart';
 
 class MediatorClient {
   final DidDocument mediatorDidDocument;
 
   final Dio _dio;
-  final Wallet _wallet;
-  final String _keyId;
+  final Wallet wallet;
+  final String keyId;
   final DidSigner _didSigner;
 
   late final IOWebSocketChannel? _channel;
 
   MediatorClient({
     required this.mediatorDidDocument,
-    required Wallet wallet,
-    required String keyId,
+    required this.wallet,
+    required this.keyId,
     required DidSigner didSigner,
   })  : _dio = mediatorDidDocument.toDio(
-          mediatorServiceType: MediatorServiceType.didCommMessaging,
+          mediatorServiceType: DidDocumentServiceType.didCommMessaging,
         ),
-        _wallet = wallet,
-        _keyId = keyId,
         _didSigner = didSigner;
 
   static Future<MediatorClient> fromMediatorDidDocumentUri(
@@ -43,10 +41,10 @@ class MediatorClient {
     required String keyId,
     required DidSigner didSigner,
   }) async {
-    final response = await Dio().getUri(didDocumentUrl);
-
     return MediatorClient(
-      mediatorDidDocument: DidDocument.fromJson(response.data),
+      mediatorDidDocument: await UniversalDIDResolver.resolve(
+        didDocumentUrl.toString(),
+      ),
       wallet: wallet,
       keyId: keyId,
       didSigner: didSigner,
@@ -198,8 +196,8 @@ class MediatorClient {
 
     final encryptedSetupMessage = await EncryptedMessage.packWithAuthentication(
       signedSetupMessage,
-      wallet: _wallet,
-      keyId: _keyId,
+      wallet: wallet,
+      keyId: keyId,
       jwksPerRecipient: [
         Jwks.fromJson({
           'keys': mediatorJwks,
@@ -218,7 +216,7 @@ class MediatorClient {
   }
 
   Future<DidDocument> _getActorDidDocument() async {
-    final recipientKeyPair = await _wallet.generateKey(keyId: _keyId);
+    final recipientKeyPair = await wallet.generateKey(keyId: keyId);
 
     return DidKey.generateDocument(
       recipientKeyPair.publicKey,

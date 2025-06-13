@@ -59,12 +59,7 @@ void main() async {
     didSigner: receiverSigner,
   );
 
-  final receiverTokens = await receiverMediatorClient.authenticate(
-    wallet: receiverWallet,
-    keyId: receiverKeyId,
-    mediatorDidDocument: mediatorDidDocument,
-  );
-
+  final receiverTokens = await receiverMediatorClient.authenticate();
   print('Sender is receiving messages...');
 
   final messageIds = await receiverMediatorClient.listInboxMessageIds(

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:didcomm/src/common/did.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:ssi/ssi.dart';
 
@@ -70,7 +71,7 @@ class SignedMessage extends DidcommMessage {
 
       final verifier = await DidVerifier.create(
         algorithm: signatureScheme,
-        issuerDid: signature.header.keyId.split('#').first,
+        issuerDid: getDidFromId(signature.header.keyId),
         kid: signature.header.keyId,
       );
 

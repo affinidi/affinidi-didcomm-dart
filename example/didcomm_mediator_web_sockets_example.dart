@@ -184,11 +184,7 @@ void main() async {
 
   // authenticate method is not direct part of mediatorClient, but it is extension method
   // this method is need for mediators, that require authentication like an Affinidi mediator
-  final aliceTokens = await aliceMediatorClient.authenticate(
-    wallet: aliceWallet,
-    keyId: aliceKeyId,
-    mediatorDidDocument: mediatorDidDocument,
-  );
+  final aliceTokens = await aliceMediatorClient.authenticate();
 
   final bobMediatorClient = MediatorClient(
     mediatorDidDocument: mediatorDidDocument,
@@ -197,11 +193,7 @@ void main() async {
     didSigner: bobSigner,
   );
 
-  final bobTokens = await bobMediatorClient.authenticate(
-    wallet: bobWallet,
-    keyId: bobKeyId,
-    mediatorDidDocument: mediatorDidDocument,
-  );
+  final bobTokens = await bobMediatorClient.authenticate();
 
   print('Bob is waiting for a message...');
 
