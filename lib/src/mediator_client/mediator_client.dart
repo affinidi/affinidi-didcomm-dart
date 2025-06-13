@@ -150,9 +150,6 @@ class MediatorClient {
       recipientDid: actorDidDocument.id,
     );
 
-    // TODO: clarify if return_route is required only by Affinidi mediator
-    setupRequestMessage['return_route'] = 'all';
-
     // TODO: clarify if live delivery is required only by Affinidi mediator
     final liveDeliveryMessage = LiveDeliveryChangeMessage(
       id: Uuid().v4(),
@@ -160,9 +157,6 @@ class MediatorClient {
       from: actorDidDocument.id,
       liveDelivery: true,
     );
-
-    // TODO: clarify if return_route is required only by Affinidi mediator
-    liveDeliveryMessage['return_route'] = 'all';
 
     final liveDeliveryEncryptedMessage = await _signAndEncryptMessage(
       liveDeliveryMessage,

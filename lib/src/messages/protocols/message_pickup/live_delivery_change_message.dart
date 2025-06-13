@@ -1,6 +1,6 @@
-import '../../core.dart';
+import 'message_pickup_message/message_pickup_message.dart';
 
-class LiveDeliveryChangeMessage extends PlainTextMessage {
+class LiveDeliveryChangeMessage extends MessagePickupMessage {
   final bool liveDelivery;
 
   LiveDeliveryChangeMessage({
@@ -9,6 +9,7 @@ class LiveDeliveryChangeMessage extends PlainTextMessage {
     required this.liveDelivery,
     required super.from,
     super.expiresTime,
+    super.returnRoute,
   }) : super(
           type: Uri.parse(
             'https://didcomm.org/messagepickup/3.0/live-delivery-change',
@@ -17,7 +18,7 @@ class LiveDeliveryChangeMessage extends PlainTextMessage {
         );
 
   factory LiveDeliveryChangeMessage.fromJson(Map<String, dynamic> json) {
-    final plainTextMessage = PlainTextMessage.fromJson(json);
+    final plainTextMessage = MessagePickupMessage.fromJson(json);
     return LiveDeliveryChangeMessage(
       id: plainTextMessage.id,
       to: plainTextMessage.to,

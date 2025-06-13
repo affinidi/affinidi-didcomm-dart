@@ -21,31 +21,44 @@ class OwnJsonPropertiesGenerator
 
     final classElement = declaration;
 
-    final fields = classElement.fields
+    final fields = _getAllFieldsIncludingFromParent(classElement)
         .where((field) => !field.isStatic && !field.isSynthetic)
         .map((field) {
-          final jsonKey = field.metadata.firstWhereOrNull(
-            (meta) => meta.element2?.displayName == 'JsonKey',
-          );
+      final jsonKey = field.metadata.firstWhereOrNull(
+        (meta) => meta.element2?.displayName == 'JsonKey',
+      );
 
-          if (jsonKey != null) {
-            final name =
-                jsonKey
-                    .computeConstantValue()
-                    ?.getField('name')
-                    ?.toStringValue();
+      if (jsonKey != null) {
+        final name =
+            jsonKey.computeConstantValue()?.getField('name')?.toStringValue();
 
-            if (name != null) {
-              return "'$name'";
-            }
-          }
+        if (name != null) {
+          return "'$name'";
+        }
+      }
 
-          return "'${field.name}'";
-        })
-        .join(', ');
+      return "'${field.name}'";
+    }).join(', ');
 
     return '''
   const _\$ownJsonProperties = [$fields];
 ''';
+  }
+
+  List<FieldElement> _getAllFieldsIncludingFromParent(
+    ClassElement classElement,
+  ) {
+    final allFields = <FieldElement>[];
+    var current = classElement;
+
+    while (!current.isDartCoreObject) {
+      allFields.addAll(
+        current.fields.where((field) => !field.isSynthetic && !field.isPrivate),
+      );
+
+      current = current.supertype?.element as ClassElement;
+    }
+
+    return allFields;
   }
 }

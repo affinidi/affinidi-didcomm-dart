@@ -1,6 +1,7 @@
 import '../../core.dart';
+import 'message_pickup_message/message_pickup_message.dart';
 
-class StatusRequestMessage extends PlainTextMessage {
+class StatusRequestMessage extends MessagePickupMessage {
   final String recipientDid;
 
   StatusRequestMessage({
@@ -9,6 +10,7 @@ class StatusRequestMessage extends PlainTextMessage {
     required this.recipientDid,
     required super.from,
     super.expiresTime,
+    super.returnRoute,
   }) : super(
           type: Uri.parse(
             'https://didcomm.org/messagepickup/3.0/status-request',
