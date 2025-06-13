@@ -8,6 +8,7 @@ import '../messages/algorithm_types/encryption_algorithm.dart';
 import '../jwks/jwks.dart';
 import '../common/authentication_tokens/authentication_tokens.dart';
 
+// TODO: should be eventually moved to TDK
 /// Authentication by mediators are not covered by standard.
 /// This extension method provides authentication for the Affinidi mediator specifically.
 extension AffinidiAuthenticatorExtension on MediatorClient {

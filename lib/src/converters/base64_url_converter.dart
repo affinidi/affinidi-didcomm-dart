@@ -1,7 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:didcomm/src/common/encoding.dart';
 import 'package:json_annotation/json_annotation.dart';
+
+import '../common/encoding.dart';
 
 class Base64UrlConverter implements JsonConverter<Uint8List, String> {
   const Base64UrlConverter();
