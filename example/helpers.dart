@@ -28,3 +28,7 @@ Future<DidDocument> readDidDocument(String didDocumentPath) async {
   final json = await File(didDocumentPath).readAsString();
   return DidDocument.fromJson(jsonDecode(json));
 }
+
+Future<String> readDid(String didPath) async {
+  return await File(didPath).readAsString();
+}

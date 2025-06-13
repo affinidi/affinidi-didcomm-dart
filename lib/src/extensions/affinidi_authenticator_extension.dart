@@ -2,8 +2,8 @@ import 'package:didcomm/didcomm.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 
+import '../common/did_document_service_type.dart';
 import '../extensions/extensions.dart';
-import '../mediator_client/mediator_service_type.dart';
 import '../messages/algorithm_types/encryption_algorithm.dart';
 import '../jwks/jwks.dart';
 import '../common/authentication_tokens/authentication_tokens.dart';
@@ -13,13 +13,10 @@ import '../common/authentication_tokens/authentication_tokens.dart';
 /// This extension method provides authentication for the Affinidi mediator specifically.
 extension AffinidiAuthenticatorExtension on MediatorClient {
   Future<AuthenticationTokens> authenticate({
-    required Wallet wallet,
-    required String keyId,
-    required DidDocument mediatorDidDocument,
     EncryptionAlgorithm encryptionAlgorithm = EncryptionAlgorithm.a256cbc,
   }) async {
     final dio = mediatorDidDocument.toDio(
-      mediatorServiceType: MediatorServiceType.authentication,
+      mediatorServiceType: DidDocumentServiceType.authentication,
     );
 
     final publicKey = await wallet.getPublicKey(keyId);
