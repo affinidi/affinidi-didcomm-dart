@@ -53,7 +53,6 @@ extension DidDocumentExtension on DidDocument {
 
     return IOWebSocketChannel.connect(
       Uri.parse(serviceEndpoint.uri),
-      // Uri.parse('wss://echo.websocket.events'),
       headers: {
         'Content-Type': 'application/json',
         if (accessToken != null) 'Authorization': 'Bearer $accessToken',
@@ -62,10 +61,7 @@ extension DidDocumentExtension on DidDocument {
   }
 
   List<ServiceEndpoint> getServicesByType(DidDocumentServiceType serviceType) {
-    return service
-        .where((item) =>
-            item.type == DidDocumentServiceType.didCommMessaging.value)
-        .toList();
+    return service.where((item) => item.type == serviceType.value).toList();
   }
 
   ServiceEndpoint? getServiceById(String serviceId) {
