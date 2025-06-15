@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:didcomm/didcomm.dart';
+import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:dio/dio.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
@@ -12,34 +13,39 @@ import 'package:web_socket_channel/status.dart' as status;
 import '../common/did_document_service_type.dart';
 import '../extensions/extensions.dart';
 import '../jwks/jwks.dart';
-import '../messages/algorithm_types/encryption_algorithm.dart';
-import '../messages/didcomm_message.dart';
+import '../messages/algorithm_types/algorithms_types.dart';
 
 class MediatorClient {
   final DidDocument mediatorDidDocument;
-
-  final Dio _dio;
   final Wallet wallet;
   final String keyId;
-  final DidSigner _didSigner;
+  final DidSigner signer;
+  final bool shouldSignForwardMessage;
+  final bool shouldEncryptForwardMessage;
+  final KeyWrappingAlgorithm keyWrappingAlgorithmForForwardMessage;
+  final EncryptionAlgorithm encryptionAlgorithmForForwardMessage;
 
+  final Dio _dio;
   late final IOWebSocketChannel? _channel;
 
   MediatorClient({
     required this.mediatorDidDocument,
     required this.wallet,
     required this.keyId,
-    required DidSigner didSigner,
-  })  : _dio = mediatorDidDocument.toDio(
+    required this.signer,
+    this.shouldSignForwardMessage = false,
+    this.shouldEncryptForwardMessage = false,
+    this.keyWrappingAlgorithmForForwardMessage = KeyWrappingAlgorithm.ecdh1Pu,
+    this.encryptionAlgorithmForForwardMessage = EncryptionAlgorithm.a256cbc,
+  }) : _dio = mediatorDidDocument.toDio(
           mediatorServiceType: DidDocumentServiceType.didCommMessaging,
-        ),
-        _didSigner = didSigner;
+        );
 
   static Future<MediatorClient> fromMediatorDidDocumentUri(
     Uri didDocumentUrl, {
     required Wallet wallet,
     required String keyId,
-    required DidSigner didSigner,
+    required DidSigner signer,
   }) async {
     return MediatorClient(
       mediatorDidDocument: await UniversalDIDResolver.resolve(
@@ -47,31 +53,53 @@ class MediatorClient {
       ),
       wallet: wallet,
       keyId: keyId,
-      didSigner: didSigner,
+      signer: signer,
     );
   }
 
-  Future<void> sendMessage(
-    DidcommMessage message, {
+  // TODO: create exception to wrap errors
+  Future<DidcommMessage> sendMessage(
+    ForwardMessage message, {
     String? accessToken,
   }) async {
-    // TODO: create exception to wrap errors
+    DidcommMessage messageToSend = message;
+
+    if (shouldSignForwardMessage) {
+      messageToSend = await SignedMessage.pack(
+        messageToSend,
+        signer: signer,
+      );
+    }
+
+    if (shouldEncryptForwardMessage) {
+      messageToSend = await EncryptedMessage.pack(
+        messageToSend,
+        wallet: wallet,
+        keyId: keyId,
+        jwksPerRecipient: [
+          mediatorDidDocument.keyAgreement.toJwks(),
+        ],
+        keyWrappingAlgorithm: keyWrappingAlgorithmForForwardMessage,
+        encryptionAlgorithm: encryptionAlgorithmForForwardMessage,
+      );
+    }
 
     final headers =
         accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
 
     await _dio.post(
       '/inbound',
-      data: message,
+      data: messageToSend,
       options: Options(headers: headers),
     );
+
+    return messageToSend;
   }
 
+  // TODO: create exception to wrap errors
   Future<List<String>> listInboxMessageIds({
     String? accessToken,
   }) async {
-    // TODO: create exception to wrap errors
-
     final actorDidDocument = await _getActorDidDocument();
 
     final headers =
@@ -185,7 +213,7 @@ class MediatorClient {
   }) async {
     final signedSetupMessage = await SignedMessage.pack(
       message,
-      signer: _didSigner,
+      signer: signer,
     );
 
     final encryptedSetupMessage = await EncryptedMessage.packWithAuthentication(

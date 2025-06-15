@@ -3,10 +3,9 @@ import 'package:didcomm/src/common/did_document_service_type.dart';
 import 'package:didcomm/src/common/encoding.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
-import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
+import 'package:didcomm/src/messages/algorithm_types/algorithms_types.dart';
 import 'package:didcomm/src/messages/attachments/attachment.dart';
 import 'package:didcomm/src/messages/attachments/attachment_data.dart';
-import 'package:didcomm/src/messages/didcomm_message.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 
@@ -25,8 +24,9 @@ void main() async {
   final bobWallet = PersistentWallet(bobKeyStore);
 
   final aliceKeyId = 'alice-key-1';
-  final alicePrivateKeyBytes =
-      await extractPrivateKeyBytes('./example/keys/alice_private_key.pem');
+  final alicePrivateKeyBytes = await extractPrivateKeyBytes(
+    './example/keys/alice_private_key.pem',
+  );
 
   await aliceKeyStore.set(
     aliceKeyId,
@@ -91,7 +91,7 @@ void main() async {
     bobWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
   }
 
-  final plainTextMassage = PlainTextMessage(
+  final alicePlainTextMassage = PlainTextMessage(
     id: Uuid().v4(),
     from: aliceDidDocument.id,
     to: [bobDidDocument.id],
@@ -99,30 +99,30 @@ void main() async {
     body: {'content': 'Hello, Bob!'},
   );
 
-  plainTextMassage['custom-header'] = 'custom-value';
+  alicePlainTextMassage['custom-header'] = 'custom-value';
 
-  prettyPrint('Plain Text Message for Bob', plainTextMassage);
+  prettyPrint('Plain Text Message for Bob', alicePlainTextMassage);
 
-  final signedMessageByAlice = await SignedMessage.pack(
-    plainTextMassage,
-    signer: aliceSigner,
-  );
-  prettyPrint('Signed Message for Bob', signedMessageByAlice);
-
-  final encryptedMessageByAlice = await EncryptedMessage.packWithAuthentication(
-    signedMessageByAlice,
+  final aliceSignedAndEncryptedMessage =
+      await DidcommMessage.packIntoSignedAndEncryptedMessages(
+    alicePlainTextMassage,
     wallet: aliceWallet,
     keyId: aliceKeyId,
     jwksPerRecipient: [bobJwks],
+    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+    signer: aliceSigner,
   );
 
-  prettyPrint('Encrypted Message for Bob', encryptedMessageByAlice);
+  prettyPrint(
+    'Encrypted and Signed Message by Alice',
+    aliceSignedAndEncryptedMessage,
+  );
 
   final createdTime = DateTime.now().toUtc();
   final expiresTime = createdTime.add(const Duration(seconds: 60));
 
-  final forwardMessageByAlice = ForwardMessage(
+  final forwardMessage = ForwardMessage(
     id: Uuid().v4(),
     to: [bobMediatorDocument.id],
     next: bobDidDocument.id,
@@ -132,7 +132,7 @@ void main() async {
         mediaType: 'application/json',
         data: AttachmentData(
           base64: base64UrlEncodeNoPadding(
-            encryptedMessageByAlice.toJsonBytes(),
+            aliceSignedAndEncryptedMessage.toJsonBytes(),
           ),
         ),
       ),
@@ -141,26 +141,8 @@ void main() async {
 
   prettyPrint(
     'Forward Message for Mediator wrapping the Encrypted Message for Bob',
-    forwardMessageByAlice,
+    forwardMessage,
   );
-
-  final signedMessageToForward = await SignedMessage.pack(
-    forwardMessageByAlice,
-    signer: aliceSigner,
-  );
-
-  prettyPrint('Singed Forward Message', signedMessageToForward);
-
-  final encryptedMessageToForward =
-      await EncryptedMessage.packWithAuthentication(
-    signedMessageToForward,
-    wallet: aliceWallet,
-    keyId: aliceKeyId,
-    jwksPerRecipient: [bobMediatorDocument.keyAgreement.toJwks()],
-    encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-  );
-
-  prettyPrint('Encrypted Forward Message', encryptedMessageToForward);
 
   // Alice is going to use Bob's Mediator to send him a message
 
@@ -168,7 +150,13 @@ void main() async {
     mediatorDidDocument: bobMediatorDocument,
     wallet: aliceWallet,
     keyId: aliceKeyId,
-    didSigner: aliceSigner,
+    signer: aliceSigner,
+
+    // optional arguments. if omitted defaults will be used
+    shouldSignForwardMessage: true,
+    shouldEncryptForwardMessage: true,
+    keyWrappingAlgorithmForForwardMessage: KeyWrappingAlgorithm.ecdh1Pu,
+    encryptionAlgorithmForForwardMessage: EncryptionAlgorithm.a256cbc,
   );
 
   // authenticate method is not direct part of mediatorClient, but it is extension method
@@ -179,16 +167,19 @@ void main() async {
     mediatorDidDocument: bobMediatorDocument,
     wallet: bobWallet,
     keyId: bobKeyId,
-    didSigner: bobSigner,
+    signer: bobSigner,
   );
 
   final bobTokens = await bobMediatorClient.authenticate();
 
-  print('Alice is sending a message...');
-
-  await aliceMediatorClient.sendMessage(
-    encryptedMessageToForward,
+  final sentMessage = await aliceMediatorClient.sendMessage(
+    forwardMessage,
     accessToken: aliceTokens.accessToken,
+  );
+
+  prettyPrint(
+    'Encrypted and Signed Forward Message',
+    sentMessage,
   );
 
   print('Bob is fetching messages...');
