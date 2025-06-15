@@ -143,17 +143,18 @@ void main() async {
   print('');
 
   final aliceMediatorClient = MediatorClient(
-    mediatorDidDocument: mediatorDidDocument,
-    wallet: aliceWallet,
-    keyId: aliceKeyId,
-    signer: aliceSigner,
+      mediatorDidDocument: mediatorDidDocument,
+      wallet: aliceWallet,
+      keyId: aliceKeyId,
+      signer: aliceSigner,
 
-    // optional arguments. if omitted defaults will be used
-    shouldSignForwardMessage: true,
-    shouldEncryptForwardMessage: true,
-    keyWrappingAlgorithmForForwardMessage: KeyWrappingAlgorithm.ecdh1Pu,
-    encryptionAlgorithmForForwardMessage: EncryptionAlgorithm.a256cbc,
-  );
+      // optional. if omitted defaults will be used
+      forwardMessageOptions: ForwardMessageOptions(
+        shouldSign: true,
+        shouldEncrypt: true,
+        keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+        encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+      ));
 
   // authenticate method is not direct part of mediatorClient, but it is extension method
   // this method is need for mediators, that require authentication like an Affinidi mediator

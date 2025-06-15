@@ -20,10 +20,7 @@ class MediatorClient {
   final Wallet wallet;
   final String keyId;
   final DidSigner signer;
-  final bool shouldSignForwardMessage;
-  final bool shouldEncryptForwardMessage;
-  final KeyWrappingAlgorithm keyWrappingAlgorithmForForwardMessage;
-  final EncryptionAlgorithm encryptionAlgorithmForForwardMessage;
+  final ForwardMessageOptions forwardMessageOptions;
 
   final Dio _dio;
   late final IOWebSocketChannel? _channel;
@@ -33,10 +30,7 @@ class MediatorClient {
     required this.wallet,
     required this.keyId,
     required this.signer,
-    this.shouldSignForwardMessage = false,
-    this.shouldEncryptForwardMessage = false,
-    this.keyWrappingAlgorithmForForwardMessage = KeyWrappingAlgorithm.ecdh1Pu,
-    this.encryptionAlgorithmForForwardMessage = EncryptionAlgorithm.a256cbc,
+    this.forwardMessageOptions = const ForwardMessageOptions(),
   }) : _dio = mediatorDidDocument.toDio(
           mediatorServiceType: DidDocumentServiceType.didCommMessaging,
         );
@@ -64,14 +58,14 @@ class MediatorClient {
   }) async {
     DidcommMessage messageToSend = message;
 
-    if (shouldSignForwardMessage) {
+    if (forwardMessageOptions.shouldSign) {
       messageToSend = await SignedMessage.pack(
         messageToSend,
         signer: signer,
       );
     }
 
-    if (shouldEncryptForwardMessage) {
+    if (forwardMessageOptions.shouldEncrypt) {
       messageToSend = await EncryptedMessage.pack(
         messageToSend,
         wallet: wallet,
@@ -79,8 +73,8 @@ class MediatorClient {
         jwksPerRecipient: [
           mediatorDidDocument.keyAgreement.toJwks(),
         ],
-        keyWrappingAlgorithm: keyWrappingAlgorithmForForwardMessage,
-        encryptionAlgorithm: encryptionAlgorithmForForwardMessage,
+        keyWrappingAlgorithm: forwardMessageOptions.keyWrappingAlgorithm,
+        encryptionAlgorithm: forwardMessageOptions.encryptionAlgorithm,
       );
     }
 

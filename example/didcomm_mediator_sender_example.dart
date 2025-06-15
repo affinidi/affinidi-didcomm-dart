@@ -4,7 +4,7 @@ import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/encoding.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:didcomm/src/jwks/jwks.dart';
-import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
+import 'package:didcomm/src/messages/algorithm_types/algorithms_types.dart';
 import 'package:didcomm/src/messages/attachments/attachment.dart';
 import 'package:didcomm/src/messages/attachments/attachment_data.dart';
 import 'package:ssi/ssi.dart';
@@ -154,8 +154,13 @@ void main() async {
     wallet: senderWallet,
     keyId: senderKeyId,
     signer: senderSigner,
-    shouldSignForwardMessage: true,
-    shouldEncryptForwardMessage: true,
+    // optional. if omitted defaults will be used
+    forwardMessageOptions: ForwardMessageOptions(
+      shouldSign: true,
+      shouldEncrypt: true,
+      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+      encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+    ),
   );
 
   // authenticate method is not direct part of mediatorClient, but it is extension method
