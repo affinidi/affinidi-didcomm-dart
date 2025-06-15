@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:didcomm/didcomm.dart';
-import 'package:didcomm/src/messages/didcomm_message.dart';
 import 'package:ssi/ssi.dart';
 
 import 'helpers.dart';
@@ -56,7 +55,7 @@ void main() async {
     mediatorDidDocument: mediatorDidDocument,
     wallet: receiverWallet,
     keyId: receiverKeyId,
-    didSigner: receiverSigner,
+    signer: receiverSigner,
   );
 
   final receiverTokens = await receiverMediatorClient.authenticate();

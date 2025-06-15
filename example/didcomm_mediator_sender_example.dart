@@ -149,43 +149,13 @@ void main() async {
   print(jsonEncode(forwardMessageByAlice));
   print('');
 
-  final signedMessageToForward = await SignedMessage.pack(
-    forwardMessageByAlice,
-    signer: senderSigner,
-  );
-
-  print(jsonEncode(signedMessageToForward));
-  print('');
-
-  final mediatorJwks = mediatorDidDocument.keyAgreement.map((keyAgreement) {
-    final jwk = keyAgreement.asJwk().toJson();
-    // TODO: kid is not available in the Jwk anymore. clarify with the team
-    jwk['kid'] = keyAgreement.id;
-
-    return jwk;
-  }).toList();
-
-  final encryptedMessageToForward =
-      await EncryptedMessage.packWithAuthentication(
-    signedMessageToForward,
-    wallet: senderWallet,
-    keyId: senderKeyId,
-    jwksPerRecipient: [
-      Jwks.fromJson({
-        'keys': mediatorJwks,
-      }),
-    ],
-    encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-  );
-
-  print(jsonEncode(encryptedMessageToForward));
-  print('');
-
   final aliceMediatorClient = MediatorClient(
     mediatorDidDocument: mediatorDidDocument,
     wallet: senderWallet,
     keyId: senderKeyId,
-    didSigner: senderSigner,
+    signer: senderSigner,
+    shouldSignForwardMessage: true,
+    shouldEncryptForwardMessage: true,
   );
 
   // authenticate method is not direct part of mediatorClient, but it is extension method
@@ -193,7 +163,7 @@ void main() async {
   final aliceTokens = await aliceMediatorClient.authenticate();
 
   await aliceMediatorClient.sendMessage(
-    encryptedMessageToForward,
+    forwardMessageByAlice,
     accessToken: aliceTokens.accessToken,
   );
 

@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/jwks/jwks.dart';
 import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
-import 'package:didcomm/src/messages/didcomm_message.dart';
 import 'package:ssi/ssi.dart';
 import 'package:convert/convert.dart';
 

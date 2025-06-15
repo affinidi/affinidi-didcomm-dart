@@ -2,6 +2,9 @@ import 'package:didcomm/didcomm.dart';
 import 'package:ssi/ssi.dart';
 import 'package:meta/meta.dart';
 
+import '../jwks/jwks.dart';
+import 'algorithm_types/algorithms_types.dart';
+
 class DidcommMessage {
   DidcommMessage();
 
@@ -10,6 +13,55 @@ class DidcommMessage {
 
   dynamic operator [](String key) => _customHeaders[key];
   void operator []=(String key, dynamic value) => _customHeaders[key] = value;
+
+  static Future<SignedMessage> packIntoSignedMessage(
+    DidcommMessage message, {
+    required DidSigner signer,
+  }) async {
+    return await SignedMessage.pack(message, signer: signer);
+  }
+
+  static Future<EncryptedMessage> packIntoEncryptedMessage(
+    DidcommMessage message, {
+    required Wallet wallet,
+    required String keyId,
+    required List<Jwks> jwksPerRecipient,
+    required KeyWrappingAlgorithm keyWrappingAlgorithm,
+    required EncryptionAlgorithm encryptionAlgorithm,
+  }) async {
+    return await EncryptedMessage.pack(
+      message,
+      wallet: wallet,
+      keyId: keyId,
+      jwksPerRecipient: jwksPerRecipient,
+      keyWrappingAlgorithm: keyWrappingAlgorithm,
+      encryptionAlgorithm: encryptionAlgorithm,
+    );
+  }
+
+  static Future<EncryptedMessage> packIntoSignedAndEncryptedMessages(
+    DidcommMessage message, {
+    required Wallet wallet,
+    required String keyId,
+    required List<Jwks> jwksPerRecipient,
+    required KeyWrappingAlgorithm keyWrappingAlgorithm,
+    required EncryptionAlgorithm encryptionAlgorithm,
+    required DidSigner signer,
+  }) async {
+    final signedMessage = await SignedMessage.pack(
+      message,
+      signer: signer,
+    );
+
+    return await EncryptedMessage.pack(
+      signedMessage,
+      wallet: wallet,
+      keyId: keyId,
+      jwksPerRecipient: jwksPerRecipient,
+      keyWrappingAlgorithm: keyWrappingAlgorithm,
+      encryptionAlgorithm: encryptionAlgorithm,
+    );
+  }
 
   static Future<PlainTextMessage?> unpackToPlainTextMessage({
     required Map<String, dynamic> message,

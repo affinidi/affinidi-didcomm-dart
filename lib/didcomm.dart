@@ -1,8 +1,6 @@
-/// Support for doing something awesome.
-///
-/// More dartdocs go here.
 library;
 
+export 'src/messages/didcomm_message.dart';
 export 'src/messages/core.dart';
 export 'src/messages/protocols.dart';
 export 'src/errors/errors.dart';
