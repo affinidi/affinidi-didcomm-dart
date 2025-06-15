@@ -68,15 +68,10 @@ void main() async {
     await readDid('./example/mediator/mediator_did.txt'),
   );
 
-  // TODO: authentication service is temporary needed until Affinidi Mediator is updated
-  bobDidDocument.copyServicesByTypeFromResolvedDid(
-    DidDocumentServiceType.authentication,
-    await readDid('./example/mediator/mediator_did.txt'),
-  );
-
   final bobMediatorDocument = await UniversalDIDResolver.resolve(
-    bobDidDocument
-        .getFirstServiceDidByType(DidDocumentServiceType.didCommMessaging)!,
+    bobDidDocument.getFirstServiceDidByType(
+      DidDocumentServiceType.didCommMessaging,
+    )!,
   );
 
   prettyPrint('Bob DID', bobDidDocument.id);
