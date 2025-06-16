@@ -90,7 +90,7 @@ abstract class EcdhEs implements Ecdh {
     final keyPair = ck.KeyPair.fromJwk(sharedSecretJwk);
 
     if (keyPair == null) {
-      throw Exception('Failed to construct a key pair for a shared secret');
+      throw ArgumentError('Failed to construct a key pair for a shared secret');
     }
 
     return keyPair.publicKey!.createEncrypter(

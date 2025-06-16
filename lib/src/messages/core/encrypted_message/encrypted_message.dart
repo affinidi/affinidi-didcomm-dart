@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:didcomm/src/errors/missing_initialization_vector_error.dart';
+import 'package:didcomm/src/errors/missing_key_agreement_error.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
 import 'package:ssi/ssi.dart' hide Jwk;
@@ -8,6 +10,7 @@ import 'package:ssi/ssi.dart' hide Jwk;
 import '../../../converters/base64_url_converter.dart';
 import '../../../converters/jwe_header_converter.dart';
 import '../../../ecdh/ecdh.dart';
+import '../../../errors/missing_authentication_tag_error.dart';
 import '../../../jwks/jwks.dart';
 import '../../../annotations/own_json_properties.dart';
 import '../../../common/crypto.dart';
@@ -139,11 +142,15 @@ class EncryptedMessage extends DidcommMessage {
     );
 
     if (encryptedInnerMessage.initializationVector == null) {
-      throw Exception('Initialization vector not set after encryption');
+      throw MissingInitializationVectorError(
+        'Initialization vector not set after encryption',
+      );
     }
 
     if (encryptedInnerMessage.authenticationTag == null) {
-      throw Exception('Authentication tag not set after encryption');
+      throw MissingAuthenticationTag(
+        'Authentication tag not set after encryption',
+      );
     }
 
     final recipients = await _createRecipients(
@@ -214,8 +221,9 @@ class EncryptedMessage extends DidcommMessage {
 
     final keyAgreement = senderDidDocument.keyAgreement.firstWhere(
       (keyAgreement) => keyAgreement.id == subjectKeyId,
-      orElse: () =>
-          throw Exception('Can not find a key agreement for subject ID'),
+      orElse: () => throw MissingKeyAgreementError(
+        'Key agreement with id $subjectKeyId not found in sender DID document',
+      ),
     );
 
     final senderJwk = Jwk.fromJson(
