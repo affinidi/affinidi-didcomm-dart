@@ -2,7 +2,7 @@
 
 A Dart package for implementing secure and private communication on your app using DIDComm v2 Messaging protocol. DIDComm v2 Messaging is a decentralised communication protocol that uses a Decentralised Identifier (DID) to establish a secure communication channel and send a private and verifiable message.
 
-The DIDComm for Dart package provides the tools and libraries to enable your app to send DIDComm messages. It supports various encryption algorithms and DID methods, such as `did:peer` for signing and encrypting to ensure the secure and private transport of messages to the intended recipient, establishing verifiable and trusted communication.
+The DIDComm for Dart package provides the tools and libraries to enable your app to send DIDComm messages. It supports various encryption algorithms and DID methods, such as `did:peer`, `did:key`, `did:web`, and `did:peer` for signing and encrypting to ensure the secure and private transport of messages to the intended recipient, establishing verifiable and trusted communication.
 
 
 ## Table of Contents
@@ -24,7 +24,7 @@ The DIDComm for Dart package utilises existing open standards and cryptographic 
 
 - **DID Document** - A DID is a URI (Uniform Resource Identifier) that resolves into a DID Document that contains information such as cryptographic public keys, authentication methods, and service endpoints. It allows others to verify signatures, authenticate interactions, and validate messages cryptographically.
 
-- **DIDComm Message** - usually called DIDComm Encrypted Message is a JSON Web Message (JWM), a lightweight, secure, and standardised format for structured communication using JSON. It represents headers, message types, routing metadata, and payloads designed to enable secure and interoperable communication across different systems.
+- **DIDComm Message** - is a JSON Web Message (JWM), a lightweight, secure, and standardised format for structured communication using JSON. It represents headers, message types, routing metadata, and payloads designed to enable secure and interoperable communication across different systems.
 
 - **Mediator** - A service that handles and routes messages sent between participants (e.g., users, organisations, another mediator, or even AI agents).
 
@@ -36,7 +36,7 @@ The DIDComm for Dart package utilises existing open standards and cryptographic 
 
 - Support for multiple DID methods like `did:peer` and `did:web` to prove control of user's digital identity.
 
-- Support for various digital wallets to manage cryptographic keys like `BIP32` for Hierarchical Deterministic (HD) wallets.
+- Support for digital wallets under [Affinidi Dart SSI](https://pub.dev/packages/ssi) to manage cryptographic keys.
 
 - Support key types like `P256` and `ED25519` to encrypt and sign messages.
 
