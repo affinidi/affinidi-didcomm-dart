@@ -20,11 +20,10 @@ void main() {
       32,
       (index) => index + 2,
     );
-    final aliceWallet =
-        Bip32Ed25519Wallet.fromSeed(Uint8List.fromList(aliceSeed));
-    final bobWallet = Bip32Ed25519Wallet.fromSeed(Uint8List.fromList(bobSeed));
+    final aliceWallet = Bip32Wallet.fromSeed(Uint8List.fromList(aliceSeed));
+    final bobWallet = Bip32Wallet.fromSeed(Uint8List.fromList(bobSeed));
 
-    group("BIP32 Ed25519", () {
+    group("BIP32", () {
       final aliceKeyId = "m/44'/60'/0'/0'/0'";
       final bobKeyId = "m/44'/60'/0'/0'/0'";
 
@@ -37,33 +36,27 @@ void main() {
       setUp(() async {
         final aliceKeyPair = await aliceWallet.generateKey(
           keyId: aliceKeyId,
-          keyType: KeyType.ed25519,
-        );
-        final aliceX25519PublicKey = await aliceWallet.getX25519PublicKey(
-          aliceKeyPair.id,
+          keyType: KeyType.secp256k1,
         );
 
         aliceDidDocument = DidKey.generateDocument(
-          PublicKey(aliceKeyId, aliceX25519PublicKey, KeyType.x25519),
+          aliceKeyPair.publicKey,
         );
 
         aliceSigner = DidSigner(
           didDocument: aliceDidDocument,
           keyPair: aliceKeyPair,
           didKeyId: aliceDidDocument.verificationMethod[0].id,
-          signatureScheme: SignatureScheme.eddsa_sha512,
+          signatureScheme: SignatureScheme.ecdsa_secp256k1_sha256,
         );
 
         final bobKeyPair = await bobWallet.generateKey(
           keyId: bobKeyId,
-          keyType: KeyType.ed25519,
+          keyType: KeyType.secp256k1,
         );
 
-        final bobX25519PublicKey =
-            await bobWallet.getX25519PublicKey(bobKeyPair.id);
-
         bobDidDocument = DidKey.generateDocument(
-          PublicKey(bobKeyId, bobX25519PublicKey, KeyType.x25519),
+          bobKeyPair.publicKey,
         );
 
         bobJwk = bobDidDocument.keyAgreement[0].asJwk().toJson();
