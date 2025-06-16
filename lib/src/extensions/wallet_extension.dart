@@ -25,6 +25,10 @@ extension WalletExtension on Wallet {
       return await keyPair.computeEcdhSecret(othersPublicKeyBytes);
     }
 
+    if (keyPair is Secp256k1KeyPair) {
+      return await keyPair.computeEcdhSecret(othersPublicKeyBytes);
+    }
+
     // TODO: add secp from the latest SSI package
     throw UnsupportedKeyTypeError(keyPair.publicKey.type);
   }
