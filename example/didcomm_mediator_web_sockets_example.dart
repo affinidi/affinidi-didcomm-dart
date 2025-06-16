@@ -1,9 +1,8 @@
-import 'dart:convert';
-
 import 'package:didcomm/didcomm.dart';
+import 'package:didcomm/src/common/did_document_service_type.dart';
 import 'package:didcomm/src/common/encoding.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
-import 'package:didcomm/src/jwks/jwks.dart';
+import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:didcomm/src/messages/algorithm_types/algorithms_types.dart';
 import 'package:didcomm/src/messages/attachments/attachment.dart';
 import 'package:didcomm/src/messages/attachments/attachment_data.dart';
@@ -17,7 +16,8 @@ void main() async {
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/alice_private_key.pem
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/bob_private_key.pem
 
-  // Create and run a DIDComm mediator, for instance with https://portal.affinidi.com. Copy its DID Document into example/mediator/mediator_did_document.json.
+  // Create and run a DIDComm mediator, for instance with https://portal.affinidi.com.
+  // Copy its DID Document URL into example/mediator/mediator_did.txt.
 
   final aliceKeyStore = InMemoryKeyStore();
   final aliceWallet = PersistentWallet(aliceKeyStore);
@@ -40,8 +40,7 @@ void main() async {
   final aliceKeyPair = await aliceWallet.getKeyPair(aliceKeyId);
   final aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
 
-  print('Alice DID: ${aliceDidDocument.id}');
-  print('');
+  prettyPrint('Alice DID', aliceDidDocument.id);
 
   final aliceSigner = DidSigner(
     didDocument: aliceDidDocument,
@@ -65,8 +64,19 @@ void main() async {
   final bobKeyPair = await bobWallet.getKeyPair(bobKeyId);
   final bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
 
-  print('Bob DID: ${bobDidDocument.id}');
-  print('');
+  await bobDidDocument.copyServicesByTypeFromResolvedDid(
+    DidDocumentServiceType.didCommMessaging,
+    await readDid('./example/mediator/mediator_did.txt'),
+  );
+
+  // Serialized bobDidDocument needs to shared with sender
+  prettyPrint('Bob DID Document', bobDidDocument);
+
+  final bobMediatorDocument = await UniversalDIDResolver.resolve(
+    bobDidDocument.getFirstServiceDidByType(
+      DidDocumentServiceType.didCommMessaging,
+    )!,
+  );
 
   final bobSigner = DidSigner(
     didDocument: bobDidDocument,
@@ -75,18 +85,15 @@ void main() async {
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
-  // TODO: kid is not available in the Jwk anymore. clarify with the team
-  final bobJwk = bobDidDocument.keyAgreement[0].asJwk().toJson();
-  bobJwk['kid'] =
-      '${bobDidDocument.id}#${bobDidDocument.id.replaceFirst('did:key:', '')}';
+  final bobJwks = bobDidDocument.keyAgreement.toJwks();
 
-  // Important! link JWK, so the wallet should be able to find the key pair by JWK
-  bobWallet.linkJwkKeyIdKeyWithKeyId(bobJwk['kid']!, bobKeyId);
+  for (var jwk in bobJwks.keys) {
+    // Important! link JWK, so the wallet should be able to find the key pair by JWK
+    // It will be replaced with DID Manager
+    bobWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
+  }
 
-  final mediatorDidDocument =
-      await readDidDocument('./example/mediator/mediator_did_document.json');
-
-  final plainTextMassage = PlainTextMessage(
+  final alicePlainTextMassage = PlainTextMessage(
     id: Uuid().v4(),
     from: aliceDidDocument.id,
     to: [bobDidDocument.id],
@@ -94,37 +101,31 @@ void main() async {
     body: {'content': 'Hello, Bob!'},
   );
 
-  plainTextMassage['custom-header'] = 'custom-value';
+  alicePlainTextMassage['custom-header'] = 'custom-value';
+  prettyPrint('Plain Text Message for Bob', alicePlainTextMassage);
 
-  print(jsonEncode(plainTextMassage));
-  print('');
-
-  final signedMessageByAlice = await SignedMessage.pack(
-    plainTextMassage,
+  final aliceSignedAndEncryptedMessage =
+      await DidcommMessage.packIntoSignedAndEncryptedMessages(
+    alicePlainTextMassage,
+    wallet: aliceWallet,
+    keyId: aliceKeyId,
+    jwksPerRecipient: [bobJwks],
+    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+    encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     signer: aliceSigner,
   );
 
-  print(jsonEncode(signedMessageByAlice));
-  print('');
-
-  final encryptedMessageByAlice = await EncryptedMessage.packWithAuthentication(
-    signedMessageByAlice,
-    wallet: aliceWallet,
-    keyId: aliceKeyId,
-    jwksPerRecipient: [
-      Jwks.fromJson({
-        'keys': [bobJwk],
-      }),
-    ],
-    encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+  prettyPrint(
+    'Encrypted and Signed Message by Alice',
+    aliceSignedAndEncryptedMessage,
   );
 
   final createdTime = DateTime.now().toUtc();
   final expiresTime = createdTime.add(const Duration(seconds: 60));
 
-  final forwardMessageByAlice = ForwardMessage(
+  final forwardMessage = ForwardMessage(
     id: Uuid().v4(),
-    to: [mediatorDidDocument.id],
+    to: [bobMediatorDocument.id],
     next: bobDidDocument.id,
     expiresTime: expiresTime,
     attachments: [
@@ -132,18 +133,20 @@ void main() async {
         mediaType: 'application/json',
         data: AttachmentData(
           base64: base64UrlEncodeNoPadding(
-            encryptedMessageByAlice.toJsonBytes(),
+            aliceSignedAndEncryptedMessage.toJsonBytes(),
           ),
         ),
       ),
     ],
   );
 
-  print(jsonEncode(forwardMessageByAlice));
-  print('');
+  prettyPrint(
+    'Forward Message for Mediator that wraps Encrypted Message for Bob',
+    forwardMessage,
+  );
 
   final aliceMediatorClient = MediatorClient(
-      mediatorDidDocument: mediatorDidDocument,
+      mediatorDidDocument: bobMediatorDocument,
       wallet: aliceWallet,
       keyId: aliceKeyId,
       signer: aliceSigner,
@@ -161,7 +164,7 @@ void main() async {
   final aliceTokens = await aliceMediatorClient.authenticate();
 
   final bobMediatorClient = MediatorClient(
-    mediatorDidDocument: mediatorDidDocument,
+    mediatorDidDocument: bobMediatorDocument,
     wallet: bobWallet,
     keyId: bobKeyId,
     signer: bobSigner,
@@ -187,8 +190,10 @@ void main() async {
         recipientWallet: bobWallet,
       );
 
-      print(jsonEncode(unpackedMessageByBob));
-      print('');
+      prettyPrint(
+        'Unpacked Plain Text Message received by Bob via Mediator',
+        unpackedMessageByBob,
+      );
 
       await bobMediatorClient.disconnect();
     },
@@ -199,7 +204,7 @@ void main() async {
   );
 
   await aliceMediatorClient.sendMessage(
-    forwardMessageByAlice,
+    forwardMessage,
     accessToken: aliceTokens.accessToken,
   );
 }

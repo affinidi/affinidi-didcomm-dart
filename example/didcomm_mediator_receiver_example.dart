@@ -1,20 +1,22 @@
-import 'dart:convert';
-
 import 'package:didcomm/didcomm.dart';
+import 'package:didcomm/src/common/did_document_service_type.dart';
+import 'package:didcomm/src/extensions/extensions.dart';
+import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:ssi/ssi.dart';
 
 import 'helpers.dart';
 
 void main() async {
-  // Run commands below in your terminal to generate keys for your receiver:
+  // Run commands below in your terminal to generate keys for Receiver:
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/bob_private_key.pem
 
-  // Create and run a DIDComm mediator, for instance with https://portal.affinidi.com. Copy its DID Document into example/mediator/mediator_did_document.json.
+  // Create and run a DIDComm mediator, for instance with https://portal.affinidi.com.
+  // Copy its DID Document URL into example/mediator/mediator_did.txt.
 
   final receiverKeyStore = InMemoryKeyStore();
   final receiverWallet = PersistentWallet(receiverKeyStore);
 
-  final receiverKeyId = 'bob-key-1';
+  final receiverKeyId = 'receiver-key-1';
   final receiverPrivateKeyBytes =
       await extractPrivateKeyBytes('./example/keys/bob_private_key.pem');
 
@@ -27,11 +29,23 @@ void main() async {
   );
 
   final receiverKeyPair = await receiverWallet.getKeyPair(receiverKeyId);
-  final receiverDidDocument =
-      DidKey.generateDocument(receiverKeyPair.publicKey);
+  final receiverDidDocument = DidKey.generateDocument(
+    receiverKeyPair.publicKey,
+  );
 
-  print('Receiver DID: ${receiverDidDocument.id}');
-  print('');
+  await receiverDidDocument.copyServicesByTypeFromResolvedDid(
+    DidDocumentServiceType.didCommMessaging,
+    await readDid('./example/mediator/mediator_did.txt'),
+  );
+
+  // Serialized receiverMediatorDocument needs to shared with sender
+  prettyPrint('Receiver DID Document', receiverDidDocument);
+
+  final receiverMediatorDocument = await UniversalDIDResolver.resolve(
+    receiverDidDocument.getFirstServiceDidByType(
+      DidDocumentServiceType.didCommMessaging,
+    )!,
+  );
 
   final receiverSigner = DidSigner(
     didDocument: receiverDidDocument,
@@ -40,26 +54,23 @@ void main() async {
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
-  // TODO: kid is not available in the Jwk anymore. clarify with the team
-  final receiverJwk = receiverDidDocument.keyAgreement[0].asJwk().toJson();
-  receiverJwk['kid'] =
-      '${receiverDidDocument.id}#${receiverDidDocument.id.replaceFirst('did:key:', '')}';
+  final receiverJwks = receiverDidDocument.keyAgreement.toJwks();
 
-  // Important! link JWK, so the wallet should be able to find the key pair by JWK
-  receiverWallet.linkJwkKeyIdKeyWithKeyId(receiverJwk['kid']!, receiverKeyId);
-
-  final mediatorDidDocument =
-      await readDidDocument('./example/mediator/mediator_did_document.json');
+  for (var jwk in receiverJwks.keys) {
+    // Important! link JWK, so the wallet should be able to find the key pair by JWK
+    // It will be replaced with DID Manager
+    receiverWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, receiverKeyId);
+  }
 
   final receiverMediatorClient = MediatorClient(
-    mediatorDidDocument: mediatorDidDocument,
+    mediatorDidDocument: receiverMediatorDocument,
     wallet: receiverWallet,
     keyId: receiverKeyId,
     signer: receiverSigner,
   );
 
   final receiverTokens = await receiverMediatorClient.authenticate();
-  print('Sender is receiving messages...');
+  print('Receiver is fetching messages...');
 
   final messageIds = await receiverMediatorClient.listInboxMessageIds(
     accessToken: receiverTokens.accessToken,
@@ -70,17 +81,16 @@ void main() async {
     accessToken: receiverTokens.accessToken,
   );
 
-  if (messages.isEmpty) {
-    print('No messages to read');
-  }
-
   for (final message in messages) {
-    final originalPlainTextMessageFromAlice =
+    final originalPlainTextMessageFromSender =
         await DidcommMessage.unpackToPlainTextMessage(
       message: message,
       recipientWallet: receiverWallet,
     );
 
-    print(jsonEncode(originalPlainTextMessageFromAlice));
+    prettyPrint(
+      'Unpacked Plain Text Message received by Receiver via Mediator',
+      originalPlainTextMessageFromSender,
+    );
   }
 }

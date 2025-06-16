@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:didcomm/didcomm.dart';
-import 'package:didcomm/src/jwks/jwks.dart';
+import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
 import 'package:ssi/ssi.dart';
 import 'package:convert/convert.dart';
+
+import 'helpers.dart';
 
 void main() async {
   final aliceSeed = hex.decode(
@@ -57,15 +59,15 @@ void main() async {
     PublicKey(bobKeyId, bobX25519PublicKey, KeyType.x25519),
   );
 
-  // TODO: kid is not available in the Jwk anymore. clarify with the team
-  final bobJwk = bobDidDocument.keyAgreement[0].asJwk().toJson();
-  bobJwk['kid'] =
-      '${bobDidDocument.id}#${bobDidDocument.id.replaceFirst('did:key:', '')}';
+  final bobJwks = bobDidDocument.keyAgreement.toJwks();
 
-  // Important! link JWK, so the wallet should be able to find the key pair by JWK
-  bobWallet.linkJwkKeyIdKeyWithKeyId(bobJwk['kid']!, bobKeyId);
+  for (var jwk in bobJwks.keys) {
+    // Important! link JWK, so the wallet should be able to find the key pair by JWK
+    // It will be replaced with DID Manager
+    bobWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
+  }
 
-  final plainTextMassage = PlainTextMessage(
+  final alicePlainTextMassage = PlainTextMessage(
     id: '041b47d4-9c8f-4a24-ae85-b60ec91b025c',
     from: aliceDidDocument.id,
     to: [bobDidDocument.id],
@@ -73,40 +75,43 @@ void main() async {
     body: {'content': 'Hello, Bob!'},
   );
 
-  plainTextMassage['custom-header'] = 'custom-value';
+  alicePlainTextMassage['custom-header'] = 'custom-value';
+  prettyPrint('Plain Text Message for Bob', alicePlainTextMassage);
 
-  print(jsonEncode(plainTextMassage));
-  print('');
-
-  final signedMessageByAlice = await SignedMessage.pack(
-    plainTextMassage,
+  final aliceSignedMessage = await SignedMessage.pack(
+    alicePlainTextMassage,
     signer: aliceSigner,
   );
 
-  print(jsonEncode(signedMessageByAlice));
-  print('');
+  prettyPrint(
+    'Signed Message by Alice',
+    aliceSignedMessage,
+  );
 
-  final encryptedMessageByAlice = await EncryptedMessage.packWithAuthentication(
-    signedMessageByAlice,
+  final aliceEncryptedMessage = await EncryptedMessage.packWithAuthentication(
+    aliceSignedMessage,
     wallet: aliceWallet,
     keyId: aliceKeyId,
     jwksPerRecipient: [
-      Jwks.fromJson({
-        'keys': [bobJwk],
-      }),
+      bobJwks,
     ],
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
 
-  final sentMessageByAlice = jsonEncode(encryptedMessageByAlice);
-  print(sentMessageByAlice);
-  print('');
+  prettyPrint(
+    'Encrypted Message by Alice',
+    aliceEncryptedMessage,
+  );
+
+  final sentMessageByAlice = jsonEncode(aliceEncryptedMessage);
 
   final unpackedMessageByBob = await DidcommMessage.unpackToPlainTextMessage(
     message: jsonDecode(sentMessageByAlice),
     recipientWallet: bobWallet,
   );
 
-  print(unpackedMessageByBob?.toJson());
-  print('');
+  prettyPrint(
+    'Unpacked Plain Text Message received by Bob',
+    unpackedMessageByBob,
+  );
 }
