@@ -75,6 +75,7 @@ void main() {
 
       for (final encryptionAlgorithm in [
         EncryptionAlgorithm.a256cbc,
+        EncryptionAlgorithm.a256gcm,
       ]) {
         group(encryptionAlgorithm.value.toString(), () {
           test(
