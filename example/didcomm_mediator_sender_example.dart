@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/encoding.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
-import 'package:didcomm/src/jwks/jwks.dart';
+import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:didcomm/src/messages/algorithm_types/algorithms_types.dart';
 import 'package:didcomm/src/messages/attachments/attachment.dart';
 import 'package:didcomm/src/messages/attachments/attachment_data.dart';
@@ -13,10 +13,11 @@ import 'package:uuid/uuid.dart';
 import 'helpers.dart';
 
 void main() async {
-  // Run commands below in your terminal to generate keys for your sender:
-  // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/alice_private_key.pem
+  // Run commands below in your terminal to generate keys for Receiver:
+  // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/bob_private_key.pem
 
-  // Create and run a DIDComm mediator, for instance with https://portal.affinidi.com. Copy its DID Document into example/mediator/mediator_did_document.json.
+  // Create and run a DIDComm mediator, for instance with https://portal.affinidi.com.
+  // Copy its DID Document URL into example/mediator/mediator_did.txt.
 
   // Replace this DID Document with your receiver DID Document
   final receiverDidDocument = DidDocument.fromJson(jsonDecode("""
@@ -53,14 +54,7 @@ void main() async {
   """));
 
   final messageForReceiver = 'Hello, Bob!';
-
-  final receiverJwks = receiverDidDocument.keyAgreement.map((keyAgreement) {
-    final jwk = keyAgreement.asJwk().toJson();
-    // TODO: kid is not available in the Jwk anymore. clarify with the team
-    jwk['kid'] = keyAgreement.id;
-
-    return jwk;
-  }).toList();
+  final receiverJwks = receiverDidDocument.keyAgreement.toJwks();
 
   final senderKeyStore = InMemoryKeyStore();
   final senderWallet = PersistentWallet(senderKeyStore);
@@ -80,8 +74,7 @@ void main() async {
   final senderKeyPair = await senderWallet.getKeyPair(senderKeyId);
   final senderDidDocument = DidKey.generateDocument(senderKeyPair.publicKey);
 
-  print('Sender DID: ${senderDidDocument.id}');
-  print('');
+  prettyPrint('Sender DID', senderDidDocument.id);
 
   final senderSigner = DidSigner(
     didDocument: senderDidDocument,
@@ -90,48 +83,42 @@ void main() async {
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
-  final mediatorDidDocument =
+  final receiverMediatorDidDocument =
       await readDidDocument('./example/mediator/mediator_did_document.json');
 
-  final plainTextMassage = PlainTextMessage(
+  final senderPlainTextMassage = PlainTextMessage(
     id: Uuid().v4(),
     from: senderDidDocument.id,
     to: [receiverDidDocument.id],
     type: Uri.parse('https://didcomm.org/example/1.0/message'),
-    body: {'content': messageForReceiver},
+    body: {'content': 'Hello, Bob!'},
   );
 
-  plainTextMassage['custom-header'] = 'custom-value';
+  senderPlainTextMassage['custom-header'] = 'custom-value';
+  prettyPrint('Plain Text Message for Receiver', senderPlainTextMassage);
 
-  print(jsonEncode(plainTextMassage));
-  print('');
-
-  final signedMessageByAlice = await SignedMessage.pack(
-    plainTextMassage,
+  final senderSignedAndEncryptedMessage =
+      await DidcommMessage.packIntoSignedAndEncryptedMessages(
+    senderPlainTextMassage,
+    wallet: senderWallet,
+    keyId: senderKeyId,
+    jwksPerRecipient: [receiverJwks],
+    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+    encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     signer: senderSigner,
   );
 
-  print(jsonEncode(signedMessageByAlice));
-  print('');
-
-  final encryptedMessageByAlice = await EncryptedMessage.packWithAuthentication(
-    signedMessageByAlice,
-    wallet: senderWallet,
-    keyId: senderKeyId,
-    jwksPerRecipient: [
-      Jwks.fromJson({
-        'keys': receiverJwks,
-      }),
-    ],
-    encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+  prettyPrint(
+    'Encrypted and Signed Message by Sender',
+    senderSignedAndEncryptedMessage,
   );
 
   final createdTime = DateTime.now().toUtc();
   final expiresTime = createdTime.add(const Duration(seconds: 60));
 
-  final forwardMessageByAlice = ForwardMessage(
+  final forwardMessage = ForwardMessage(
     id: Uuid().v4(),
-    to: [mediatorDidDocument.id],
+    to: [receiverMediatorDidDocument.id],
     next: receiverDidDocument.id,
     expiresTime: expiresTime,
     attachments: [
@@ -139,18 +126,20 @@ void main() async {
         mediaType: 'application/json',
         data: AttachmentData(
           base64: base64UrlEncodeNoPadding(
-            encryptedMessageByAlice.toJsonBytes(),
+            senderSignedAndEncryptedMessage.toJsonBytes(),
           ),
         ),
       ),
     ],
   );
 
-  print(jsonEncode(forwardMessageByAlice));
-  print('');
+  prettyPrint(
+    'Forward Message for Mediator that wraps Encrypted Message for Receiver',
+    forwardMessage,
+  );
 
-  final aliceMediatorClient = MediatorClient(
-    mediatorDidDocument: mediatorDidDocument,
+  final senderMediatorClient = MediatorClient(
+    mediatorDidDocument: receiverMediatorDidDocument,
     wallet: senderWallet,
     keyId: senderKeyId,
     signer: senderSigner,
@@ -165,10 +154,10 @@ void main() async {
 
   // authenticate method is not direct part of mediatorClient, but it is extension method
   // this method is need for mediators, that require authentication like an Affinidi mediator
-  final aliceTokens = await aliceMediatorClient.authenticate();
+  final aliceTokens = await senderMediatorClient.authenticate();
 
-  await aliceMediatorClient.sendMessage(
-    forwardMessageByAlice,
+  await senderMediatorClient.sendMessage(
+    forwardMessage,
     accessToken: aliceTokens.accessToken,
   );
 
