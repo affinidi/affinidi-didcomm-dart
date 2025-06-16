@@ -91,7 +91,7 @@ void main() async {
     from: senderDidDocument.id,
     to: [receiverDidDocument.id],
     type: Uri.parse('https://didcomm.org/example/1.0/message'),
-    body: {'content': 'Hello, Bob!'},
+    body: {'content': messageForReceiver},
   );
 
   senderPlainTextMassage['custom-header'] = 'custom-value';
