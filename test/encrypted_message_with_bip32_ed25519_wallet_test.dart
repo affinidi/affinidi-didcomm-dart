@@ -1,5 +1,3 @@
-// TODO: add only succsful test cases for encrypted message with BIP32 Ed25519 wallet
-// only "Pack and unpack encrypted message successfully" from test/encrypted_message_with_persistent_test.dart
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -9,6 +7,8 @@ import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
 import 'package:didcomm/src/messages/didcomm_message.dart';
 import 'package:ssi/ssi.dart';
 import 'package:test/test.dart';
+
+import 'utils/create_message_assertion.dart';
 
 void main() {
   group("Encrypted message", () {
@@ -81,15 +81,12 @@ void main() {
           test(
             'Pack and unpack encrypted message successfully',
             () async {
-              // Act: create, sign, and encrypt the message
-
-              // TODO: create a helper function to create a message so it can be reused
-              final plainTextMessage = PlainTextMessage(
-                id: 'test-id',
+              const content = 'Hello, Bob!';
+              final plainTextMessage =
+                  await MessageAssertionService.createPlainTextMessageAssertion(
+                content,
                 from: aliceDidDocument.id,
                 to: [bobDidDocument.id],
-                type: Uri.parse('https://didcomm.org/example/1.0/message'),
-                body: {'content': 'Hello, Bob!'},
               );
 
               final signedMessage = await SignedMessage.pack(
@@ -111,17 +108,13 @@ void main() {
 
               final sharedMessageToBobInJson = jsonEncode(sut);
 
-              final expectedBodyContent = 'Hello, Bob!';
-
               final actual = await DidcommMessage.unpackToPlainTextMessage(
                 message: jsonDecode(sharedMessageToBobInJson),
                 recipientWallet: bobWallet,
               );
 
               expect(actual, isNotNull);
-              expect(actual!.body?['content'], expectedBodyContent);
-
-              // TODO: check if there is no any user identifiable information in the unpacked message for anonymous messages
+              expect(actual!.body?['content'], content);
             },
           );
         });
