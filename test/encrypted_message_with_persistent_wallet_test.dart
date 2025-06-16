@@ -6,6 +6,8 @@ import 'package:didcomm/src/messages/didcomm_message.dart';
 import 'package:ssi/ssi.dart';
 import 'package:test/test.dart';
 
+import 'utils/create_message_assertion.dart';
+
 void main() async {
   group('Encrypted message', () {
     final aliceKeyStore = InMemoryKeyStore();
@@ -71,15 +73,12 @@ void main() async {
                     'Pack and unpack encrypted message successfully',
                     () async {
                       // Act: create, sign, and encrypt the message
-
-                      // TODO: create a helper function to create a message so it can be reused
-                      final plainTextMessage = PlainTextMessage(
-                        id: 'test-id',
+                      const content = 'Hello, Bob!';
+                      final plainTextMessage = await MessageAssertionService
+                          .createPlainTextMessageAssertion(
+                        content,
                         from: aliceDidDocument.id,
                         to: [bobDidDocument.id],
-                        type: Uri.parse(
-                            'https://didcomm.org/example/1.0/message'),
-                        body: {'content': 'Hello, Bob!'},
                       );
 
                       final signedMessage = await SignedMessage.pack(
@@ -116,8 +115,6 @@ void main() async {
 
                       expect(actual, isNotNull);
                       expect(actual!.body?['content'], expectedBodyContent);
-
-                      // TODO: check if there is no any user identifiable information in the unpacked message for anonymous messages
                     },
                   );
 
@@ -125,13 +122,12 @@ void main() async {
                     'Fails to unpack encrypted message with authentication due to missing key',
                     () async {
                       // Act: create, sign, and encrypt the message
-                      final plainTextMessage = PlainTextMessage(
-                        id: 'test-id',
+                      const content = 'Hello, Bob!';
+                      final plainTextMessage = await MessageAssertionService
+                          .createPlainTextMessageAssertion(
+                        content,
                         from: aliceDidDocument.id,
                         to: [bobDidDocument.id],
-                        type: Uri.parse(
-                            'https://didcomm.org/example/1.0/message'),
-                        body: {'content': 'Hello, Bob!'},
                       );
 
                       final sut = await EncryptedMessage.packWithAuthentication(
