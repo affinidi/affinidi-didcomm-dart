@@ -165,6 +165,14 @@ void main() async {
     wallet: bobWallet,
     keyId: bobKeyId,
     signer: bobSigner,
+    webSocketOptions: WebSocketOptions(
+      statusRequestMessageOptions: StatusRequestMessageOptions(
+        shouldSend: true,
+      ),
+      liveDeliveryChangeMessageOptions: LiveDeliveryChangeMessageOptions(
+        shouldSend: true,
+      ),
+    ),
   );
 
   final bobTokens = await bobMediatorClient.authenticate();
