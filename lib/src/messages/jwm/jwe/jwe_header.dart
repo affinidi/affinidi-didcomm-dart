@@ -8,6 +8,7 @@ import 'package:ssi/ssi.dart';
 import '../../../common/crypto.dart';
 import '../../../common/encoding.dart';
 import '../../../errors/errors.dart';
+import '../../../errors/unsupported_wallet_type_error.dart';
 import '../../../jwks/jwks.dart';
 import '../../../extensions/extensions.dart';
 import '../../../curves/curve_type.dart';
@@ -104,7 +105,7 @@ class JweHeader {
     } else if (curve.isXCurve()) {
       // TODO: revisit wallet casting
       if (wallet is! Bip32Ed25519Wallet) {
-        throw Exception('Wallet must be Bip32Ed25519Wallet for X curve');
+        throw UnsupportedWalletTypeError(wallet);
       }
 
       final x25519PublicKey = await wallet.getX25519PublicKey(keyId);
