@@ -16,7 +16,9 @@ void main() async {
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/alice_private_key.pem
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/bob_private_key.pem
 
-  // Create and run a DIDComm mediator, for instance with https://portal.affinidi.com. Copy its DID Document into example/mediator/mediator_did_document.json.
+  // Create and run a DIDComm mediator, for instance with https://portal.affinidi.com.
+  // Copy its DID Document URL into example/mediator/mediator_did.txt.
+
   final aliceKeyStore = InMemoryKeyStore();
   final aliceWallet = PersistentWallet(aliceKeyStore);
 
@@ -68,14 +70,14 @@ void main() async {
     await readDid('./example/mediator/mediator_did.txt'),
   );
 
+  // Serialized bobDidDocument needs to shared with sender
+  prettyPrint('Bob DID Document', bobDidDocument);
+
   final bobMediatorDocument = await UniversalDIDResolver.resolve(
     bobDidDocument.getFirstServiceDidByType(
       DidDocumentServiceType.didCommMessaging,
     )!,
   );
-
-  prettyPrint('Bob DID', bobDidDocument.id);
-  prettyPrint('Bob Mediator DID', bobMediatorDocument.id);
 
   final bobSigner = DidSigner(
     didDocument: bobDidDocument,
@@ -88,6 +90,7 @@ void main() async {
 
   for (var jwk in bobJwks.keys) {
     // Important! link JWK, so the wallet should be able to find the key pair by JWK
+    // It will be replaced with DID Manager
     bobWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
   }
 
@@ -100,7 +103,6 @@ void main() async {
   );
 
   alicePlainTextMassage['custom-header'] = 'custom-value';
-
   prettyPrint('Plain Text Message for Bob', alicePlainTextMassage);
 
   final aliceSignedAndEncryptedMessage =
@@ -140,7 +142,7 @@ void main() async {
   );
 
   prettyPrint(
-    'Forward Message for Mediator wrapping the Encrypted Message for Bob',
+    'Forward Message for Mediator that wraps Encrypted Message for Bob',
     forwardMessage,
   );
 
