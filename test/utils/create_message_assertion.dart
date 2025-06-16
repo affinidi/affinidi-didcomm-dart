@@ -5,7 +5,7 @@ class MessageAssertionService {
     String message, {
     required String from,
     required List<String> to,
-  }) async {
+  }) {
     final plainTextMessage = PlainTextMessage(
       id: 'test-id',
       from: from,
