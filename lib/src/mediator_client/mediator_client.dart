@@ -12,8 +12,6 @@ import 'package:web_socket_channel/status.dart' as status;
 
 import '../common/did_document_service_type.dart';
 import '../extensions/extensions.dart';
-import '../jwks/jwks.dart';
-import '../messages/algorithm_types/algorithms_types.dart';
 
 class MediatorClient {
   final DidDocument mediatorDidDocument;
@@ -21,6 +19,7 @@ class MediatorClient {
   final String keyId;
   final DidSigner signer;
   final ForwardMessageOptions forwardMessageOptions;
+  final WebSocketOptions webSocketOptions;
 
   final Dio _dio;
   late final IOWebSocketChannel? _channel;
@@ -31,6 +30,7 @@ class MediatorClient {
     required this.keyId,
     required this.signer,
     this.forwardMessageOptions = const ForwardMessageOptions(),
+    this.webSocketOptions = const WebSocketOptions(),
   }) : _dio = mediatorDidDocument.toDio(
           mediatorServiceType: DidDocumentServiceType.didCommMessaging,
         );
@@ -56,27 +56,10 @@ class MediatorClient {
     ForwardMessage message, {
     String? accessToken,
   }) async {
-    DidcommMessage messageToSend = message;
-
-    if (forwardMessageOptions.shouldSign) {
-      messageToSend = await SignedMessage.pack(
-        messageToSend,
-        signer: signer,
-      );
-    }
-
-    if (forwardMessageOptions.shouldEncrypt) {
-      messageToSend = await EncryptedMessage.pack(
-        messageToSend,
-        wallet: wallet,
-        keyId: keyId,
-        jwksPerRecipient: [
-          mediatorDidDocument.keyAgreement.toJwks(),
-        ],
-        keyWrappingAlgorithm: forwardMessageOptions.keyWrappingAlgorithm,
-        encryptionAlgorithm: forwardMessageOptions.encryptionAlgorithm,
-      );
-    }
+    DidcommMessage messageToSend = await _packMessage(
+      message,
+      messageOptions: forwardMessageOptions,
+    );
 
     final headers =
         accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
@@ -156,73 +139,39 @@ class MediatorClient {
 
     final actorDidDocument = await _getActorDidDocument();
 
-    final mediatorJwks = mediatorDidDocument.keyAgreement.map((keyAgreement) {
-      final jwk = keyAgreement.asJwk().toJson();
-      // TODO: kid is not available in the Jwk anymore. clarify with the team
-      jwk['kid'] = keyAgreement.id;
+    if (webSocketOptions.statusRequestMessageOptions.shouldSend) {
+      final setupRequestMessage = StatusRequestMessage(
+        id: Uuid().v4(),
+        to: [mediatorDidDocument.id],
+        from: actorDidDocument.id,
+        recipientDid: actorDidDocument.id,
+      );
 
-      return jwk;
-    }).toList();
+      _sendMessageToChannel(
+        await _packMessage(
+          setupRequestMessage,
+          messageOptions: webSocketOptions.statusRequestMessageOptions,
+        ),
+      );
+    }
 
-    // TODO: clarify if setup request is required only by Affinidi mediator
-    final setupRequestMessage = StatusRequestMessage(
-      id: Uuid().v4(),
-      to: [mediatorDidDocument.id],
-      from: actorDidDocument.id,
-      recipientDid: actorDidDocument.id,
-    );
+    if (webSocketOptions.liveDeliveryChangeMessageOptions.shouldSend) {
+      final liveDeliveryChangeMessage = LiveDeliveryChangeMessage(
+        id: Uuid().v4(),
+        to: [mediatorDidDocument.id],
+        from: actorDidDocument.id,
+        liveDelivery: true,
+      );
 
-    // TODO: clarify if live delivery is required only by Affinidi mediator
-    final liveDeliveryMessage = LiveDeliveryChangeMessage(
-      id: Uuid().v4(),
-      to: [mediatorDidDocument.id],
-      from: actorDidDocument.id,
-      liveDelivery: true,
-    );
-
-    final liveDeliveryEncryptedMessage = await _signAndEncryptMessage(
-      liveDeliveryMessage,
-      mediatorJwks: mediatorJwks,
-    );
-
-    final signedAndEncryptedSetupMessage = await _signAndEncryptMessage(
-      setupRequestMessage,
-      mediatorJwks: mediatorJwks,
-    );
-
-    _channel.sink.add(
-      jsonEncode(liveDeliveryEncryptedMessage),
-    );
-
-    _channel.sink.add(
-      jsonEncode(signedAndEncryptedSetupMessage),
-    );
+      _sendMessageToChannel(
+        await _packMessage(
+          liveDeliveryChangeMessage,
+          messageOptions: webSocketOptions.statusRequestMessageOptions,
+        ),
+      );
+    }
 
     return subscription;
-  }
-
-  Future<EncryptedMessage> _signAndEncryptMessage(
-    PlainTextMessage message, {
-    required List<Map<String, String>> mediatorJwks,
-  }) async {
-    final signedSetupMessage = await SignedMessage.pack(
-      message,
-      signer: signer,
-    );
-
-    final encryptedSetupMessage = await EncryptedMessage.packWithAuthentication(
-      signedSetupMessage,
-      wallet: wallet,
-      keyId: keyId,
-      jwksPerRecipient: [
-        Jwks.fromJson({
-          'keys': mediatorJwks,
-        }),
-      ],
-      encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-    );
-
-    return encryptedSetupMessage;
   }
 
   Future<void> disconnect() async {
@@ -236,6 +185,47 @@ class MediatorClient {
 
     return DidKey.generateDocument(
       recipientKeyPair.publicKey,
+    );
+  }
+
+  Future<DidcommMessage> _packMessage(
+    PlainTextMessage message, {
+    required MessageOptions messageOptions,
+  }) async {
+    DidcommMessage messageToSend = message;
+
+    if (messageOptions.shouldSign) {
+      messageToSend = await SignedMessage.pack(
+        messageToSend,
+        signer: signer,
+      );
+    }
+
+    if (messageOptions.shouldEncrypt) {
+      messageToSend = await EncryptedMessage.pack(
+        messageToSend,
+        wallet: wallet,
+        keyId: keyId,
+        jwksPerRecipient: [
+          mediatorDidDocument.keyAgreement.toJwks(),
+        ],
+        keyWrappingAlgorithm: messageOptions.keyWrappingAlgorithm,
+        encryptionAlgorithm: messageOptions.encryptionAlgorithm,
+      );
+    }
+
+    return messageToSend;
+  }
+
+  _sendMessageToChannel(DidcommMessage message) {
+    if (_channel == null) {
+      throw Exception(
+        'WebSockets connection has not configured yet. Call listenForIncomingMessages first.',
+      );
+    }
+
+    _channel.sink.add(
+      jsonEncode(message),
     );
   }
 }
