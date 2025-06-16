@@ -59,22 +59,19 @@ abstract class EcdhEs implements Ecdh {
     final encAscii = ascii.encode(KeyWrappingAlgorithm.ecdhEs.value);
     final encLength = _int32BigEndianBytes(encAscii.length);
 
-    final partyU =
-        jweHeader.agreementPartyUInfo != null
-            ? base64UrlDecodeWithPadding(jweHeader.agreementPartyUInfo!)
-            : Uint8List(0);
+    final partyU = jweHeader.agreementPartyUInfo != null
+        ? base64UrlDecodeWithPadding(jweHeader.agreementPartyUInfo!)
+        : Uint8List(0);
 
     final partyULength = _int32BigEndianBytes(partyU.length);
 
-    final partyV =
-        jweHeader.agreementPartyVInfo != null
-            ? base64UrlDecodeWithPadding(jweHeader.agreementPartyVInfo!)
-            : Uint8List(0);
+    final partyV = jweHeader.agreementPartyVInfo != null
+        ? base64UrlDecodeWithPadding(jweHeader.agreementPartyVInfo!)
+        : Uint8List(0);
 
     final partyVLength = _int32BigEndianBytes(partyV.length);
 
-    final otherInfo =
-        encLength +
+    final otherInfo = encLength +
         encAscii +
         partyULength +
         partyU +
@@ -93,7 +90,7 @@ abstract class EcdhEs implements Ecdh {
     final keyPair = ck.KeyPair.fromJwk(sharedSecretJwk);
 
     if (keyPair == null) {
-      throw Exception('Failed to construct a key pair for a shared secret');
+      throw ArgumentError('Failed to construct a key pair for a shared secret');
     }
 
     return keyPair.publicKey!.createEncrypter(

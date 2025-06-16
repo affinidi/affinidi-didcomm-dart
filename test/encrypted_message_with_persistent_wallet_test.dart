@@ -167,8 +167,6 @@ void main() async {
                     },
                   );
 
-                  // TODO: find all places, which throw generic Exception and relace them with more specific exceptions
-                  // TODO: add tests to capture those exceptions
                   // TODO: wrap failed decryption that throw 'Invalid ' with own exception
                 });
               }
