@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:didcomm/didcomm.dart';
+import 'package:didcomm/src/converters/jwe_header_converter.dart';
+import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:didcomm/src/jwks/jwks.dart';
-import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
-import 'package:didcomm/src/messages/didcomm_message.dart';
+import 'package:didcomm/src/messages/algorithm_types/algorithms_types.dart';
 import 'package:ssi/ssi.dart';
 import 'package:test/test.dart';
 
@@ -32,7 +33,7 @@ void main() {
       late DidDocument bobDidDocument;
       late DidSigner aliceSigner;
 
-      late Map<String, dynamic> bobJwk;
+      late Jwks bobJwks;
 
       setUp(() async {
         final aliceKeyPair = await aliceWallet.generateKey(
@@ -66,11 +67,13 @@ void main() {
           PublicKey(bobKeyId, bobX25519PublicKey, KeyType.x25519),
         );
 
-        bobJwk = bobDidDocument.keyAgreement[0].asJwk().toJson();
-        bobJwk['kid'] =
-            '${bobDidDocument.id}#${bobDidDocument.id.replaceFirst('did:key:', '')}';
+        bobJwks = bobDidDocument.keyAgreement.toJwks();
 
-        bobWallet.linkJwkKeyIdKeyWithKeyId(bobJwk['kid']!, bobKeyId);
+        for (var jwk in bobJwks.keys) {
+          // Important! link JWK, so the wallet should be able to find the key pair by JWK
+          // It will be replaced with DID Manager
+          bobWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
+        }
       });
 
       for (final encryptionAlgorithm in [
@@ -78,45 +81,58 @@ void main() {
         EncryptionAlgorithm.a256gcm,
       ]) {
         group(encryptionAlgorithm.value.toString(), () {
-          test(
-            'Pack and unpack encrypted message successfully',
-            () async {
-              const content = 'Hello, Bob!';
-              final plainTextMessage =
-                  MessageAssertionService.createPlainTextMessageAssertion(
-                content,
-                from: aliceDidDocument.id,
-                to: [bobDidDocument.id],
+          for (final isAuthenticated in [true, false]) {
+            group(isAuthenticated ? 'Authenticated' : 'Anonymous', () {
+              test(
+                'Pack and unpack encrypted message successfully',
+                () async {
+                  const content = 'Hello, Bob!';
+                  final plainTextMessage =
+                      MessageAssertionService.createPlainTextMessageAssertion(
+                    content,
+                    from: aliceDidDocument.id,
+                    to: [bobDidDocument.id],
+                  );
+
+                  final signedMessage = await SignedMessage.pack(
+                    plainTextMessage,
+                    signer: aliceSigner,
+                  );
+
+                  final sut = await EncryptedMessage.pack(
+                    signedMessage,
+                    wallet: aliceWallet,
+                    keyId: aliceKeyId,
+                    jwksPerRecipient: [bobJwks],
+                    encryptionAlgorithm: encryptionAlgorithm,
+                    keyWrappingAlgorithm: isAuthenticated
+                        ? KeyWrappingAlgorithm.ecdh1Pu
+                        : KeyWrappingAlgorithm.ecdhEs,
+                  );
+
+                  final sharedMessageToBobInJson = jsonEncode(sut);
+
+                  final actual = await DidcommMessage.unpackToPlainTextMessage(
+                    message: jsonDecode(sharedMessageToBobInJson),
+                    recipientWallet: bobWallet,
+                  );
+
+                  expect(actual, isNotNull);
+                  expect(actual!.body?['content'], content);
+
+                  final actualJweHeader = JweHeaderConverter().fromJson(
+                    sut.protected,
+                  );
+
+                  // make sure sender identity does not leak for anonymous authentication
+                  expect(
+                    actualJweHeader.subjectKeyId,
+                    isAuthenticated ? isNotNull : isNull,
+                  );
+                },
               );
-
-              final signedMessage = await SignedMessage.pack(
-                plainTextMessage,
-                signer: aliceSigner,
-              );
-
-              final sut = await EncryptedMessage.packWithAuthentication(
-                signedMessage,
-                wallet: aliceWallet,
-                keyId: aliceKeyId,
-                jwksPerRecipient: [
-                  Jwks.fromJson({
-                    'keys': [bobJwk]
-                  })
-                ],
-                encryptionAlgorithm: encryptionAlgorithm,
-              );
-
-              final sharedMessageToBobInJson = jsonEncode(sut);
-
-              final actual = await DidcommMessage.unpackToPlainTextMessage(
-                message: jsonDecode(sharedMessageToBobInJson),
-                recipientWallet: bobWallet,
-              );
-
-              expect(actual, isNotNull);
-              expect(actual!.body?['content'], content);
-            },
-          );
+            });
+          }
         });
       }
     });
