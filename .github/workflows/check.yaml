@@ -2,10 +2,16 @@ name: check
 on:
   pull_request:
 jobs:
+  pre-step:
+    steps:
+      - name: Write TEST_MEDIATOR_DID to file
+        run: echo "${{ vars.TEST_MEDIATOR_DID }}" > example/mediator/mediator_did.txt
+      - name: Write TEST_ALICE_PRIVATE_KEY_PEM to file
+        run: echo "${{ vars.TEST_ALICE_PRIVATE_KEY_PEM }}" > example/keys/alice_private_key.pem
+      - name: Write TEST_BOB_PRIVATE_KEY_PEM to file
+        run: echo "${{ vars.TEST_BOB_PRIVATE_KEY_PEM }}" > example/keys/bob_private_key.pem
+
   dart-pipeline:
     uses: affinidi/pipeline-dart/.github/workflows/check.yaml@main
     secrets: inherit
-    with:
-      TEST_MEDIATOR_DID: ${{ vars.TEST_MEDIATOR_DID }}
-      TEST_ALICE_PRIVATE_KEY_PEM: ${{ vars.TEST_ALICE_PRIVATE_KEY_PEM }}
-      TEST_BOB_PRIVATE_KEY_PEM: ${{ vars.TEST_BOB_PRIVATE_KEY_PEM }}
+
