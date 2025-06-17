@@ -46,3 +46,21 @@ String formatBytes(int bytes) {
   final kbs = bytes / 1024;
   return '${kbs.toStringAsFixed(2)}kb';
 }
+
+Future<void> writeEnvironmentVariableToFileIfNeed(
+  String? environmentVariableName,
+  String filePath,
+) async {
+  final file = File(filePath);
+  final environmentVariable = Platform.environment[environmentVariableName];
+
+  if (environmentVariable == null && !(await file.exists())) {
+    throw ArgumentError(
+      'environmentVariableName can not be null if file was not created yet',
+      'environmentVariableName',
+    );
+  }
+
+  if (environmentVariable == null) return;
+  await file.writeAsString(environmentVariable);
+}
