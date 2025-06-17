@@ -9,7 +9,7 @@ import '../errors/errors.dart';
 import '../messages/algorithm_types/algorithms_types.dart';
 
 ({Uint8List privateKeyBytes, Uint8List? publicKeyBytes})
-generateEphemeralKeyPair(KeyType keyType) {
+    generateEphemeralKeyPair(KeyType keyType) {
   if (keyType == KeyType.p256) {
     return (
       privateKeyBytes: Uint8List.fromList(

@@ -91,8 +91,7 @@ abstract class Ecdh1Pu implements Ecdh {
     final partyV = base64UrlDecodeWithPadding(jweHeader.agreementPartyVInfo!);
     final partyVLength = _int32BigEndianBytes(partyV.length);
 
-    final otherInfo =
-        encLength +
+    final otherInfo = encLength +
         encAscii +
         partyULength +
         partyU +
