@@ -15,6 +15,43 @@ Packages with breaking changes:
 
 Packages with other changes:
 
+ - [`didcomm` - `v0.0.3`](#didcomm---v003)
+
+---
+
+#### `didcomm` - `v0.0.3`
+
+ - **FEAT**: resolve conflicts after rebase.
+ - **FEAT**: add basic test for signed message.
+ - **FEAT**: update tests.
+ - **FEAT**: update tests.
+ - **FEAT**: add algorithm a256gcm.
+ - **FEAT**: add test/encrypted_message_with_bip32_ed25519_wallet_test.dart.
+ - **FEAT**: update errors being thrown & add respective constructors.
+
+## 0.0.3
+
+ - **FEAT**: resolve conflicts after rebase.
+ - **FEAT**: add basic test for signed message.
+ - **FEAT**: update tests.
+ - **FEAT**: update tests.
+ - **FEAT**: add algorithm a256gcm.
+ - **FEAT**: add test/encrypted_message_with_bip32_ed25519_wallet_test.dart.
+ - **FEAT**: update errors being thrown & add respective constructors.
+
+
+## 2025-06-17
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
  - [`didcomm` - `v0.0.2`](#didcomm---v002)
 
 ---
