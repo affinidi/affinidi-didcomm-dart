@@ -56,7 +56,7 @@ Future<void> writeEnvironmentVariableToFileIfNeed(
 
   if (environmentVariable == null && !(await file.exists())) {
     throw ArgumentError(
-      'environmentVariableName can not be null if file was not created yet',
+      'Environment variable $environmentVariableName can not be null if file was not created yet',
       'environmentVariableName',
     );
   }
