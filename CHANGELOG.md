@@ -15,6 +15,31 @@ Packages with breaking changes:
 
 Packages with other changes:
 
+ - [`didcomm` - `v0.0.3+1`](#didcomm---v0031)
+
+---
+
+#### `didcomm` - `v0.0.3+1`
+
+ - **FIX**: websockets example.
+
+## 0.0.3+1
+
+ - **FIX**: websockets example.
+
+
+## 2025-06-17
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
  - [`didcomm` - `v0.0.3`](#didcomm---v003)
 
 ---
