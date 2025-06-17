@@ -1,0 +1,9 @@
+name: release
+on:
+  push:
+    branches:
+      - main
+jobs:
+  dart-pipeline:
+    uses: affinidi/pipeline-dart/.github/workflows/release.yaml@main
+    secrets: inherit
