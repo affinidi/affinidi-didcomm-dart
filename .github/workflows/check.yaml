@@ -2,24 +2,11 @@ name: check
 on:
   pull_request:
 jobs:
-  pre-step:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Ensure /example directory exists
-        run: mkdir -p example
-      - name: Ensure /example/mediator directory exists
-        run: mkdir -p example/mediator
-      - name: Ensure /example/keys directory exists
-        run: mkdir -p example/keys
-      - name: Write TEST_MEDIATOR_DID to file
-        run: echo "${{ vars.TEST_MEDIATOR_DID }}" > example/mediator/mediator_did.txt
-      - name: Write TEST_ALICE_PRIVATE_KEY_PEM to file
-        run: echo "${{ vars.TEST_ALICE_PRIVATE_KEY_PEM }}" > example/keys/alice_private_key.pem
-      - name: Write TEST_BOB_PRIVATE_KEY_PEM to file
-        run: echo "${{ vars.TEST_BOB_PRIVATE_KEY_PEM }}" > example/keys/bob_private_key.pem
-
   dart-pipeline:
     uses: affinidi/pipeline-dart/.github/workflows/check.yaml@main
     secrets: inherit
-    needs: pre-step
+    env:
+      TEST_MEDIATOR_DID: ${{ vars.TEST_MEDIATOR_DID }}
+      TEST_ALICE_PRIVATE_KEY_PEM: ${{ vars.TEST_ALICE_PRIVATE_KEY_PEM }}
+      TEST_BOB_PRIVATE_KEY_PEM: ${{ vars.TEST_BOB_PRIVATE_KEY_PEM }}
 
