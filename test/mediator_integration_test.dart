@@ -36,11 +36,13 @@ void main() async {
   await writeEnvironmentVariableToFileIfNeed(
     'TEST_ALICE_PRIVATE_KEY_PEM',
     alicePrivateKeyPath,
+    decodeBase64: true,
   );
 
   await writeEnvironmentVariableToFileIfNeed(
     'TEST_BOB_PRIVATE_KEY_PEM',
     bobPrivateKeyPath,
+    decodeBase64: true,
   );
 
   group('Mediator Integration Test', () {
