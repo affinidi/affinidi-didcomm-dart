@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/did_document_service_type.dart';
 import 'package:didcomm/src/common/encoding.dart';
@@ -130,12 +131,14 @@ void main() async {
     });
 
     test('REST API works correctly', () async {
+      final expectedBodyContent = Uuid().v4();
+
       final alicePlainTextMassage = PlainTextMessage(
         id: Uuid().v4(),
         from: aliceDidDocument.id,
         to: [bobDidDocument.id],
         type: Uri.parse('https://didcomm.org/example/1.0/message'),
-        body: {'content': 'Hello, Bob!'},
+        body: {'content': expectedBodyContent},
       );
 
       alicePlainTextMassage['custom-header'] = 'custom-value';
@@ -215,7 +218,27 @@ void main() async {
         accessToken: bobTokens.accessToken,
       );
 
-      assert(messages.isNotEmpty, isTrue);
+      expect(messages.isNotEmpty, isTrue);
+
+      final actualUnpackedMessages = await Future.wait(
+        messages.map(
+          (message) => DidcommMessage.unpackToPlainTextMessage(
+            message: message,
+            recipientWallet: bobWallet,
+          ),
+        ),
+      );
+
+      final actualBodyContents = actualUnpackedMessages
+          .map<String?>((message) => message?.body?['content'])
+          .toList();
+
+      expect(
+        actualBodyContents.singleWhereOrNull(
+          (content) => content == expectedBodyContent,
+        ),
+        isNotNull,
+      );
     });
   });
 }
