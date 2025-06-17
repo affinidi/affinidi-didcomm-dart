@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:didcomm/didcomm.dart';
+import 'package:didcomm/src/converters/jwe_header_converter.dart';
+import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:didcomm/src/jwks/jwks.dart';
 import 'package:didcomm/src/messages/algorithm_types/algorithms_types.dart';
-import 'package:didcomm/src/messages/didcomm_message.dart';
 import 'package:ssi/ssi.dart';
 import 'package:test/test.dart';
 
@@ -22,53 +23,54 @@ void main() async {
         // KeyType.p384,
         // KeyType.p521,
       ]) {
-        for (final isAuthenticated in [true, false]) {
-          group(isAuthenticated ? 'Authenticated' : 'Anonymous', () {
-            group(keyType.name, () {
-              final aliceKeyId = 'alice-key-1-${keyType.name}';
-              final bobKeyId = 'bob-key-1-${keyType.name}';
+        group(keyType.name, () {
+          final aliceKeyId = 'alice-key-1-${keyType.name}';
+          final bobKeyId = 'bob-key-1-${keyType.name}';
 
-              late DidDocument aliceDidDocument;
-              late DidDocument bobDidDocument;
-              late DidSigner aliceSigner;
+          late DidDocument aliceDidDocument;
+          late DidDocument bobDidDocument;
+          late DidSigner aliceSigner;
 
-              late Map<String, dynamic> bobJwk;
+          late Jwks bobJwks;
 
-              setUp(() async {
-                final aliceKeyPair = await aliceWallet.generateKey(
-                  keyId: aliceKeyId,
-                  keyType: keyType,
-                );
+          setUp(() async {
+            final aliceKeyPair = await aliceWallet.generateKey(
+              keyId: aliceKeyId,
+              keyType: keyType,
+            );
 
-                aliceDidDocument =
-                    DidKey.generateDocument(aliceKeyPair.publicKey);
+            aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
 
-                aliceSigner = DidSigner(
-                  didDocument: aliceDidDocument,
-                  keyPair: aliceKeyPair,
-                  didKeyId: aliceDidDocument.verificationMethod[0].id,
-                  signatureScheme: SignatureScheme.ecdsa_p256_sha256,
-                );
+            aliceSigner = DidSigner(
+              didDocument: aliceDidDocument,
+              keyPair: aliceKeyPair,
+              didKeyId: aliceDidDocument.verificationMethod[0].id,
+              signatureScheme: SignatureScheme.ecdsa_p256_sha256,
+            );
 
-                final bobKeyPair = await bobWallet.generateKey(
-                  keyId: bobKeyId,
-                  keyType: keyType,
-                );
+            final bobKeyPair = await bobWallet.generateKey(
+              keyId: bobKeyId,
+              keyType: keyType,
+            );
 
-                bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
+            bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
 
-                bobJwk = bobDidDocument.keyAgreement[0].asJwk().toJson();
-                bobJwk['kid'] =
-                    '${bobDidDocument.id}#${bobDidDocument.id.replaceFirst('did:key:', '')}';
+            bobJwks = bobDidDocument.keyAgreement.toJwks();
 
-                bobWallet.linkJwkKeyIdKeyWithKeyId(bobJwk['kid']!, bobKeyId);
-              });
+            for (var jwk in bobJwks.keys) {
+              // Important! link JWK, so the wallet should be able to find the key pair by JWK
+              // It will be replaced with DID Manager
+              bobWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
+            }
+          });
 
-              for (final encryptionAlgorithm in [
-                EncryptionAlgorithm.a256cbc,
-                EncryptionAlgorithm.a256gcm
-              ]) {
-                group(encryptionAlgorithm.value, () {
+          for (final encryptionAlgorithm in [
+            EncryptionAlgorithm.a256cbc,
+            EncryptionAlgorithm.a256gcm
+          ]) {
+            group(encryptionAlgorithm.value, () {
+              for (final isAuthenticated in [true, false]) {
+                group(isAuthenticated ? 'Authenticated' : 'Anonymous', () {
                   test(
                     'Pack and unpack encrypted message successfully',
                     () async {
@@ -90,11 +92,7 @@ void main() async {
                         signedMessage,
                         wallet: aliceWallet,
                         keyId: aliceKeyId,
-                        jwksPerRecipient: [
-                          Jwks.fromJson({
-                            'keys': [bobJwk]
-                          })
-                        ],
+                        jwksPerRecipient: [bobJwks],
                         encryptionAlgorithm: encryptionAlgorithm,
                         keyWrappingAlgorithm: isAuthenticated
                             ? KeyWrappingAlgorithm.ecdh1Pu
@@ -107,14 +105,25 @@ void main() async {
 
                       final expectedBodyContent = 'Hello, Bob!';
 
-                      final actual =
+                      final actualPlainTextMessage =
                           await DidcommMessage.unpackToPlainTextMessage(
                         message: jsonDecode(sharedMessageToBobInJson),
                         recipientWallet: bobWallet,
                       );
 
-                      expect(actual, isNotNull);
-                      expect(actual!.body?['content'], expectedBodyContent);
+                      expect(actualPlainTextMessage, isNotNull);
+                      expect(actualPlainTextMessage!.body?['content'],
+                          expectedBodyContent);
+
+                      final actualJweHeader = JweHeaderConverter().fromJson(
+                        sut.protected,
+                      );
+
+                      // make sure sender identity does not leak for anonymous authentication
+                      expect(
+                        actualJweHeader.subjectKeyId,
+                        isAuthenticated ? isNotNull : isNull,
+                      );
                     },
                   );
 
@@ -134,11 +143,7 @@ void main() async {
                         plainTextMessage,
                         wallet: aliceWallet,
                         keyId: aliceKeyId,
-                        jwksPerRecipient: [
-                          Jwks.fromJson({
-                            'keys': [bobJwk]
-                          })
-                        ],
+                        jwksPerRecipient: [bobJwks],
                         encryptionAlgorithm: encryptionAlgorithm,
                       );
 
@@ -167,8 +172,8 @@ void main() async {
                 });
               }
             });
-          });
-        }
+          }
+        });
       }
     });
   });
