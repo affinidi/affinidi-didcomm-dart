@@ -3,6 +3,7 @@ on:
   pull_request:
 jobs:
   pre-step:
+    runs-on: ubuntu-latest
     steps:
       - name: Write TEST_MEDIATOR_DID to file
         run: echo "${{ vars.TEST_MEDIATOR_DID }}" > example/mediator/mediator_did.txt
@@ -14,4 +15,5 @@ jobs:
   dart-pipeline:
     uses: affinidi/pipeline-dart/.github/workflows/check.yaml@main
     secrets: inherit
+    needs: pre-step
 
