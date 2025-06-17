@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:didcomm/src/errors/missing_authentication_tag_error.dart';
 import 'package:didcomm/src/errors/missing_initialization_vector_error.dart';
 import 'package:didcomm/src/errors/missing_key_agreement_error.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -10,7 +11,6 @@ import 'package:ssi/ssi.dart' hide Jwk;
 import '../../../converters/base64_url_converter.dart';
 import '../../../converters/jwe_header_converter.dart';
 import '../../../ecdh/ecdh.dart';
-import '../../../errors/missing_authentication_tag_error.dart';
 import '../../../jwks/jwks.dart';
 import '../../../annotations/own_json_properties.dart';
 import '../../../common/crypto.dart';
@@ -143,14 +143,12 @@ class EncryptedMessage extends DidcommMessage {
 
     if (encryptedInnerMessage.initializationVector == null) {
       throw MissingInitializationVectorError(
-        'Initialization vector not set after encryption',
-      );
+          'Initialization vector not set after encryption');
     }
 
     if (encryptedInnerMessage.authenticationTag == null) {
       throw MissingAuthenticationTag(
-        'Authentication tag not set after encryption',
-      );
+          'Authentication tag not set after encryption');
     }
 
     final recipients = await _createRecipients(
@@ -175,10 +173,12 @@ class EncryptedMessage extends DidcommMessage {
 
   Future<Map<String, dynamic>> unpack({required Wallet recipientWallet}) async {
     final self = await _findSelfAsRecipient(recipientWallet);
-    final subjectKeyId = protected.subjectKeyId;
+    final jweHeader = JweHeaderConverter().fromJson(protected);
+
+    final subjectKeyId = jweHeader.subjectKeyId;
 
     if (subjectKeyId == null &&
-        protected.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
+        jweHeader.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
       throw ArgumentError(
         'skid is required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
       );
@@ -187,8 +187,8 @@ class EncryptedMessage extends DidcommMessage {
     final contentEncryptionKey = await Ecdh.decrypt(
       self.encryptedKey,
       recipientWallet: recipientWallet,
-      jweHeader: protected,
-      senderJwk: protected.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu
+      jweHeader: jweHeader,
+      senderJwk: jweHeader.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu
           ? await _getSenderJwk(subjectKeyId!)
           : null,
       self: self,
@@ -216,19 +216,18 @@ class EncryptedMessage extends DidcommMessage {
 
   Future<Jwk> _getSenderJwk(String subjectKeyId) async {
     final senderDid = subjectKeyId.split('#').first;
-
     final senderDidDocument = await UniversalDIDResolver.resolve(senderDid);
 
     final keyAgreement = senderDidDocument.keyAgreement.firstWhere(
       (keyAgreement) => keyAgreement.id == subjectKeyId,
       orElse: () => throw MissingKeyAgreementError(
-        'Key agreement with id $subjectKeyId not found in sender DID document',
-      ),
+          'Can not find a key agreement for subject ID'),
     );
 
     final senderJwk = Jwk.fromJson(
       keyAgreement.asJwk().toJson(),
     );
+
     return senderJwk;
   }
 
