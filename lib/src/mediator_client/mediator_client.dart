@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+import 'package:didcomm/didcomm.dart';
+import 'package:didcomm/src/did_resolver_manager.dart';
+import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:dio/dio.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
@@ -52,8 +55,8 @@ class MediatorClient {
     this.forwardMessageOptions = const ForwardMessageOptions(),
     this.webSocketOptions = const WebSocketOptions(),
   }) : _dio = mediatorDidDocument.toDio(
-          mediatorServiceType: DidDocumentServiceType.didCommMessaging,
-        );
+         mediatorServiceType: DidDocumentServiceType.didCommMessaging,
+       );
 
   /// Creates a [MediatorClient] from a mediator DID Document URI.
   ///
@@ -68,7 +71,7 @@ class MediatorClient {
     required DidSigner signer,
   }) async {
     return MediatorClient(
-      mediatorDidDocument: await UniversalDIDResolver.resolve(
+      mediatorDidDocument: await DidResolverManager.resolve(
         didDocumentUrl.toString(),
       ),
       keyPair: keyPair,
@@ -92,8 +95,9 @@ class MediatorClient {
       messageOptions: forwardMessageOptions,
     );
 
-    final headers =
-        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+    final headers = accessToken != null
+        ? {'Authorization': 'Bearer $accessToken'}
+        : null;
 
     await _dio.post<Map<String, dynamic>>(
       '/inbound',
@@ -109,13 +113,12 @@ class MediatorClient {
   /// [accessToken] - Optional bearer token for authentication.
   ///
   /// Returns a list of message IDs as strings.
-  Future<List<String>> listInboxMessageIds({
-    String? accessToken,
-  }) async {
+  Future<List<String>> listInboxMessageIds({String? accessToken}) async {
     final actorDidDocument = await _getActorDidDocument();
 
-    final headers =
-        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+    final headers = accessToken != null
+        ? {'Authorization': 'Bearer $accessToken'}
+        : null;
 
     final response = await _dio.get<Map<String, dynamic>>(
       '/list/${sha256.convert(utf8.encode(actorDidDocument.id)).toString()}/inbox',
@@ -123,9 +126,7 @@ class MediatorClient {
     );
 
     return (response.data!['data'] as List<dynamic>)
-        .map(
-          (item) => (item as Map<String, dynamic>)['msg_id'] as String,
-        )
+        .map((item) => (item as Map<String, dynamic>)['msg_id'] as String)
         .toList();
   }
 
@@ -143,8 +144,9 @@ class MediatorClient {
   }) async {
     // TODO: create exception to wrap errors
 
-    final headers =
-        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+    final headers = accessToken != null
+        ? {'Authorization': 'Bearer $accessToken'}
+        : null;
 
     final response = await _dio.post<Map<String, dynamic>>(
       '/outbound',
@@ -156,9 +158,9 @@ class MediatorClient {
 
     return (data['success'] as List<dynamic>)
         .map(
-          (item) => jsonDecode(
-            (item as Map<String, dynamic>)['msg'] as String,
-          ) as Map<String, dynamic>,
+          (item) =>
+              jsonDecode((item as Map<String, dynamic>)['msg'] as String)
+                  as Map<String, dynamic>,
         )
         .toList();
   }
@@ -179,16 +181,12 @@ class MediatorClient {
     bool? cancelOnError,
     String? accessToken,
   }) async {
-    _channel = mediatorDidDocument.toWebSocketChannel(
-      accessToken: accessToken,
-    );
+    _channel = mediatorDidDocument.toWebSocketChannel(accessToken: accessToken);
 
     await _channel!.ready;
 
     final subscription = _channel.stream.listen(
-      (data) => onMessage(
-        jsonDecode(data as String) as Map<String, dynamic>,
-      ),
+      (data) => onMessage(jsonDecode(data as String) as Map<String, dynamic>),
       onError: onError,
       onDone: onDone,
       cancelOnError: cancelOnError,
@@ -239,9 +237,7 @@ class MediatorClient {
   }
 
   Future<DidDocument> _getActorDidDocument() async {
-    return DidKey.generateDocument(
-      keyPair.publicKey,
-    );
+    return DidKey.generateDocument(keyPair.publicKey);
   }
 
   Future<DidcommMessage> _packMessage(
@@ -251,10 +247,7 @@ class MediatorClient {
     DidcommMessage messageToSend = message;
 
     if (messageOptions.shouldSign) {
-      messageToSend = await SignedMessage.pack(
-        message,
-        signer: signer,
-      );
+      messageToSend = await SignedMessage.pack(message, signer: signer);
     }
 
     if (messageOptions.shouldEncrypt) {
@@ -278,8 +271,6 @@ class MediatorClient {
       );
     }
 
-    _channel.sink.add(
-      jsonEncode(message),
-    );
+    _channel.sink.add(jsonEncode(message));
   }
 }

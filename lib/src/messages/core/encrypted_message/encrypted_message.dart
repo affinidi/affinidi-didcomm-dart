@@ -1,6 +1,11 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:didcomm/src/did_resolver_manager.dart';
+import 'package:didcomm/src/errors/missing_authentication_tag_error.dart';
+import 'package:didcomm/src/errors/missing_initialization_vector_error.dart';
+import 'package:didcomm/src/errors/missing_key_agreement_error.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
 import 'package:json_annotation/json_annotation.dart';
 import 'package:ssi/ssi.dart' hide Jwk;
@@ -165,12 +170,14 @@ class EncryptedMessage extends DidcommMessage {
 
     if (encryptedInnerMessage.initializationVector == null) {
       throw MissingInitializationVectorError(
-          'Initialization vector not set after encryption');
+        'Initialization vector not set after encryption',
+      );
     }
 
     if (encryptedInnerMessage.authenticationTag == null) {
       throw MissingAuthenticationTag(
-          'Authentication tag not set after encryption');
+        'Authentication tag not set after encryption',
+      );
     }
 
     final recipients = await _createRecipients(
@@ -201,9 +208,7 @@ class EncryptedMessage extends DidcommMessage {
   /// [recipientWallet]: The wallet to use for decryption.
   ///
   /// Returns the decrypted inner message as a JSON map.
-  Future<Map<String, dynamic>> unpack({
-    required Wallet recipientWallet,
-  }) async {
+  Future<Map<String, dynamic>> unpack({required Wallet recipientWallet}) async {
     final self = await _findSelfAsRecipient(recipientWallet);
     final jweHeader = _jweHeaderConverter.fromJson(protected);
 
@@ -237,9 +242,7 @@ class EncryptedMessage extends DidcommMessage {
         cipherText,
         initializationVector: initializationVector,
         authenticationTag: authenticationTag,
-        additionalAuthenticatedData: ascii.encode(
-          protected,
-        ),
+        additionalAuthenticatedData: ascii.encode(protected),
       ),
     );
 
@@ -249,17 +252,16 @@ class EncryptedMessage extends DidcommMessage {
 
   Future<Jwk> _getSenderJwk(String subjectKeyId) async {
     final senderDid = subjectKeyId.split('#').first;
-    final senderDidDocument = await UniversalDIDResolver.resolve(senderDid);
+    final senderDidDocument = await DidResolverManager.resolve(senderDid);
 
     final keyAgreement = senderDidDocument.keyAgreement.firstWhere(
       (keyAgreement) => keyAgreement.id == subjectKeyId,
       orElse: () => throw MissingKeyAgreementError(
-          'Can not find a key agreement for subject ID'),
+        'Can not find a key agreement for subject ID',
+      ),
     );
 
-    final senderJwk = Jwk.fromJson(
-      keyAgreement.asJwk().toJson(),
-    );
+    final senderJwk = Jwk.fromJson(keyAgreement.asJwk().toJson());
 
     return senderJwk;
   }
@@ -298,8 +300,9 @@ class EncryptedMessage extends DidcommMessage {
     EncryptionAlgorithm encryptionAlgorithm,
   ) {
     // TODO: clarify why 512 for a256cbc
-    final keySize =
-        encryptionAlgorithm == EncryptionAlgorithm.a256cbc ? 512 : 256;
+    final keySize = encryptionAlgorithm == EncryptionAlgorithm.a256cbc
+        ? 512
+        : 256;
     return ck.SymmetricKey.generate(keySize);
   }
 

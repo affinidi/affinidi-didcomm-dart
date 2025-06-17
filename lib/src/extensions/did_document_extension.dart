@@ -1,4 +1,9 @@
 import 'package:collection/collection.dart';
+<<<<<<< HEAD
+=======
+import 'package:didcomm/src/curves/curve_type.dart';
+import 'package:didcomm/src/did_resolver_manager.dart';
+>>>>>>> fe2fa85 (feat: add configurable did resolver)
 import 'package:dio/dio.dart';
 import 'package:ssi/ssi.dart' hide Jwk;
 import 'package:web_socket_channel/io.dart';
@@ -128,7 +133,7 @@ extension DidDocumentExtension on DidDocument {
   Future<void> addMediatorsFromResolvedDid(
     String did,
   ) async {
-    final didDocument = await UniversalDIDResolver.resolve(did);
+    final didDocument = await DidResolverManager.resolve(did);
     addMediatorsFromDidDocument(didDocument);
   }
 
