@@ -53,13 +53,10 @@ Future<void> writeEnvironmentVariableToFileIfNeed(
   bool decodeBase64 = false,
 }) async {
   final file = File(filePath);
-  final environmentVariable = decodeBase64
-      ? ascii.decode(
-          base64Decode(Platform.environment[environmentVariableName]!),
-        )
-      : Platform.environment[environmentVariableName];
+  final environmentVariable = Platform.environment[environmentVariableName];
 
-  if (environmentVariable == null && !(await file.exists())) {
+  if ((environmentVariable == null || environmentVariable.isEmpty) &&
+      !(await file.exists())) {
     throw ArgumentError(
       'Environment variable $environmentVariableName can not be null if file was not created yet',
       'environmentVariableName',
@@ -67,5 +64,11 @@ Future<void> writeEnvironmentVariableToFileIfNeed(
   }
 
   if (environmentVariable == null) return;
-  await file.writeAsString(environmentVariable);
+
+  if (decodeBase64) {
+    final bytes = base64Decode(environmentVariable);
+    await file.writeAsString(ascii.decode(bytes));
+  } else {
+    await file.writeAsString(environmentVariable);
+  }
 }
