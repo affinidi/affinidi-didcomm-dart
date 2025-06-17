@@ -49,10 +49,15 @@ String formatBytes(int bytes) {
 
 Future<void> writeEnvironmentVariableToFileIfNeed(
   String? environmentVariableName,
-  String filePath,
-) async {
+  String filePath, {
+  bool decodeBase64 = false,
+}) async {
   final file = File(filePath);
-  final environmentVariable = Platform.environment[environmentVariableName];
+  final environmentVariable = decodeBase64
+      ? utf8.decode(
+          base64Decode(Platform.environment[environmentVariableName]!),
+        )
+      : Platform.environment[environmentVariableName];
 
   if (environmentVariable == null && !(await file.exists())) {
     throw ArgumentError(
