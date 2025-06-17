@@ -166,7 +166,7 @@ class MediatorClient {
       _sendMessageToChannel(
         await _packMessage(
           liveDeliveryChangeMessage,
-          messageOptions: webSocketOptions.statusRequestMessageOptions,
+          messageOptions: webSocketOptions.liveDeliveryChangeMessageOptions,
         ),
       );
     }

@@ -171,9 +171,13 @@ void main() async {
     webSocketOptions: WebSocketOptions(
       statusRequestMessageOptions: StatusRequestMessageOptions(
         shouldSend: true,
+        shouldSign: true,
+        shouldEncrypt: true,
       ),
       liveDeliveryChangeMessageOptions: LiveDeliveryChangeMessageOptions(
         shouldSend: true,
+        shouldSign: true,
+        shouldEncrypt: true,
       ),
     ),
   );
