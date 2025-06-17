@@ -14,11 +14,6 @@ jobs:
           - 4566:4566
         options: --env KMS=true
 
-    env:
-      TEST_MEDIATOR_DID: ${{ vars.TEST_MEDIATOR_DID }}
-      TEST_ALICE_PRIVATE_KEY_PEM: ${{ vars.TEST_ALICE_PRIVATE_KEY_PEM }}
-      TEST_BOB_PRIVATE_KEY_PEM: ${{ vars.TEST_BOB_PRIVATE_KEY_PEM }}
-
     steps:
       - uses: actions/checkout@v4
       # Note: This workflow uses the latest stable version of the Dart SDK.
@@ -30,6 +25,10 @@ jobs:
       - run: melos analyze
       - run: echo ${{ vars.TEST_ALICE_PRIVATE_KEY_PEM }}
       - run: melos test
+        env:
+          TEST_MEDIATOR_DID: ${{ vars.TEST_MEDIATOR_DID }}
+          TEST_ALICE_PRIVATE_KEY_PEM: ${{ vars.TEST_ALICE_PRIVATE_KEY_PEM }}
+          TEST_BOB_PRIVATE_KEY_PEM: ${{ vars.TEST_BOB_PRIVATE_KEY_PEM }}
       - uses: romeovs/lcov-reporter-action@v0.3.1
         with:
           lcov-file: ./coverage/lcov.info
