@@ -20,7 +20,6 @@ jobs:
         options: --env KMS=true
 
     steps:
-      - run: printenv
       - uses: actions/checkout@v4
       # Note: This workflow uses the latest stable version of the Dart SDK.
       # You can specify other versions if desired, see documentation here:
