@@ -118,10 +118,13 @@ void main() {
                   );
 
                   // make sure sender identity does not leak for anonymous authentication
-                  expect(
-                    actualJweHeader.subjectKeyId,
-                    isAuthenticated ? isNotNull : isNull,
-                  );
+                  if (isAuthenticated) {
+                    expect(actualJweHeader.subjectKeyId, isNotNull);
+                    expect(actualJweHeader.agreementPartyUInfo, isNotNull);
+                  } else {
+                    expect(actualJweHeader.subjectKeyId, isNull);
+                    expect(actualJweHeader.agreementPartyUInfo, isNull);
+                  }
                 },
               );
             });
