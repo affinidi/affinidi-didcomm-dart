@@ -54,7 +54,7 @@ Future<void> writeEnvironmentVariableToFileIfNeed(
 }) async {
   final file = File(filePath);
   final environmentVariable = decodeBase64
-      ? utf8.decode(
+      ? ascii.decode(
           base64Decode(Platform.environment[environmentVariableName]!),
         )
       : Platform.environment[environmentVariableName];
