@@ -48,11 +48,13 @@ void main() async {
     late PersistentWallet aliceWallet;
     late DidSigner aliceSigner;
     late DidDocument aliceDidDocument;
+    late MediatorClient aliceMediatorClient;
 
     late String bobKeyId;
     late PersistentWallet bobWallet;
     late DidSigner bobSigner;
     late DidDocument bobDidDocument;
+    late MediatorClient bobMediatorClient;
     late Jwks bobJwks;
 
     late DidDocument bobMediatorDocument;
@@ -128,6 +130,46 @@ void main() async {
           DidDocumentServiceType.didCommMessaging,
         )!,
       );
+
+      aliceMediatorClient = MediatorClient(
+        mediatorDidDocument: bobMediatorDocument,
+        wallet: aliceWallet,
+        keyId: aliceKeyId,
+        signer: aliceSigner,
+
+        // optional. if omitted defaults will be used
+        forwardMessageOptions: ForwardMessageOptions(
+          shouldSign: true,
+          shouldEncrypt: true,
+          keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+          encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+        ),
+      );
+
+      bobMediatorClient = MediatorClient(
+        mediatorDidDocument: bobMediatorDocument,
+        wallet: bobWallet,
+        keyId: bobKeyId,
+        signer: bobSigner,
+
+        // optional. if omitted defaults will be used
+        webSocketOptions: WebSocketOptions(
+          liveDeliveryChangeMessageOptions: LiveDeliveryChangeMessageOptions(
+            shouldSend: true,
+            shouldSign: true,
+            shouldEncrypt: true,
+            keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+            encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+          ),
+          statusRequestMessageOptions: StatusRequestMessageOptions(
+            shouldSend: true,
+            shouldSign: true,
+            shouldEncrypt: true,
+            keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+            encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+          ),
+        ),
+      );
     });
 
     test('REST API works correctly', () async {
@@ -174,34 +216,7 @@ void main() async {
         ],
       );
 
-      // Alice is going to use Bob's Mediator to send him a message
-
-      final aliceMediatorClient = MediatorClient(
-        mediatorDidDocument: bobMediatorDocument,
-        wallet: aliceWallet,
-        keyId: aliceKeyId,
-        signer: aliceSigner,
-
-        // optional. if omitted defaults will be used
-        forwardMessageOptions: ForwardMessageOptions(
-          shouldSign: true,
-          shouldEncrypt: true,
-          keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
-          encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-        ),
-      );
-
-      // authenticate method is not direct part of mediatorClient, but it is extension method
-      // this method is need for mediators, that require authentication like an Affinidi mediator
       final aliceTokens = await aliceMediatorClient.authenticate();
-
-      final bobMediatorClient = MediatorClient(
-        mediatorDidDocument: bobMediatorDocument,
-        wallet: bobWallet,
-        keyId: bobKeyId,
-        signer: bobSigner,
-      );
-
       final bobTokens = await bobMediatorClient.authenticate();
 
       await aliceMediatorClient.sendMessage(
