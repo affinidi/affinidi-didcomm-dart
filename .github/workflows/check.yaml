@@ -1,12 +1,35 @@
 name: check
 on:
   pull_request:
+env:
+  TEST_MEDIATOR_DID: ${{ vars.TEST_MEDIATOR_DID }}
+  TEST_ALICE_PRIVATE_KEY_PEM: ${{ vars.TEST_ALICE_PRIVATE_KEY_PEM }}
+  TEST_BOB_PRIVATE_KEY_PEM: ${{ vars.TEST_BOB_PRIVATE_KEY_PEM }}
+  TEST: test
 jobs:
-  dart-pipeline:
-    uses: affinidi/pipeline-dart/.github/workflows/check.yaml@main
+  wiz-scan:
+    uses: affinidi/pipeline-security/.github/workflows/wizcli-dirscan.yml@main
     secrets: inherit
-    env:
-      TEST_MEDIATOR_DID: ${{ vars.TEST_MEDIATOR_DID }}
-      TEST_ALICE_PRIVATE_KEY_PEM: ${{ vars.TEST_ALICE_PRIVATE_KEY_PEM }}
-      TEST_BOB_PRIVATE_KEY_PEM: ${{ vars.TEST_BOB_PRIVATE_KEY_PEM }}
-      TEST: test
+  build:
+    runs-on: ubuntu-latest
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        options: --env KMS=true
+
+    steps:
+      - uses: actions/checkout@v4
+      # Note: This workflow uses the latest stable version of the Dart SDK.
+      # You can specify other versions if desired, see documentation here:
+      # https://github.com/dart-lang/setup-dart/blob/main/README.md
+      - uses: dart-lang/setup-dart@v1.7.1
+      - uses: bluefireteam/melos-action@v3
+      - run: melos format --output=none --set-exit-if-changed .
+      - run: melos analyze
+      - run: melos test
+      - uses: romeovs/lcov-reporter-action@v0.3.1
+        with:
+          lcov-file: ./coverage/lcov.info
+
