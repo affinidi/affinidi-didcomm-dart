@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:didcomm/didcomm.dart';
+import 'package:didcomm/src/common/authentication_tokens/authentication_tokens.dart';
 import 'package:didcomm/src/common/did_document_service_type.dart';
 import 'package:didcomm/src/common/encoding.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
@@ -46,17 +47,19 @@ void main() async {
   );
 
   group('Mediator Integration Test', () {
-    late String aliceKeyId;
     late PersistentWallet aliceWallet;
     late DidSigner aliceSigner;
     late DidDocument aliceDidDocument;
     late MediatorClient aliceMediatorClient;
+    late Jwks aliceJwks;
+    late AuthenticationTokens aliceTokens;
 
     late String bobKeyId;
     late PersistentWallet bobWallet;
     late DidSigner bobSigner;
     late DidDocument bobDidDocument;
     late MediatorClient bobMediatorClient;
+    late AuthenticationTokens bobTokens;
     late Jwks bobJwks;
 
     late DidDocument bobMediatorDocument;
@@ -68,7 +71,7 @@ void main() async {
       final bobKeyStore = InMemoryKeyStore();
       bobWallet = PersistentWallet(bobKeyStore);
 
-      aliceKeyId = 'alice-key-1';
+      final aliceKeyId = 'alice-key-1';
       final alicePrivateKeyBytes = await extractPrivateKeyBytes(
         alicePrivateKeyPath,
       );
@@ -90,6 +93,14 @@ void main() async {
         didKeyId: aliceDidDocument.verificationMethod[0].id,
         signatureScheme: SignatureScheme.ecdsa_p256_sha256,
       );
+
+      aliceJwks = aliceDidDocument.keyAgreement.toJwks();
+
+      for (var jwk in aliceJwks.keys) {
+        // Important! link JWK, so the wallet should be able to find the key pair by JWK
+        // It will be replaced with DID Manager
+        aliceWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, aliceKeyId);
+      }
 
       bobKeyId = 'bob-key-1';
       final bobPrivateKeyBytes = await extractPrivateKeyBytes(
@@ -172,6 +183,9 @@ void main() async {
           ),
         ),
       );
+
+      aliceTokens = await aliceMediatorClient.authenticate();
+      bobTokens = await bobMediatorClient.authenticate();
     });
 
     test('REST API works correctly', () async {
@@ -187,11 +201,18 @@ void main() async {
 
       alicePlainTextMassage['custom-header'] = 'custom-value';
 
+      final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsMatchedByType(
+        wallet: aliceWallet,
+        otherDidDocuments: [
+          bobDidDocument,
+        ],
+      );
+
       final aliceSignedAndEncryptedMessage =
           await DidcommMessage.packIntoSignedAndEncryptedMessages(
         alicePlainTextMassage,
         wallet: aliceWallet,
-        keyId: aliceKeyId,
+        keyId: aliceMatchedKeyIds.first,
         jwksPerRecipient: [bobJwks],
         keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
         encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
@@ -217,9 +238,6 @@ void main() async {
           ),
         ],
       );
-
-      final aliceTokens = await aliceMediatorClient.authenticate();
-      final bobTokens = await bobMediatorClient.authenticate();
 
       await aliceMediatorClient.sendMessage(
         forwardMessage,
@@ -256,6 +274,87 @@ void main() async {
         ),
         isNotNull,
       );
+    });
+
+    test('WebSockets API works correctly', () async {
+      final expectedBodyContent = Uuid().v4();
+
+      final alicePlainTextMassage = PlainTextMessage(
+        id: Uuid().v4(),
+        from: aliceDidDocument.id,
+        to: [bobDidDocument.id],
+        type: Uri.parse('https://didcomm.org/example/1.0/message'),
+        body: {'content': expectedBodyContent},
+      );
+
+      alicePlainTextMassage['custom-header'] = 'custom-value';
+
+      final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsMatchedByType(
+        wallet: aliceWallet,
+        otherDidDocuments: [
+          bobDidDocument,
+        ],
+      );
+
+      final aliceSignedAndEncryptedMessage =
+          await DidcommMessage.packIntoSignedAndEncryptedMessages(
+        alicePlainTextMassage,
+        wallet: aliceWallet,
+        keyId: aliceMatchedKeyIds.first,
+        jwksPerRecipient: [bobJwks],
+        keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+        encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+        signer: aliceSigner,
+      );
+
+      final createdTime = DateTime.now().toUtc();
+      final expiresTime = createdTime.add(const Duration(seconds: 60));
+
+      final forwardMessage = ForwardMessage(
+        id: Uuid().v4(),
+        to: [bobMediatorDocument.id],
+        next: bobDidDocument.id,
+        expiresTime: expiresTime,
+        attachments: [
+          Attachment(
+            mediaType: 'application/json',
+            data: AttachmentData(
+              base64: base64UrlEncodeNoPadding(
+                aliceSignedAndEncryptedMessage.toJsonBytes(),
+              ),
+            ),
+          ),
+        ],
+      );
+
+      late final String actualBodyContent;
+
+      await bobMediatorClient.listenForIncomingMessages(
+        (message) async {
+          final unpackedMessage = await DidcommMessage.unpackToPlainTextMessage(
+            message: message,
+            recipientWallet: bobWallet,
+          );
+
+          final content = unpackedMessage?.body?['content'];
+
+          if (content == expectedBodyContent) {
+            await bobMediatorClient.disconnect();
+            actualBodyContent = content;
+          }
+        },
+        onError: (error) => print(error),
+        onDone: () => print('done'),
+        accessToken: bobTokens.accessToken,
+        cancelOnError: false,
+      );
+
+      await aliceMediatorClient.sendMessage(
+        forwardMessage,
+        accessToken: aliceTokens.accessToken,
+      );
+
+      expect(actualBodyContent, expectedBodyContent);
     });
   });
 }
