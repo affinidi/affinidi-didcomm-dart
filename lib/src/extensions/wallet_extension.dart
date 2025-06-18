@@ -47,4 +47,9 @@ extension WalletExtension on Wallet {
   String? getKeyIdByJwkId(String jwkKeyId) {
     return _walletsMeta[this]?[_WalletMetaType.jwkToKeyId]?[jwkKeyId];
   }
+
+  List<String> getKeyIds() {
+    return _walletsMeta[this]?[_WalletMetaType.jwkToKeyId]?.values.toList() ??
+        [];
+  }
 }

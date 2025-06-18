@@ -5,6 +5,7 @@ import 'package:ssi/ssi.dart';
 
 import '../common/did.dart';
 import '../common/did_document_service_type.dart';
+import 'wallet_extension.dart';
 
 extension DidDocumentExtension on DidDocument {
   Dio toDio({required DidDocumentServiceType mediatorServiceType}) {
@@ -97,5 +98,13 @@ extension DidDocumentExtension on DidDocument {
   ) async {
     final didDocument = await UniversalDIDResolver.resolve(did);
     copyServicesByTypeFromDidDocument(serviceType, didDocument);
+  }
+
+  List<String> getKeyIdsMatchedByType({
+    required Wallet wallet,
+    required List<DidDocument> otherDidDocuments,
+  }) {
+    // TODO: this is a mock. Add implementation in the next MR
+    return wallet.getKeyIds();
   }
 }
