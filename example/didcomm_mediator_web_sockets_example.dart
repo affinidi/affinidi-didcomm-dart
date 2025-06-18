@@ -49,6 +49,14 @@ void main() async {
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
+  final aliceJwks = aliceDidDocument.keyAgreement.toJwks();
+
+  for (var jwk in aliceJwks.keys) {
+    // Important! link JWK, so the wallet should be able to find the key pair by JWK
+    // It will be replaced with DID Manager
+    aliceWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, aliceKeyId);
+  }
+
   final bobKeyId = 'bob-key-1';
   final bobPrivateKeyBytes =
       await extractPrivateKeyBytes('./example/keys/bob_private_key.pem');
@@ -104,11 +112,19 @@ void main() async {
   alicePlainTextMassage['custom-header'] = 'custom-value';
   prettyPrint('Plain Text Message for Bob', alicePlainTextMassage);
 
+  // find keys whose curve is common in other DID Documents
+  final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsWithCommonType(
+    wallet: aliceWallet,
+    otherDidDocuments: [
+      bobDidDocument,
+    ],
+  );
+
   final aliceSignedAndEncryptedMessage =
       await DidcommMessage.packIntoSignedAndEncryptedMessages(
     alicePlainTextMassage,
     wallet: aliceWallet,
-    keyId: aliceKeyId,
+    keyId: aliceMatchedKeyIds.first,
     jwksPerRecipient: [bobJwks],
     keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,

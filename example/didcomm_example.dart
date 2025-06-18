@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:didcomm/didcomm.dart';
+import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
 import 'package:ssi/ssi.dart';
@@ -28,6 +29,14 @@ void main() async {
     didKeyId: aliceDidDocument.verificationMethod[0].id,
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
+
+  final aliceJwks = aliceDidDocument.keyAgreement.toJwks();
+
+  for (var jwk in aliceJwks.keys) {
+    // Important! link JWK, so the wallet should be able to find the key pair by JWK
+    // It will be replaced with DID Manager
+    aliceWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, aliceKeyId);
+  }
 
   final bobKeyId = 'bob-key-1';
   final bobKeyPair = await bobWallet.generateKey(
@@ -65,10 +74,18 @@ void main() async {
     aliceSignedMessage,
   );
 
+  // find keys whose curve is common in other DID Documents
+  final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsWithCommonType(
+    wallet: aliceWallet,
+    otherDidDocuments: [
+      bobDidDocument,
+    ],
+  );
+
   final aliceEncryptedMessage = await EncryptedMessage.packWithAuthentication(
     aliceSignedMessage,
     wallet: aliceWallet,
-    keyId: aliceKeyId,
+    keyId: aliceMatchedKeyIds.first,
     jwksPerRecipient: [
       bobJwks,
     ],
