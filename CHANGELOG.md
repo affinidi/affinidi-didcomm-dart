@@ -3,6 +3,55 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2025-06-18
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
+ - [`didcomm` - `v0.0.4`](#didcomm---v004)
+
+---
+
+#### `didcomm` - `v0.0.4`
+
+ - **FIX**: dart analyzer issues.
+ - **FIX**: integration test.
+ - **FIX**: pem decoding.
+ - **FIX**: integration test pipeline.
+ - **FIX**: integration test pipeline.
+ - **FIX**: pipeline for integration tests.
+ - **FIX**: store env variables in file.
+ - **FIX**: passing env variables.
+ - **FIX**: set job secrets.
+ - **FEAT**: integration test for mediator.
+ - **FEAT**: add attachments, jwks and algorithms to exports.
+ - **DOCS**: update readme to add support for keytype SECP256K1.
+ - **DOCS**: update readme to add support for keytype SECP256K1.
+
+## 0.0.4
+
+ - **FIX**: dart analyzer issues.
+ - **FIX**: integration test.
+ - **FIX**: pem decoding.
+ - **FIX**: integration test pipeline.
+ - **FIX**: integration test pipeline.
+ - **FIX**: pipeline for integration tests.
+ - **FIX**: store env variables in file.
+ - **FIX**: passing env variables.
+ - **FIX**: set job secrets.
+ - **FEAT**: integration test for mediator.
+ - **FEAT**: add attachments, jwks and algorithms to exports.
+ - **DOCS**: update readme to add support for keytype SECP256K1.
+ - **DOCS**: update readme to add support for keytype SECP256K1.
+
+
 ## 2025-06-17
 
 ### Changes
