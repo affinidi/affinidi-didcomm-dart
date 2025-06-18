@@ -1,10 +1,12 @@
 import 'package:collection/collection.dart';
+import 'package:didcomm/src/curves/curve_type.dart';
 import 'package:dio/dio.dart';
 import 'package:web_socket_channel/io.dart';
-import 'package:ssi/ssi.dart';
+import 'package:ssi/ssi.dart' hide Jwk;
 
 import '../common/did.dart';
 import '../common/did_document_service_type.dart';
+import '../jwks/jwk.dart';
 import 'wallet_extension.dart';
 
 extension DidDocumentExtension on DidDocument {
@@ -100,11 +102,49 @@ extension DidDocumentExtension on DidDocument {
     copyServicesByTypeFromDidDocument(serviceType, didDocument);
   }
 
-  List<String> getKeyIdsMatchedByType({
+  List<String> getKeyIdsWithCommonType({
     required Wallet wallet,
     required List<DidDocument> otherDidDocuments,
   }) {
-    // TODO: this is a mock. Add implementation in the next MR
-    return wallet.getKeyIds();
+    final ownCurves = Set<CurveType>.from(
+      keyAgreement
+          .map(
+            (keyAgreement) => getCurveFromKeyAgreement(keyAgreement),
+          )
+          .where(
+            (type) => type != null,
+          ),
+    );
+
+    final matchedCurves = ownCurves.where(
+      (ownCurve) => otherDidDocuments.every(
+        (doc) => doc.keyAgreement.any(
+          (keyAgreement) => getCurveFromKeyAgreement(keyAgreement) == ownCurve,
+        ),
+      ),
+    );
+
+    return matchedCurves.map((curve) {
+      final jwkKeyId = keyAgreement
+          .firstWhere(
+            (keyAgreement) => getCurveFromKeyAgreement(keyAgreement) == curve,
+          )
+          .id;
+
+      final keyId = wallet.getKeyIdByJwkId(jwkKeyId);
+
+      if (keyId == null) {
+        throw Exception(
+          'Can not find mapping between JWK kid and key ID in the wallet',
+        );
+      }
+
+      return keyId;
+    }).toList();
+  }
+
+  CurveType? getCurveFromKeyAgreement(VerificationMethod keyAgreement) {
+    final jwk = Jwk.fromJson(keyAgreement.asJwk().toJson());
+    return jwk.curve;
   }
 }

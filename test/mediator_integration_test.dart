@@ -15,6 +15,10 @@ import 'package:uuid/uuid.dart';
 
 import '../example/helpers.dart';
 
+// sometimes websockets connection is dropped
+// it is better to delegate connection restoration strategy for the application, that uses this library
+const webSocketsTestRetries = 2;
+
 void main() async {
   // Run commands below in your terminal to generate keys for Alice and Bob:
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/alice_private_key.pem
@@ -54,7 +58,6 @@ void main() async {
     late Jwks aliceJwks;
     late AuthenticationTokens aliceTokens;
 
-    late String bobKeyId;
     late PersistentWallet bobWallet;
     late DidSigner bobSigner;
     late DidDocument bobDidDocument;
@@ -102,7 +105,7 @@ void main() async {
         aliceWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, aliceKeyId);
       }
 
-      bobKeyId = 'bob-key-1';
+      final bobKeyId = 'bob-key-1';
       final bobPrivateKeyBytes = await extractPrivateKeyBytes(
         bobPrivateKeyPath,
       );
@@ -201,7 +204,8 @@ void main() async {
 
       alicePlainTextMassage['custom-header'] = 'custom-value';
 
-      final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsMatchedByType(
+      // find keys whose type is common in other DID Documents
+      final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsWithCommonType(
         wallet: aliceWallet,
         otherDidDocuments: [
           bobDidDocument,
@@ -276,85 +280,90 @@ void main() async {
       );
     });
 
-    test('WebSockets API works correctly', () async {
-      final expectedBodyContent = Uuid().v4();
+    test(
+      'WebSockets API works correctly',
+      () async {
+        final expectedBodyContent = Uuid().v4();
 
-      final alicePlainTextMassage = PlainTextMessage(
-        id: Uuid().v4(),
-        from: aliceDidDocument.id,
-        to: [bobDidDocument.id],
-        type: Uri.parse('https://didcomm.org/example/1.0/message'),
-        body: {'content': expectedBodyContent},
-      );
+        final alicePlainTextMassage = PlainTextMessage(
+          id: Uuid().v4(),
+          from: aliceDidDocument.id,
+          to: [bobDidDocument.id],
+          type: Uri.parse('https://didcomm.org/example/1.0/message'),
+          body: {'content': expectedBodyContent},
+        );
 
-      alicePlainTextMassage['custom-header'] = 'custom-value';
+        alicePlainTextMassage['custom-header'] = 'custom-value';
 
-      final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsMatchedByType(
-        wallet: aliceWallet,
-        otherDidDocuments: [
-          bobDidDocument,
-        ],
-      );
+        final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsWithCommonType(
+          wallet: aliceWallet,
+          otherDidDocuments: [
+            bobDidDocument,
+          ],
+        );
 
-      final aliceSignedAndEncryptedMessage =
-          await DidcommMessage.packIntoSignedAndEncryptedMessages(
-        alicePlainTextMassage,
-        wallet: aliceWallet,
-        keyId: aliceMatchedKeyIds.first,
-        jwksPerRecipient: [bobJwks],
-        keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
-        encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-        signer: aliceSigner,
-      );
+        final aliceSignedAndEncryptedMessage =
+            await DidcommMessage.packIntoSignedAndEncryptedMessages(
+          alicePlainTextMassage,
+          wallet: aliceWallet,
+          keyId: aliceMatchedKeyIds.first,
+          jwksPerRecipient: [bobJwks],
+          keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+          encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+          signer: aliceSigner,
+        );
 
-      final createdTime = DateTime.now().toUtc();
-      final expiresTime = createdTime.add(const Duration(seconds: 60));
+        final createdTime = DateTime.now().toUtc();
+        final expiresTime = createdTime.add(const Duration(seconds: 60));
 
-      final forwardMessage = ForwardMessage(
-        id: Uuid().v4(),
-        to: [bobMediatorDocument.id],
-        next: bobDidDocument.id,
-        expiresTime: expiresTime,
-        attachments: [
-          Attachment(
-            mediaType: 'application/json',
-            data: AttachmentData(
-              base64: base64UrlEncodeNoPadding(
-                aliceSignedAndEncryptedMessage.toJsonBytes(),
+        final forwardMessage = ForwardMessage(
+          id: Uuid().v4(),
+          to: [bobMediatorDocument.id],
+          next: bobDidDocument.id,
+          expiresTime: expiresTime,
+          attachments: [
+            Attachment(
+              mediaType: 'application/json',
+              data: AttachmentData(
+                base64: base64UrlEncodeNoPadding(
+                  aliceSignedAndEncryptedMessage.toJsonBytes(),
+                ),
               ),
             ),
-          ),
-        ],
-      );
+          ],
+        );
 
-      late final String actualBodyContent;
+        String? actualBodyContent;
 
-      await bobMediatorClient.listenForIncomingMessages(
-        (message) async {
-          final unpackedMessage = await DidcommMessage.unpackToPlainTextMessage(
-            message: message,
-            recipientWallet: bobWallet,
-          );
+        await bobMediatorClient.listenForIncomingMessages(
+          (message) async {
+            final unpackedMessage =
+                await DidcommMessage.unpackToPlainTextMessage(
+              message: message,
+              recipientWallet: bobWallet,
+            );
 
-          final content = unpackedMessage?.body?['content'];
+            final content = unpackedMessage?.body?['content'];
 
-          if (content == expectedBodyContent) {
-            await bobMediatorClient.disconnect();
-            actualBodyContent = content;
-          }
-        },
-        onError: (error) => print(error),
-        onDone: () => print('done'),
-        accessToken: bobTokens.accessToken,
-        cancelOnError: false,
-      );
+            if (content == expectedBodyContent) {
+              actualBodyContent = content;
+              await bobMediatorClient.disconnect();
+            }
+          },
+          onError: (error) => print(error),
+          onDone: () => print('done'),
+          accessToken: bobTokens.accessToken,
+          cancelOnError: false,
+        );
 
-      await aliceMediatorClient.sendMessage(
-        forwardMessage,
-        accessToken: aliceTokens.accessToken,
-      );
+        await aliceMediatorClient.sendMessage(
+          forwardMessage,
+          accessToken: aliceTokens.accessToken,
+        );
 
-      expect(actualBodyContent, expectedBodyContent);
-    });
+        expect(actualBodyContent, expectedBodyContent);
+      },
+      retry: webSocketsTestRetries,
+    );
   });
 }
