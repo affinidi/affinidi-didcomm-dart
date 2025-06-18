@@ -38,7 +38,7 @@ The DIDComm for Dart package utilises existing open standards and cryptographic 
 
 - Support for digital wallets under [Affinidi Dart SSI](https://pub.dev/packages/ssi) to manage cryptographic keys.
 
-- Support key types like `P256` and `ED25519` to encrypt and sign messages.
+- Support key types like `P256`, `ED25519` and `SECP256k1` to encrypt and sign messages.
 
 - Connect and authenticate with different mediator services that follow the DIDComm Message v2.0 protocol.
 
