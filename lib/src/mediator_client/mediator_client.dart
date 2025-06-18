@@ -55,8 +55,8 @@ class MediatorClient {
     this.forwardMessageOptions = const ForwardMessageOptions(),
     this.webSocketOptions = const WebSocketOptions(),
   }) : _dio = mediatorDidDocument.toDio(
-         mediatorServiceType: DidDocumentServiceType.didCommMessaging,
-       );
+          mediatorServiceType: DidDocumentServiceType.didCommMessaging,
+        );
 
   /// Creates a [MediatorClient] from a mediator DID Document URI.
   ///
@@ -95,9 +95,8 @@ class MediatorClient {
       messageOptions: forwardMessageOptions,
     );
 
-    final headers = accessToken != null
-        ? {'Authorization': 'Bearer $accessToken'}
-        : null;
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
 
     await _dio.post<Map<String, dynamic>>(
       '/inbound',
@@ -116,9 +115,8 @@ class MediatorClient {
   Future<List<String>> listInboxMessageIds({String? accessToken}) async {
     final actorDidDocument = await _getActorDidDocument();
 
-    final headers = accessToken != null
-        ? {'Authorization': 'Bearer $accessToken'}
-        : null;
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
 
     final response = await _dio.get<Map<String, dynamic>>(
       '/list/${sha256.convert(utf8.encode(actorDidDocument.id)).toString()}/inbox',
@@ -144,9 +142,8 @@ class MediatorClient {
   }) async {
     // TODO: create exception to wrap errors
 
-    final headers = accessToken != null
-        ? {'Authorization': 'Bearer $accessToken'}
-        : null;
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
 
     final response = await _dio.post<Map<String, dynamic>>(
       '/outbound',
@@ -158,9 +155,8 @@ class MediatorClient {
 
     return (data['success'] as List<dynamic>)
         .map(
-          (item) =>
-              jsonDecode((item as Map<String, dynamic>)['msg'] as String)
-                  as Map<String, dynamic>,
+          (item) => jsonDecode((item as Map<String, dynamic>)['msg'] as String)
+              as Map<String, dynamic>,
         )
         .toList();
   }
