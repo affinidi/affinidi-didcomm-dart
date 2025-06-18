@@ -204,7 +204,7 @@ void main() async {
 
       alicePlainTextMassage['custom-header'] = 'custom-value';
 
-      // find keys whose type is common in other DID Documents
+      // find keys whose curve is common in other DID Documents
       final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsWithCommonType(
         wallet: aliceWallet,
         otherDidDocuments: [

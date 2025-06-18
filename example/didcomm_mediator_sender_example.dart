@@ -97,11 +97,19 @@ void main() async {
   senderPlainTextMassage['custom-header'] = 'custom-value';
   prettyPrint('Plain Text Message for Receiver', senderPlainTextMassage);
 
+  // find keys whose curve is common in other DID Documents
+  final aliceMatchedKeyIds = senderDidDocument.getKeyIdsWithCommonType(
+    wallet: senderWallet,
+    otherDidDocuments: [
+      receiverDidDocument,
+    ],
+  );
+
   final senderSignedAndEncryptedMessage =
       await DidcommMessage.packIntoSignedAndEncryptedMessages(
     senderPlainTextMassage,
     wallet: senderWallet,
-    keyId: senderKeyId,
+    keyId: aliceMatchedKeyIds.first,
     jwksPerRecipient: [receiverJwks],
     keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
