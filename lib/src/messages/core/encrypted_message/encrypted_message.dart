@@ -8,18 +8,15 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
 import 'package:ssi/ssi.dart' hide Jwk;
 
+import '../../../../didcomm.dart';
 import '../../../converters/base64_url_converter.dart';
 import '../../../converters/jwe_header_converter.dart';
 import '../../../ecdh/ecdh.dart';
-import '../../../jwks/jwks.dart';
 import '../../../annotations/own_json_properties.dart';
 import '../../../common/crypto.dart';
 import '../../../extensions/extensions.dart';
-import '../../algorithm_types/algorithms_types.dart';
-import '../../didcomm_message.dart';
+import '../../../jwks/jwk.dart';
 import '../../jwm.dart';
-import 'recipients/recipient.dart';
-import 'recipients/recipient_header.dart';
 
 part 'encrypted_message.g.dart';
 part 'encrypted_message.own_json_props.g.dart';
@@ -62,13 +59,13 @@ class EncryptedMessage extends DidcommMessage {
   static Future<EncryptedMessage> packAnonymously(
     DidcommMessage message, {
     required KeyPair keyPair,
-    required List<Jwks> jwksPerRecipient,
+    required List<DidDocument> recipientDidDocuments,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
     return await EncryptedMessage.pack(
       message,
       keyPair: keyPair,
-      jwksPerRecipient: jwksPerRecipient,
+      recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
       encryptionAlgorithm: encryptionAlgorithm,
     );
@@ -78,14 +75,14 @@ class EncryptedMessage extends DidcommMessage {
     DidcommMessage message, {
     required KeyPair keyPair,
     required String didKeyId,
-    required List<Jwks> jwksPerRecipient,
+    required List<DidDocument> recipientDidDocuments,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
     return await EncryptedMessage.pack(
       message,
       keyPair: keyPair,
       didKeyId: didKeyId,
-      jwksPerRecipient: jwksPerRecipient,
+      recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
       encryptionAlgorithm: encryptionAlgorithm,
     );
@@ -95,7 +92,7 @@ class EncryptedMessage extends DidcommMessage {
     DidcommMessage message, {
     required KeyPair keyPair,
     String? didKeyId,
-    required List<Jwks> jwksPerRecipient,
+    required List<DidDocument> recipientDidDocuments,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
@@ -121,7 +118,7 @@ class EncryptedMessage extends DidcommMessage {
       subjectKeyId: didKeyId,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
-      jwksPerRecipient: jwksPerRecipient,
+      recipientDidDocuments: recipientDidDocuments,
       ephemeralPrivateKeyBytes: ephemeralKeyPair.privateKeyBytes,
       ephemeralPublicKeyBytes: ephemeralKeyPair.publicKeyBytes,
     );
@@ -152,7 +149,7 @@ class EncryptedMessage extends DidcommMessage {
     final recipients = await _createRecipients(
       keyPair: keyPair,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
-      jwksPerRecipient: jwksPerRecipient,
+      recipientDidDocuments: recipientDidDocuments,
       authenticationTag: encryptedInnerMessage.authenticationTag!,
       contentEncryptionKey: contentEncryptionKey,
       ephemeralPrivateKeyBytes: ephemeralKeyPair.privateKeyBytes,
@@ -281,7 +278,7 @@ class EncryptedMessage extends DidcommMessage {
 
   static Future<List<Recipient>> _createRecipients({
     required KeyPair keyPair,
-    required List<Jwks> jwksPerRecipient,
+    required List<DidDocument> recipientDidDocuments,
     required JweHeader jweHeader,
     required ck.SymmetricKey contentEncryptionKey,
     required Uint8List ephemeralPrivateKeyBytes,
@@ -290,21 +287,21 @@ class EncryptedMessage extends DidcommMessage {
   }) async {
     final publicKey = keyPair.publicKey;
 
-    final futures = jwksPerRecipient.map((jwks) async {
+    final futures = recipientDidDocuments.map((didDocument) async {
       final curve = publicKey.type.asDidcommCompatibleCurve();
-      final recipientJwk = jwks.firstWithCurve(curve);
+      final keyAgreement = didDocument.keyAgreement.firstWithCurve(curve);
 
       final encryptedKey = await Ecdh.encrypt(
         contentEncryptionKey.keyValue,
         senderKeyPair: keyPair,
-        recipientJwk: recipientJwk,
+        recipientJwk: keyAgreement.toJwk(),
         ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
         jweHeader: jweHeader,
         authenticationTag: authenticationTag,
       );
 
       return Recipient(
-        header: RecipientHeader(keyId: recipientJwk.keyId!),
+        header: RecipientHeader(keyId: keyAgreement.id),
         encryptedKey: encryptedKey,
       );
     });

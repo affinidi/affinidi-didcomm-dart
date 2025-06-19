@@ -38,23 +38,11 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
       body: challengeResponse.data['data'],
     );
 
-    final mediatorJwks = mediatorDidDocument.keyAgreement.map((keyAgreement) {
-      final jwk = keyAgreement.asJwk().toJson();
-      // TODO: kid is not available in the Jwk anymore. clarify with the team
-      jwk['kid'] = keyAgreement.id;
-
-      return jwk;
-    }).toList();
-
     final encryptedMessage = await EncryptedMessage.packWithAuthentication(
       plainTextMessage,
       keyPair: keyPair,
       didKeyId: didKeyId,
-      jwksPerRecipient: [
-        Jwks.fromJson({
-          'keys': mediatorJwks,
-        }),
-      ],
+      recipientDidDocuments: [mediatorDidDocument],
       encryptionAlgorithm: encryptionAlgorithm,
     );
 

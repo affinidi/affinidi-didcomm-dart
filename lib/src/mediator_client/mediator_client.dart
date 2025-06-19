@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:didcomm/didcomm.dart';
-import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:dio/dio.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
@@ -204,9 +203,7 @@ class MediatorClient {
         messageToSend,
         keyPair: keyPair,
         didKeyId: didKeyId,
-        jwksPerRecipient: [
-          mediatorDidDocument.keyAgreement.toJwks(),
-        ],
+        recipientDidDocuments: [mediatorDidDocument],
         keyWrappingAlgorithm: messageOptions.keyWrappingAlgorithm,
         encryptionAlgorithm: messageOptions.encryptionAlgorithm,
       );

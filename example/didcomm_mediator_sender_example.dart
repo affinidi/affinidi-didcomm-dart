@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/encoding.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
-import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 
@@ -51,7 +50,6 @@ void main() async {
   """));
 
   final messageForReceiver = 'Hello, Bob!';
-  final receiverJwks = receiverDidDocument.keyAgreement.toJwks();
 
   final senderKeyStore = InMemoryKeyStore();
   final senderWallet = PersistentWallet(senderKeyStore);
@@ -81,12 +79,10 @@ void main() async {
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
-  final senderJwks = senderDidDocument.keyAgreement.toJwks();
-
-  for (var jwk in senderJwks.keys) {
+  for (var keyAgreement in senderDidDocument.keyAgreement) {
     // Important! link JWK, so the wallet should be able to find the key pair by JWK
     // It will be replaced with DID Manager
-    senderWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, senderKeyId);
+    senderWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, senderKeyId);
   }
 
   final receiverMediatorDidDocument =
@@ -118,7 +114,7 @@ void main() async {
       keyId: senderMatchedKeyIds.first,
     ),
     didKeyId: senderWallet.getDidIdByKeyId(senderMatchedKeyIds.first)!,
-    jwksPerRecipient: [receiverJwks],
+    recipientDidDocuments: [receiverDidDocument],
     keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     signer: senderSigner,

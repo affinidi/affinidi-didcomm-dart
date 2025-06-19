@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
-import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:ssi/ssi.dart';
 import 'package:convert/convert.dart';
 
@@ -47,12 +46,10 @@ void main() async {
     signatureScheme: SignatureScheme.eddsa_sha512,
   );
 
-  final aliceJwks = aliceDidDocument.keyAgreement.toJwks();
-
-  for (var jwk in aliceJwks.keys) {
+  for (var keyAgreement in aliceDidDocument.keyAgreement) {
     // Important! link JWK, so the wallet should be able to find the key pair by JWK
     // It will be replaced with DID Manager
-    aliceWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, aliceKeyId);
+    aliceWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, aliceKeyId);
   }
 
   final bobKeyId = "m/44'/60'/0'/0'/0'";
@@ -67,12 +64,10 @@ void main() async {
     PublicKey(bobKeyId, bobX25519PublicKey, KeyType.x25519),
   );
 
-  final bobJwks = bobDidDocument.keyAgreement.toJwks();
-
-  for (var jwk in bobJwks.keys) {
+  for (var keyAgreement in bobDidDocument.keyAgreement) {
     // Important! link JWK, so the wallet should be able to find the key pair by JWK
     // It will be replaced with DID Manager
-    bobWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
+    bobWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, bobKeyId);
   }
 
   final alicePlainTextMassage = PlainTextMessage(
@@ -110,7 +105,7 @@ void main() async {
       keyId: aliceMatchedKeyIds.first,
     ),
     didKeyId: aliceWallet.getDidIdByKeyId(aliceMatchedKeyIds.first)!,
-    jwksPerRecipient: [bobJwks],
+    recipientDidDocuments: [bobDidDocument],
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
 

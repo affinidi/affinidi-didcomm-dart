@@ -22,7 +22,7 @@ class DidcommMessage {
     DidcommMessage message, {
     required KeyPair keyPair,
     required String didKeyId,
-    required List<Jwks> jwksPerRecipient,
+    required List<DidDocument> recipientDidDocuments,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
@@ -30,7 +30,7 @@ class DidcommMessage {
       message,
       keyPair: keyPair,
       didKeyId: didKeyId,
-      jwksPerRecipient: jwksPerRecipient,
+      recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
     );
@@ -40,7 +40,7 @@ class DidcommMessage {
     DidcommMessage message, {
     required KeyPair keyPair,
     required String didKeyId,
-    required List<Jwks> jwksPerRecipient,
+    required List<DidDocument> recipientDidDocuments,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
     required DidSigner signer,
@@ -54,7 +54,7 @@ class DidcommMessage {
       signedMessage,
       keyPair: keyPair,
       didKeyId: didKeyId,
-      jwksPerRecipient: jwksPerRecipient,
+      recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
     );
