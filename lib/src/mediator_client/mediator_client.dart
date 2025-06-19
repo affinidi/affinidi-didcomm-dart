@@ -15,8 +15,7 @@ import '../extensions/extensions.dart';
 
 class MediatorClient {
   final DidDocument mediatorDidDocument;
-  final Wallet wallet;
-  final String keyId;
+  final KeyPair keyPair;
   final DidSigner signer;
   final ForwardMessageOptions forwardMessageOptions;
   final WebSocketOptions webSocketOptions;
@@ -26,8 +25,7 @@ class MediatorClient {
 
   MediatorClient({
     required this.mediatorDidDocument,
-    required this.wallet,
-    required this.keyId,
+    required this.keyPair,
     required this.signer,
     this.forwardMessageOptions = const ForwardMessageOptions(),
     this.webSocketOptions = const WebSocketOptions(),
@@ -37,16 +35,14 @@ class MediatorClient {
 
   static Future<MediatorClient> fromMediatorDidDocumentUri(
     Uri didDocumentUrl, {
-    required Wallet wallet,
-    required String keyId,
+    required KeyPair keyPair,
     required DidSigner signer,
   }) async {
     return MediatorClient(
       mediatorDidDocument: await UniversalDIDResolver.resolve(
         didDocumentUrl.toString(),
       ),
-      wallet: wallet,
-      keyId: keyId,
+      keyPair: keyPair,
       signer: signer,
     );
   }
@@ -181,10 +177,8 @@ class MediatorClient {
   }
 
   Future<DidDocument> _getActorDidDocument() async {
-    final recipientKeyPair = await wallet.generateKey(keyId: keyId);
-
     return DidKey.generateDocument(
-      recipientKeyPair.publicKey,
+      keyPair.publicKey,
     );
   }
 
@@ -204,8 +198,7 @@ class MediatorClient {
     if (messageOptions.shouldEncrypt) {
       messageToSend = await EncryptedMessage.pack(
         messageToSend,
-        wallet: wallet,
-        keyId: keyId,
+        keyPair: keyPair,
         jwksPerRecipient: [
           mediatorDidDocument.keyAgreement.toJwks(),
         ],

@@ -4,8 +4,6 @@ import 'package:uuid/uuid.dart';
 
 import '../common/did_document_service_type.dart';
 import '../extensions/extensions.dart';
-import '../messages/algorithm_types/encryption_algorithm.dart';
-import '../jwks/jwks.dart';
 import '../common/authentication_tokens/authentication_tokens.dart';
 
 // TODO: should be eventually moved to TDK
@@ -19,8 +17,7 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
       mediatorServiceType: DidDocumentServiceType.authentication,
     );
 
-    final publicKey = await wallet.getPublicKey(keyId);
-    final didDocument = DidKey.generateDocument(publicKey);
+    final didDocument = DidKey.generateDocument(keyPair.publicKey);
 
     final challengeResponse = await dio.post(
       '/challenge',
@@ -32,7 +29,7 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
 
     final plainTextMessage = PlainTextMessage(
       id: Uuid().v4(),
-      // this is specif to affinidi mediator
+      // this is specific to affinidi mediator
       type: Uri.parse('https://affinidi.com/atm/1.0/authenticate'),
       createdTime: createdTime,
       expiresTime: expiresTime,
@@ -51,8 +48,7 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
 
     final encryptedMessage = await EncryptedMessage.packWithAuthentication(
       plainTextMessage,
-      wallet: wallet,
-      keyId: keyId,
+      keyPair: keyPair,
       jwksPerRecipient: [
         Jwks.fromJson({
           'keys': mediatorJwks,

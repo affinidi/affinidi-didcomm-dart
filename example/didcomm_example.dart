@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
-import 'package:didcomm/src/messages/algorithm_types/encryption_algorithm.dart';
 import 'package:ssi/ssi.dart';
 
 import 'helpers.dart';
@@ -84,8 +83,9 @@ void main() async {
 
   final aliceEncryptedMessage = await EncryptedMessage.packWithAuthentication(
     aliceSignedMessage,
-    wallet: aliceWallet,
-    keyId: aliceMatchedKeyIds.first,
+    keyPair: await aliceWallet.generateKey(
+      keyId: aliceMatchedKeyIds.first,
+    ),
     jwksPerRecipient: [
       bobJwks,
     ],

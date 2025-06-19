@@ -17,8 +17,9 @@ void main() async {
   final receiverWallet = PersistentWallet(receiverKeyStore);
 
   final receiverKeyId = 'receiver-key-1';
-  final receiverPrivateKeyBytes =
-      await extractPrivateKeyBytes('./example/keys/bob_private_key.pem');
+  final receiverPrivateKeyBytes = await extractPrivateKeyBytes(
+    './example/keys/bob_private_key.pem',
+  );
 
   await receiverKeyStore.set(
     receiverKeyId,
@@ -64,8 +65,7 @@ void main() async {
 
   final receiverMediatorClient = MediatorClient(
     mediatorDidDocument: receiverMediatorDocument,
-    wallet: receiverWallet,
-    keyId: receiverKeyId,
+    keyPair: receiverKeyPair,
     signer: receiverSigner,
   );
 

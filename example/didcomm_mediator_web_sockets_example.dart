@@ -3,9 +3,6 @@ import 'package:didcomm/src/common/did_document_service_type.dart';
 import 'package:didcomm/src/common/encoding.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
-import 'package:didcomm/src/messages/algorithm_types/algorithms_types.dart';
-import 'package:didcomm/src/messages/attachments/attachment.dart';
-import 'package:didcomm/src/messages/attachments/attachment_data.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 
@@ -26,8 +23,9 @@ void main() async {
   final bobWallet = PersistentWallet(bobKeyStore);
 
   final aliceKeyId = 'alice-key-1';
-  final alicePrivateKeyBytes =
-      await extractPrivateKeyBytes('./example/keys/alice_private_key.pem');
+  final alicePrivateKeyBytes = await extractPrivateKeyBytes(
+    './example/keys/alice_private_key.pem',
+  );
 
   await aliceKeyStore.set(
     aliceKeyId,
@@ -123,8 +121,9 @@ void main() async {
   final aliceSignedAndEncryptedMessage =
       await DidcommMessage.packIntoSignedAndEncryptedMessages(
     alicePlainTextMassage,
-    wallet: aliceWallet,
-    keyId: aliceMatchedKeyIds.first,
+    keyPair: await aliceWallet.generateKey(
+      keyId: aliceMatchedKeyIds.first,
+    ),
     jwksPerRecipient: [bobJwks],
     keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
@@ -163,8 +162,7 @@ void main() async {
 
   final aliceMediatorClient = MediatorClient(
       mediatorDidDocument: bobMediatorDocument,
-      wallet: aliceWallet,
-      keyId: aliceKeyId,
+      keyPair: aliceKeyPair,
       signer: aliceSigner,
 
       // optional. if omitted defaults will be used
@@ -181,8 +179,7 @@ void main() async {
 
   final bobMediatorClient = MediatorClient(
     mediatorDidDocument: bobMediatorDocument,
-    wallet: bobWallet,
-    keyId: bobKeyId,
+    keyPair: bobKeyPair,
     signer: bobSigner,
     webSocketOptions: WebSocketOptions(
       statusRequestMessageOptions: StatusRequestMessageOptions(

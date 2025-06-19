@@ -8,14 +8,6 @@ extension KeyTypeExtension on KeyType {
       return CurveType.p256;
     }
 
-    if (this == KeyType.p384) {
-      return CurveType.p384;
-    }
-
-    if (this == KeyType.p521) {
-      return CurveType.p521;
-    }
-
     if (this == KeyType.secp256k1) {
       return CurveType.secp256k1;
     }

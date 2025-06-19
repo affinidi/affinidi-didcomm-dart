@@ -17,14 +17,12 @@ abstract class EcdhEs implements Ecdh {
 
   Future<Uint8List> getEncryptionSecret();
   Future<Uint8List> getDecryptionSecret({
-    required Wallet recipientWallet,
-    required String recipientKeyId,
+    required KeyPair recipientKeyPair,
   });
 
   @override
   Future<Uint8List> encryptData({
-    required Wallet senderWallet,
-    required String senderKeyId,
+    required KeyPair senderKeyPair,
     required Uint8List data,
   }) async {
     final secret = await getEncryptionSecret();
@@ -36,13 +34,11 @@ abstract class EcdhEs implements Ecdh {
 
   @override
   Future<Uint8List> decryptData({
-    required Wallet recipientWallet,
-    required String recipientKeyId,
+    required KeyPair recipientKeyPair,
     required Uint8List data,
   }) async {
     final secret = await getDecryptionSecret(
-      recipientWallet: recipientWallet,
-      recipientKeyId: recipientKeyId,
+      recipientKeyPair: recipientKeyPair,
     );
 
     final sharedSecret = _generateSharedSecret(secret);

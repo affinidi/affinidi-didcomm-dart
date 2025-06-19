@@ -53,10 +53,8 @@ void main() async {
                 plainTextMessage,
                 signer: aliceSigner,
               );
-              print(signedMessage.toJson());
 
               expect(signedMessage.signatures, isNotNull);
-
               expect(
                 signedMessage.signatures[0].header.keyId,
                 aliceSigner.keyId,
@@ -64,7 +62,6 @@ void main() async {
               final unpackedSignedMessage = await signedMessage.unpack();
 
               expect(unpackedSignedMessage, isNotNull);
-              print(unpackedSignedMessage);
               expect(unpackedSignedMessage['body']['content'], content);
             });
           });

@@ -61,15 +61,13 @@ class EncryptedMessage extends DidcommMessage {
 
   static Future<EncryptedMessage> packAnonymously(
     DidcommMessage message, {
-    required Wallet wallet,
-    required String keyId,
+    required KeyPair keyPair,
     required List<Jwks> jwksPerRecipient,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
     return await EncryptedMessage.pack(
       message,
-      wallet: wallet,
-      keyId: keyId,
+      keyPair: keyPair,
       jwksPerRecipient: jwksPerRecipient,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -78,15 +76,13 @@ class EncryptedMessage extends DidcommMessage {
 
   static Future<EncryptedMessage> packWithAuthentication(
     DidcommMessage message, {
-    required Wallet wallet,
-    required String keyId,
+    required KeyPair keyPair,
     required List<Jwks> jwksPerRecipient,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
     return await EncryptedMessage.pack(
       message,
-      wallet: wallet,
-      keyId: keyId,
+      keyPair: keyPair,
       jwksPerRecipient: jwksPerRecipient,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -95,8 +91,7 @@ class EncryptedMessage extends DidcommMessage {
 
   static Future<EncryptedMessage> pack(
     DidcommMessage message, {
-    required Wallet wallet,
-    required String keyId,
+    required KeyPair keyPair,
     required List<Jwks> jwksPerRecipient,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
@@ -115,12 +110,11 @@ class EncryptedMessage extends DidcommMessage {
     //   }
     // }
 
-    final publicKey = await wallet.getPublicKey(keyId);
+    final publicKey = keyPair.publicKey;
     final ephemeralKeyPair = generateEphemeralKeyPair(publicKey.type);
 
-    final jweHeader = await JweHeader.fromWalletKey(
-      wallet,
-      keyId,
+    final jweHeader = await JweHeader.fromKeyPair(
+      keyPair,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
       jwksPerRecipient: jwksPerRecipient,
@@ -152,8 +146,7 @@ class EncryptedMessage extends DidcommMessage {
     }
 
     final recipients = await _createRecipients(
-      wallet: wallet,
-      keyId: keyId,
+      keyPair: keyPair,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       jwksPerRecipient: jwksPerRecipient,
       authenticationTag: encryptedInnerMessage.authenticationTag!,
@@ -283,8 +276,7 @@ class EncryptedMessage extends DidcommMessage {
   }
 
   static Future<List<Recipient>> _createRecipients({
-    required Wallet wallet,
-    required String keyId,
+    required KeyPair keyPair,
     required List<Jwks> jwksPerRecipient,
     required JweHeader jweHeader,
     required ck.SymmetricKey contentEncryptionKey,
@@ -292,7 +284,7 @@ class EncryptedMessage extends DidcommMessage {
     required Uint8List authenticationTag,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
   }) async {
-    final publicKey = await wallet.getPublicKey(keyId);
+    final publicKey = keyPair.publicKey;
 
     final futures = jwksPerRecipient.map((jwks) async {
       final curve = publicKey.type.asDidcommCompatibleCurve();
@@ -300,8 +292,7 @@ class EncryptedMessage extends DidcommMessage {
 
       final encryptedKey = await Ecdh.encrypt(
         contentEncryptionKey.keyValue,
-        senderWallet: wallet,
-        senderKeyId: keyId,
+        senderKeyPair: keyPair,
         recipientJwk: recipientJwk,
         ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
         jweHeader: jweHeader,

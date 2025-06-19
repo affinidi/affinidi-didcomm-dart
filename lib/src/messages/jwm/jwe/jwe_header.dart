@@ -8,7 +8,6 @@ import 'package:ssi/ssi.dart';
 import '../../../common/crypto.dart';
 import '../../../common/encoding.dart';
 import '../../../errors/errors.dart';
-import '../../../errors/unsupported_wallet_type_error.dart';
 import '../../../jwks/jwks.dart';
 import '../../../extensions/extensions.dart';
 import '../../../curves/curve_type.dart';
@@ -51,9 +50,8 @@ class JweHeader {
     required this.agreementPartyVInfo,
   });
 
-  static Future<JweHeader> fromWalletKey(
-    Wallet wallet,
-    String keyId, {
+  static Future<JweHeader> fromKeyPair(
+    KeyPair keyPair, {
     required List<Jwks> jwksPerRecipient,
     required Uint8List ephemeralPrivateKeyBytes,
     Uint8List? ephemeralPublicKeyBytes,
@@ -62,8 +60,7 @@ class JweHeader {
   }) async {
     final (subjectKeyId, curve, senderPublicKey) = await _buildHeaderParts(
       keyWrappingAlgorithm,
-      wallet,
-      keyId,
+      keyPair,
     );
 
     return JweHeader(
@@ -92,10 +89,9 @@ class JweHeader {
   // TODO: add support for DID web and peer
   static Future<(String?, CurveType, PublicKey)> _buildHeaderParts(
     KeyWrappingAlgorithm keyWrapAlgorithm,
-    Wallet wallet,
-    String keyId,
+    KeyPair keyPair,
   ) async {
-    final publicKey = await wallet.getPublicKey(keyId);
+    final publicKey = keyPair.publicKey;
     final curve = publicKey.type.asDidcommCompatibleCurve();
 
     final DidDocument didDocument;
@@ -103,15 +99,13 @@ class JweHeader {
     if (curve.isSecp256OrPCurve()) {
       didDocument = DidKey.generateDocument(publicKey);
     } else if (curve.isXCurve()) {
-      // TODO: revisit wallet casting
-      if (wallet is! Bip32Ed25519Wallet) {
-        throw UnsupportedWalletTypeError(wallet);
-      }
-
-      final x25519PublicKey = await wallet.getX25519PublicKey(keyId);
+      // TODO: revisit, when X curve is added to Dart SSI
+      final x25519PublicKey =
+          await (keyPair as Ed25519KeyPair).ed25519KeyToX25519PublicKey();
+      final x25519PublicKeyBytes = Uint8List.fromList(x25519PublicKey.bytes);
 
       didDocument = DidKey.generateDocument(
-        PublicKey(keyId, x25519PublicKey, KeyType.x25519),
+        PublicKey(publicKey.id, x25519PublicKeyBytes, KeyType.x25519),
       );
     } else {
       throw UnsupportedCurveError(curve);
