@@ -4,7 +4,6 @@ import 'package:didcomm/src/common/authentication_tokens/authentication_tokens.d
 import 'package:didcomm/src/common/did_document_service_type.dart';
 import 'package:didcomm/src/common/encoding.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
-import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:ssi/ssi.dart';
 import 'package:test/test.dart';
 import 'package:uuid/uuid.dart';
@@ -51,7 +50,6 @@ void main() async {
     late DidSigner aliceSigner;
     late DidDocument aliceDidDocument;
     late MediatorClient aliceMediatorClient;
-    late Jwks aliceJwks;
     late AuthenticationTokens aliceTokens;
 
     late PersistentWallet bobWallet;
@@ -59,7 +57,6 @@ void main() async {
     late DidDocument bobDidDocument;
     late MediatorClient bobMediatorClient;
     late AuthenticationTokens bobTokens;
-    late Jwks bobJwks;
 
     late DidDocument bobMediatorDocument;
 
@@ -93,12 +90,10 @@ void main() async {
         signatureScheme: SignatureScheme.ecdsa_p256_sha256,
       );
 
-      aliceJwks = aliceDidDocument.keyAgreement.toJwks();
-
-      for (var jwk in aliceJwks.keys) {
+      for (var keyAgreement in aliceDidDocument.keyAgreement) {
         // Important! link JWK, so the wallet should be able to find the key pair by JWK
         // It will be replaced with DID Manager
-        aliceWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, aliceKeyId);
+        aliceWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, aliceKeyId);
       }
 
       final bobKeyId = 'bob-key-1';
@@ -129,12 +124,10 @@ void main() async {
         signatureScheme: SignatureScheme.ecdsa_p256_sha256,
       );
 
-      bobJwks = bobDidDocument.keyAgreement.toJwks();
-
-      for (var jwk in bobJwks.keys) {
+      for (var keyAgreement in bobDidDocument.keyAgreement) {
         // Important! link JWK, so the wallet should be able to find the key pair by JWK
         // It will be replaced with DID Manager
-        bobWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
+        bobWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, bobKeyId);
       }
 
       bobMediatorDocument = await UniversalDIDResolver.resolve(
@@ -220,7 +213,7 @@ void main() async {
         alicePlainTextMassage,
         keyPair: await aliceWallet.getKeyPair(aliceMatchedKeyIds.first),
         didKeyId: aliceWallet.getDidIdByKeyId(aliceMatchedKeyIds.first)!,
-        jwksPerRecipient: [bobJwks],
+        recipientDidDocuments: [bobDidDocument],
         keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
         encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
         signer: aliceSigner,
@@ -310,7 +303,7 @@ void main() async {
           alicePlainTextMassage,
           keyPair: await aliceWallet.getKeyPair(aliceMatchedKeyIds.first),
           didKeyId: aliceWallet.getDidIdByKeyId(aliceMatchedKeyIds.first)!,
-          jwksPerRecipient: [bobJwks],
+          recipientDidDocuments: [bobDidDocument],
           keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
           encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
           signer: aliceSigner,

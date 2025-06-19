@@ -9,4 +9,3 @@ export 'src/errors/errors.dart';
 export 'src/mediator_client.dart';
 export 'src/extensions/affinidi_authenticator_extension.dart';
 export 'src/extensions/wallet_extension.dart';
-export 'src/jwks/jwks.dart';

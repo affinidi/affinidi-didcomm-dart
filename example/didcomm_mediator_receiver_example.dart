@@ -1,7 +1,6 @@
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/did_document_service_type.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
-import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:ssi/ssi.dart';
 
 import 'helpers.dart';
@@ -55,12 +54,10 @@ void main() async {
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
-  final receiverJwks = receiverDidDocument.keyAgreement.toJwks();
-
-  for (var jwk in receiverJwks.keys) {
+  for (var keyAgreement in receiverDidDocument.keyAgreement) {
     // Important! link JWK, so the wallet should be able to find the key pair by JWK
     // It will be replaced with DID Manager
-    receiverWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, receiverKeyId);
+    receiverWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, receiverKeyId);
   }
 
   final receiverMediatorClient = MediatorClient(

@@ -8,7 +8,6 @@ import 'package:ssi/ssi.dart';
 import '../../../common/crypto.dart';
 import '../../../common/encoding.dart';
 import '../../../errors/errors.dart';
-import '../../../jwks/jwks.dart';
 import '../../../extensions/extensions.dart';
 import '../../../curves/curve_type.dart';
 import 'ephemeral_key_type.dart';
@@ -53,7 +52,7 @@ class JweHeader {
   static Future<JweHeader> fromKeyPair(
     KeyPair keyPair, {
     String? subjectKeyId,
-    required List<Jwks> jwksPerRecipient,
+    required List<DidDocument> recipientDidDocuments,
     required Uint8List ephemeralPrivateKeyBytes,
     Uint8List? ephemeralPublicKeyBytes,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
@@ -80,7 +79,8 @@ class JweHeader {
         keyType: keyPair.publicKey.type,
         curve: curve,
       ),
-      agreementPartyVInfo: _buildAgreementPartyVInfo(jwksPerRecipient, curve),
+      agreementPartyVInfo:
+          _buildAgreementPartyVInfo(recipientDidDocuments, curve),
       agreementPartyUInfo: _buildAgreementPartyUInfo(
         keyWrappingAlgorithm,
         subjectKeyId,
@@ -94,10 +94,10 @@ class JweHeader {
   Map<String, dynamic> toJson() => _$JweHeaderToJson(this);
 
   static String _buildAgreementPartyVInfo(
-    List<Jwks> jwksPerRecipient,
+    List<DidDocument> recipientDidDocuments,
     CurveType curve,
   ) {
-    final receiverKeyIds = _getKeyIds(jwksPerRecipient, curve);
+    final receiverKeyIds = _getKeyIds(recipientDidDocuments, curve);
     final keyIdString = receiverKeyIds.join('.');
 
     if (keyIdString.isEmpty) {
@@ -109,19 +109,16 @@ class JweHeader {
     );
   }
 
-  static List<String> _getKeyIds(List<Jwks> jwksPerRecipient, CurveType curve) {
+  static List<String> _getKeyIds(
+    List<DidDocument> recipientDidDocuments,
+    CurveType curve,
+  ) {
     // https://identity.foundation/didcomm-messaging/spec/#ecdh-es-key-wrapping-and-common-protected-headers
     // keys merged with comma and sorted alphabetically
 
-    final keyIdsByCurve = jwksPerRecipient.map((jwks) {
-      final key = jwks.firstWithCurve(curve);
-
-      if (key.keyId == null) {
-        throw Exception('Jwk was found, but keyId is null');
-      }
-
-      return key.keyId!;
-    }).toList();
+    final keyIdsByCurve = recipientDidDocuments
+        .map((document) => document.keyAgreement.firstWithCurve(curve).id)
+        .toList();
 
     keyIdsByCurve.sort();
     return keyIdsByCurve;

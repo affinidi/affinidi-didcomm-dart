@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/converters/jwe_header_converter.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
-import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
 import 'package:ssi/ssi.dart';
 import 'package:test/test.dart';
 
@@ -31,8 +30,6 @@ void main() async {
           late DidDocument bobDidDocument;
           late DidSigner aliceSigner;
 
-          late Jwks bobJwks;
-
           setUp(() async {
             final aliceKeyPair = await aliceWallet.generateKey(
               keyId: aliceKeyId,
@@ -41,12 +38,10 @@ void main() async {
 
             aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
 
-            final aliceJwks = aliceDidDocument.keyAgreement.toJwks();
-
-            for (var jwk in aliceJwks.keys) {
+            for (var keyAgreement in aliceDidDocument.keyAgreement) {
               // Important! link JWK, so the wallet should be able to find the key pair by JWK
               // It will be replaced with DID Manager
-              aliceWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, aliceKeyId);
+              aliceWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, aliceKeyId);
             }
 
             aliceSigner = DidSigner(
@@ -62,12 +57,11 @@ void main() async {
             );
 
             bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
-            bobJwks = bobDidDocument.keyAgreement.toJwks();
 
-            for (var jwk in bobJwks.keys) {
+            for (var keyAgreement in bobDidDocument.keyAgreement) {
               // Important! link JWK, so the wallet should be able to find the key pair by JWK
               // It will be replaced with DID Manager
-              bobWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
+              bobWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, bobKeyId);
             }
           });
 
@@ -112,7 +106,7 @@ void main() async {
                         didKeyId: aliceWallet.getDidIdByKeyId(
                           aliceMatchedKeyIds.first,
                         )!,
-                        jwksPerRecipient: [bobJwks],
+                        recipientDidDocuments: [bobDidDocument],
                         encryptionAlgorithm: encryptionAlgorithm,
                         keyWrappingAlgorithm: isAuthenticated
                             ? KeyWrappingAlgorithm.ecdh1Pu
@@ -179,7 +173,7 @@ void main() async {
                         didKeyId: aliceWallet.getDidIdByKeyId(
                           aliceMatchedKeyIds.first,
                         )!,
-                        jwksPerRecipient: [bobJwks],
+                        recipientDidDocuments: [bobDidDocument],
                         encryptionAlgorithm: encryptionAlgorithm,
                       );
 

@@ -1,17 +1,27 @@
+import 'package:collection/collection.dart';
 import 'package:ssi/ssi.dart' hide Jwk;
 
-import '../jwks/jwks.dart';
+import '../../didcomm.dart';
+import '../curves/curve_type.dart';
+import '../jwks/jwk.dart';
+
+extension VerificationMethodExtention on VerificationMethod {
+  Jwk toJwk() {
+    final jwk = asJwk().toJson();
+    return Jwk.fromJson(jwk);
+  }
+}
 
 extension VerificationMethodListExtention on List<VerificationMethod> {
-  Jwks toJwks() {
-    return Jwks(
-        keys: map(
-      (keyAgreement) {
-        final jwk = keyAgreement.asJwk().toJson();
-        // TODO: kid is not available in the Jwk anymore. clarify with the team
-        jwk['kid'] = keyAgreement.id;
-        return Jwk.fromJson(jwk);
-      },
-    ).toList());
+  VerificationMethod firstWithCurve(CurveType curve) {
+    final match = firstWhereOrNull(
+      (verificationMethod) => verificationMethod.toJwk().curve == curve,
+    );
+
+    if (match == null) {
+      throw NotFoundVerificationByCurveError(curve);
+    }
+
+    return match;
   }
 }
