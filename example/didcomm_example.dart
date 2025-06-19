@@ -86,9 +86,8 @@ void main() async {
     keyPair: await aliceWallet.generateKey(
       keyId: aliceMatchedKeyIds.first,
     ),
-    jwksPerRecipient: [
-      bobJwks,
-    ],
+    keyPairJwkId: aliceWallet.getJwkIdByKeyId(aliceMatchedKeyIds.first)!,
+    jwksPerRecipient: [bobJwks],
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
 

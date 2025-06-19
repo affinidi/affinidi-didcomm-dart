@@ -66,6 +66,7 @@ void main() async {
   final receiverMediatorClient = MediatorClient(
     mediatorDidDocument: receiverMediatorDocument,
     keyPair: receiverKeyPair,
+    keyPairJwkId: receiverWallet.getJwkIdByKeyId(receiverKeyId)!,
     signer: receiverSigner,
   );
 

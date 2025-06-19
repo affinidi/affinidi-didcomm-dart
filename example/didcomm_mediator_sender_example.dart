@@ -117,6 +117,7 @@ void main() async {
     keyPair: await senderWallet.generateKey(
       keyId: senderMatchedKeyIds.first,
     ),
+    keyPairJwkId: senderWallet.getJwkIdByKeyId(senderMatchedKeyIds.first)!,
     jwksPerRecipient: [receiverJwks],
     keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
@@ -156,6 +157,7 @@ void main() async {
   final senderMediatorClient = MediatorClient(
     mediatorDidDocument: receiverMediatorDidDocument,
     keyPair: senderKeyPair,
+    keyPairJwkId: senderWallet.getJwkIdByKeyId(senderMatchedKeyIds.first)!,
     signer: senderSigner,
     // optional. if omitted defaults will be used
     forwardMessageOptions: ForwardMessageOptions(
