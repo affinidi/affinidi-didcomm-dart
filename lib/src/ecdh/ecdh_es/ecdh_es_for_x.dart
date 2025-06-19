@@ -2,7 +2,6 @@ import 'dart:typed_data';
 import 'package:ssi/ssi.dart';
 import 'package:x25519/x25519.dart' as x25519;
 
-import '../../extensions/extensions.dart';
 import 'ecdh_es.dart';
 
 class EcdhEsForX extends EcdhEs {
