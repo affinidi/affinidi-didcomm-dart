@@ -125,13 +125,13 @@ extension DidDocumentExtension on DidDocument {
     );
 
     return matchedCurves.map((curve) {
-      final jwkKeyId = keyAgreement
+      final didKeyId = keyAgreement
           .firstWhere(
             (keyAgreement) => getCurveFromKeyAgreement(keyAgreement) == curve,
           )
           .id;
 
-      final keyId = wallet.getKeyIdByJwkId(jwkKeyId);
+      final keyId = wallet.getKeyIdByDidKeyId(didKeyId);
 
       if (keyId == null) {
         throw Exception(

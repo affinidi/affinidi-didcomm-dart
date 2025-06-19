@@ -73,7 +73,8 @@ abstract class Ecdh {
       throw UnsupportedCurveError(curveType);
     }
 
-    final recipientKeyId = recipientWallet.getKeyIdByJwkId(self.header.keyId);
+    final recipientKeyId =
+        recipientWallet.getKeyIdByDidKeyId(self.header.keyId);
 
     if (recipientKeyId == null) {
       Exception('JWK kid is not linked with any Key ID in the Wallet');

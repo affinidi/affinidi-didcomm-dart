@@ -6,7 +6,7 @@ import 'package:ssi/ssi.dart';
 import '../../didcomm.dart';
 
 enum _WalletMetaType {
-  jwkToKeyId,
+  didKeyIdToKeyId,
 }
 
 extension WalletExtension on Wallet {
@@ -37,20 +37,20 @@ extension WalletExtension on Wallet {
   static final Map<Wallet, Map<_WalletMetaType, Map<String, String>>>
       _walletsMeta = {};
 
-  void linkJwkKeyIdKeyWithKeyId(String jwkKeyId, String keyId) {
+  void linkDidKeyIdKeyWithKeyId(String didKeyId, String keyId) {
     _walletsMeta[this] = _walletsMeta[this] ?? {};
-    _walletsMeta[this]![_WalletMetaType.jwkToKeyId] =
-        _walletsMeta[this]![_WalletMetaType.jwkToKeyId] ?? {};
+    _walletsMeta[this]![_WalletMetaType.didKeyIdToKeyId] =
+        _walletsMeta[this]![_WalletMetaType.didKeyIdToKeyId] ?? {};
 
-    _walletsMeta[this]![_WalletMetaType.jwkToKeyId]![jwkKeyId] = keyId;
+    _walletsMeta[this]![_WalletMetaType.didKeyIdToKeyId]![didKeyId] = keyId;
   }
 
-  String? getKeyIdByJwkId(String jwkKeyId) {
-    return _walletsMeta[this]?[_WalletMetaType.jwkToKeyId]?[jwkKeyId];
+  String? getKeyIdByDidKeyId(String didKeyId) {
+    return _walletsMeta[this]?[_WalletMetaType.didKeyIdToKeyId]?[didKeyId];
   }
 
-  String? getJwkIdByKeyId(String keyId) {
-    return _walletsMeta[this]?[_WalletMetaType.jwkToKeyId]
+  String? getDidIdByKeyId(String keyId) {
+    return _walletsMeta[this]?[_WalletMetaType.didKeyIdToKeyId]
         ?.entries
         .firstWhereOrNull((entry) => entry.value == keyId)
         ?.key;

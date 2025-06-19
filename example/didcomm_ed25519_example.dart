@@ -52,7 +52,7 @@ void main() async {
   for (var jwk in aliceJwks.keys) {
     // Important! link JWK, so the wallet should be able to find the key pair by JWK
     // It will be replaced with DID Manager
-    aliceWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, aliceKeyId);
+    aliceWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, aliceKeyId);
   }
 
   final bobKeyId = "m/44'/60'/0'/0'/0'";
@@ -72,7 +72,7 @@ void main() async {
   for (var jwk in bobJwks.keys) {
     // Important! link JWK, so the wallet should be able to find the key pair by JWK
     // It will be replaced with DID Manager
-    bobWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
+    bobWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
   }
 
   final alicePlainTextMassage = PlainTextMessage(
@@ -109,7 +109,7 @@ void main() async {
     keyPair: await aliceWallet.generateKey(
       keyId: aliceMatchedKeyIds.first,
     ),
-    keyPairJwkId: aliceWallet.getJwkIdByKeyId(aliceMatchedKeyIds.first)!,
+    didKeyId: aliceWallet.getDidIdByKeyId(aliceMatchedKeyIds.first)!,
     jwksPerRecipient: [bobJwks],
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );

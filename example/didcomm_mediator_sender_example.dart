@@ -86,7 +86,7 @@ void main() async {
   for (var jwk in senderJwks.keys) {
     // Important! link JWK, so the wallet should be able to find the key pair by JWK
     // It will be replaced with DID Manager
-    senderWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, senderKeyId);
+    senderWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, senderKeyId);
   }
 
   final receiverMediatorDidDocument =
@@ -117,7 +117,7 @@ void main() async {
     keyPair: await senderWallet.generateKey(
       keyId: senderMatchedKeyIds.first,
     ),
-    keyPairJwkId: senderWallet.getJwkIdByKeyId(senderMatchedKeyIds.first)!,
+    didKeyId: senderWallet.getDidIdByKeyId(senderMatchedKeyIds.first)!,
     jwksPerRecipient: [receiverJwks],
     keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
@@ -157,7 +157,7 @@ void main() async {
   final senderMediatorClient = MediatorClient(
     mediatorDidDocument: receiverMediatorDidDocument,
     keyPair: senderKeyPair,
-    keyPairJwkId: senderWallet.getJwkIdByKeyId(senderMatchedKeyIds.first)!,
+    didKeyId: senderWallet.getDidIdByKeyId(senderMatchedKeyIds.first)!,
     signer: senderSigner,
     // optional. if omitted defaults will be used
     forwardMessageOptions: ForwardMessageOptions(
