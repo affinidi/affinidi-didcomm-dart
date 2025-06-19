@@ -60,13 +60,13 @@ void main() async {
   for (var jwk in receiverJwks.keys) {
     // Important! link JWK, so the wallet should be able to find the key pair by JWK
     // It will be replaced with DID Manager
-    receiverWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, receiverKeyId);
+    receiverWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, receiverKeyId);
   }
 
   final receiverMediatorClient = MediatorClient(
     mediatorDidDocument: receiverMediatorDocument,
     keyPair: receiverKeyPair,
-    keyPairJwkId: receiverWallet.getJwkIdByKeyId(receiverKeyId)!,
+    didKeyId: receiverWallet.getDidIdByKeyId(receiverKeyId)!,
     signer: receiverSigner,
   );
 

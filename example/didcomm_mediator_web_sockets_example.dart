@@ -52,7 +52,7 @@ void main() async {
   for (var jwk in aliceJwks.keys) {
     // Important! link JWK, so the wallet should be able to find the key pair by JWK
     // It will be replaced with DID Manager
-    aliceWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, aliceKeyId);
+    aliceWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, aliceKeyId);
   }
 
   final bobKeyId = 'bob-key-1';
@@ -96,7 +96,7 @@ void main() async {
   for (var jwk in bobJwks.keys) {
     // Important! link JWK, so the wallet should be able to find the key pair by JWK
     // It will be replaced with DID Manager
-    bobWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
+    bobWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
   }
 
   final alicePlainTextMassage = PlainTextMessage(
@@ -124,7 +124,7 @@ void main() async {
     keyPair: await aliceWallet.generateKey(
       keyId: aliceMatchedKeyIds.first,
     ),
-    keyPairJwkId: aliceWallet.getJwkIdByKeyId(aliceMatchedKeyIds.first)!,
+    didKeyId: aliceWallet.getDidIdByKeyId(aliceMatchedKeyIds.first)!,
     jwksPerRecipient: [bobJwks],
     keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
@@ -164,7 +164,7 @@ void main() async {
   final aliceMediatorClient = MediatorClient(
       mediatorDidDocument: bobMediatorDocument,
       keyPair: aliceKeyPair,
-      keyPairJwkId: aliceWallet.getJwkIdByKeyId(aliceMatchedKeyIds.first)!,
+      didKeyId: aliceWallet.getDidIdByKeyId(aliceMatchedKeyIds.first)!,
       signer: aliceSigner,
 
       // optional. if omitted defaults will be used
@@ -182,7 +182,7 @@ void main() async {
   final bobMediatorClient = MediatorClient(
     mediatorDidDocument: bobMediatorDocument,
     keyPair: bobKeyPair,
-    keyPairJwkId: bobWallet.getJwkIdByKeyId(bobKeyId)!,
+    didKeyId: bobWallet.getDidIdByKeyId(bobKeyId)!,
     signer: bobSigner,
     webSocketOptions: WebSocketOptions(
       statusRequestMessageOptions: StatusRequestMessageOptions(

@@ -46,7 +46,7 @@ void main() async {
             for (var jwk in aliceJwks.keys) {
               // Important! link JWK, so the wallet should be able to find the key pair by JWK
               // It will be replaced with DID Manager
-              aliceWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, aliceKeyId);
+              aliceWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, aliceKeyId);
             }
 
             aliceSigner = DidSigner(
@@ -67,7 +67,7 @@ void main() async {
             for (var jwk in bobJwks.keys) {
               // Important! link JWK, so the wallet should be able to find the key pair by JWK
               // It will be replaced with DID Manager
-              bobWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
+              bobWallet.linkDidKeyIdKeyWithKeyId(jwk.keyId!, bobKeyId);
             }
           });
 
@@ -109,7 +109,7 @@ void main() async {
                         keyPair: await aliceWallet.getKeyPair(
                           aliceMatchedKeyIds.first,
                         ),
-                        keyPairJwkId: aliceWallet.getJwkIdByKeyId(
+                        didKeyId: aliceWallet.getDidIdByKeyId(
                           aliceMatchedKeyIds.first,
                         )!,
                         jwksPerRecipient: [bobJwks],
@@ -176,7 +176,7 @@ void main() async {
                         keyPair: await aliceWallet.getKeyPair(
                           aliceMatchedKeyIds.first,
                         ),
-                        keyPairJwkId: aliceWallet.getJwkIdByKeyId(
+                        didKeyId: aliceWallet.getDidIdByKeyId(
                           aliceMatchedKeyIds.first,
                         )!,
                         jwksPerRecipient: [bobJwks],

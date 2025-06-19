@@ -77,14 +77,14 @@ class EncryptedMessage extends DidcommMessage {
   static Future<EncryptedMessage> packWithAuthentication(
     DidcommMessage message, {
     required KeyPair keyPair,
-    required String keyPairJwkId,
+    required String didKeyId,
     required List<Jwks> jwksPerRecipient,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
     return await EncryptedMessage.pack(
       message,
       keyPair: keyPair,
-      keyPairJwkId: keyPairJwkId,
+      didKeyId: didKeyId,
       jwksPerRecipient: jwksPerRecipient,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -94,7 +94,7 @@ class EncryptedMessage extends DidcommMessage {
   static Future<EncryptedMessage> pack(
     DidcommMessage message, {
     required KeyPair keyPair,
-    String? keyPairJwkId,
+    String? didKeyId,
     required List<Jwks> jwksPerRecipient,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
@@ -118,7 +118,7 @@ class EncryptedMessage extends DidcommMessage {
 
     final jweHeader = await JweHeader.fromKeyPair(
       keyPair,
-      subjectKeyId: keyPairJwkId,
+      subjectKeyId: didKeyId,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
       jwksPerRecipient: jwksPerRecipient,
@@ -230,7 +230,7 @@ class EncryptedMessage extends DidcommMessage {
 
   Future<Recipient> _findSelfAsRecipient(Wallet wallet) async {
     final self = recipients.firstWhere(
-      (recipient) => wallet.getKeyIdByJwkId(recipient.header.keyId) != null,
+      (recipient) => wallet.getKeyIdByDidKeyId(recipient.header.keyId) != null,
       orElse: () => throw Exception('Self recipient not found'),
     );
 

@@ -21,7 +21,7 @@ class DidcommMessage {
   static Future<EncryptedMessage> packIntoEncryptedMessage(
     DidcommMessage message, {
     required KeyPair keyPair,
-    required String keyPairJwkId,
+    required String didKeyId,
     required List<Jwks> jwksPerRecipient,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
@@ -29,7 +29,7 @@ class DidcommMessage {
     return await EncryptedMessage.pack(
       message,
       keyPair: keyPair,
-      keyPairJwkId: keyPairJwkId,
+      didKeyId: didKeyId,
       jwksPerRecipient: jwksPerRecipient,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -39,7 +39,7 @@ class DidcommMessage {
   static Future<EncryptedMessage> packIntoSignedAndEncryptedMessages(
     DidcommMessage message, {
     required KeyPair keyPair,
-    required String keyPairJwkId,
+    required String didKeyId,
     required List<Jwks> jwksPerRecipient,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
@@ -53,7 +53,7 @@ class DidcommMessage {
     return await EncryptedMessage.pack(
       signedMessage,
       keyPair: keyPair,
-      keyPairJwkId: keyPairJwkId,
+      didKeyId: didKeyId,
       jwksPerRecipient: jwksPerRecipient,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,

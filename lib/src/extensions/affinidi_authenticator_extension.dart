@@ -49,7 +49,7 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
     final encryptedMessage = await EncryptedMessage.packWithAuthentication(
       plainTextMessage,
       keyPair: keyPair,
-      keyPairJwkId: keyPairJwkId,
+      didKeyId: didKeyId,
       jwksPerRecipient: [
         Jwks.fromJson({
           'keys': mediatorJwks,
