@@ -32,12 +32,10 @@ class EcdhEsForSecpAndP extends EcdhEs {
 
   @override
   Future<Uint8List> getDecryptionSecret({
-    required Wallet recipientWallet,
-    required String recipientKeyId,
+    required KeyPair recipientKeyPair,
   }) async {
-    return await recipientWallet.computeEcdhSecret(
-      keyId: recipientKeyId,
-      othersPublicKeyBytes: publicKey.toBytes(),
+    return await recipientKeyPair.computeEcdhSecret(
+      publicKey.toBytes(),
     );
   }
 }

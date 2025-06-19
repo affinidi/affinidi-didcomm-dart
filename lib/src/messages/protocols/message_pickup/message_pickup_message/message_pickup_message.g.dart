@@ -16,7 +16,7 @@ MessagePickupMessage _$MessagePickupMessageFromJson(
       body: json['body'] as Map<String, dynamic>?,
       expiresTime: _$JsonConverterFromJson<int, DateTime>(
           json['expires_time'], const EpochSecondsConverter().fromJson),
-      returnRoute: json['return_route'] as String,
+      returnRoute: json['return_route'] as String? ?? 'all',
     );
 
 Map<String, dynamic> _$MessagePickupMessageToJson(

@@ -3,9 +3,8 @@ import 'dart:typed_data';
 
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/converters/jwe_header_converter.dart';
+import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
-import 'package:didcomm/src/jwks/jwks.dart';
-import 'package:didcomm/src/messages/algorithm_types/algorithms_types.dart';
 import 'package:ssi/ssi.dart';
 import 'package:test/test.dart';
 
@@ -40,6 +39,7 @@ void main() {
           keyId: aliceKeyId,
           keyType: KeyType.ed25519,
         );
+
         final aliceX25519PublicKey = await aliceWallet.getX25519PublicKey(
           aliceKeyPair.id,
         );
@@ -47,6 +47,14 @@ void main() {
         aliceDidDocument = DidKey.generateDocument(
           PublicKey(aliceKeyId, aliceX25519PublicKey, KeyType.x25519),
         );
+
+        final aliceJwks = aliceDidDocument.keyAgreement.toJwks();
+
+        for (var jwk in aliceJwks.keys) {
+          // Important! link JWK, so the wallet should be able to find the key pair by JWK
+          // It will be replaced with DID Manager
+          aliceWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, aliceKeyId);
+        }
 
         aliceSigner = DidSigner(
           didDocument: aliceDidDocument,
@@ -60,8 +68,9 @@ void main() {
           keyType: KeyType.ed25519,
         );
 
-        final bobX25519PublicKey =
-            await bobWallet.getX25519PublicKey(bobKeyPair.id);
+        final bobX25519PublicKey = await bobWallet.getX25519PublicKey(
+          bobKeyPair.id,
+        );
 
         bobDidDocument = DidKey.generateDocument(
           PublicKey(bobKeyId, bobX25519PublicKey, KeyType.x25519),
@@ -99,10 +108,20 @@ void main() {
                     signer: aliceSigner,
                   );
 
+                  // find keys whose curve is common in other DID Documents
+                  final aliceMatchedKeyIds =
+                      aliceDidDocument.getKeyIdsWithCommonType(
+                    wallet: aliceWallet,
+                    otherDidDocuments: [
+                      bobDidDocument,
+                    ],
+                  );
+
                   final sut = await EncryptedMessage.pack(
                     signedMessage,
-                    wallet: aliceWallet,
-                    keyId: aliceKeyId,
+                    keyPair: await aliceWallet.generateKey(
+                      keyId: aliceMatchedKeyIds.first,
+                    ),
                     jwksPerRecipient: [bobJwks],
                     encryptionAlgorithm: encryptionAlgorithm,
                     keyWrappingAlgorithm: isAuthenticated

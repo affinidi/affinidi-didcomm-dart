@@ -2,9 +2,6 @@ import 'package:didcomm/didcomm.dart';
 import 'package:ssi/ssi.dart';
 import 'package:meta/meta.dart';
 
-import '../jwks/jwks.dart';
-import 'algorithm_types/algorithms_types.dart';
-
 class DidcommMessage {
   DidcommMessage();
 
@@ -23,16 +20,14 @@ class DidcommMessage {
 
   static Future<EncryptedMessage> packIntoEncryptedMessage(
     DidcommMessage message, {
-    required Wallet wallet,
-    required String keyId,
+    required KeyPair keyPair,
     required List<Jwks> jwksPerRecipient,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
     return await EncryptedMessage.pack(
       message,
-      wallet: wallet,
-      keyId: keyId,
+      keyPair: keyPair,
       jwksPerRecipient: jwksPerRecipient,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -41,8 +36,7 @@ class DidcommMessage {
 
   static Future<EncryptedMessage> packIntoSignedAndEncryptedMessages(
     DidcommMessage message, {
-    required Wallet wallet,
-    required String keyId,
+    required KeyPair keyPair,
     required List<Jwks> jwksPerRecipient,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
@@ -55,8 +49,7 @@ class DidcommMessage {
 
     return await EncryptedMessage.pack(
       signedMessage,
-      wallet: wallet,
-      keyId: keyId,
+      keyPair: keyPair,
       jwksPerRecipient: jwksPerRecipient,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,

@@ -4,9 +4,6 @@ import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/encoding.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:didcomm/src/extensions/verification_method_list_extention.dart';
-import 'package:didcomm/src/messages/algorithm_types/algorithms_types.dart';
-import 'package:didcomm/src/messages/attachments/attachment.dart';
-import 'package:didcomm/src/messages/attachments/attachment_data.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 
@@ -60,8 +57,9 @@ void main() async {
   final senderWallet = PersistentWallet(senderKeyStore);
 
   final senderKeyId = 'alice-key-1';
-  final senderPrivateKeyBytes =
-      await extractPrivateKeyBytes('./example/keys/alice_private_key.pem');
+  final senderPrivateKeyBytes = await extractPrivateKeyBytes(
+    './example/keys/alice_private_key.pem',
+  );
 
   await senderKeyStore.set(
     senderKeyId,
@@ -83,6 +81,14 @@ void main() async {
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
+  final senderJwks = senderDidDocument.keyAgreement.toJwks();
+
+  for (var jwk in senderJwks.keys) {
+    // Important! link JWK, so the wallet should be able to find the key pair by JWK
+    // It will be replaced with DID Manager
+    senderWallet.linkJwkKeyIdKeyWithKeyId(jwk.keyId!, senderKeyId);
+  }
+
   final receiverMediatorDidDocument =
       await readDidDocument('./example/mediator/mediator_did_document.json');
 
@@ -98,7 +104,7 @@ void main() async {
   prettyPrint('Plain Text Message for Receiver', senderPlainTextMassage);
 
   // find keys whose curve is common in other DID Documents
-  final aliceMatchedKeyIds = senderDidDocument.getKeyIdsWithCommonType(
+  final senderMatchedKeyIds = senderDidDocument.getKeyIdsWithCommonType(
     wallet: senderWallet,
     otherDidDocuments: [
       receiverDidDocument,
@@ -108,8 +114,9 @@ void main() async {
   final senderSignedAndEncryptedMessage =
       await DidcommMessage.packIntoSignedAndEncryptedMessages(
     senderPlainTextMassage,
-    wallet: senderWallet,
-    keyId: aliceMatchedKeyIds.first,
+    keyPair: await senderWallet.generateKey(
+      keyId: senderMatchedKeyIds.first,
+    ),
     jwksPerRecipient: [receiverJwks],
     keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
@@ -148,8 +155,7 @@ void main() async {
 
   final senderMediatorClient = MediatorClient(
     mediatorDidDocument: receiverMediatorDidDocument,
-    wallet: senderWallet,
-    keyId: senderKeyId,
+    keyPair: senderKeyPair,
     signer: senderSigner,
     // optional. if omitted defaults will be used
     forwardMessageOptions: ForwardMessageOptions(

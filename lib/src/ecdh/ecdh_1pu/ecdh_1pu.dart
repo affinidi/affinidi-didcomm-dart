@@ -17,40 +17,35 @@ abstract class Ecdh1Pu implements Ecdh {
   Ecdh1Pu({required this.authenticationTag, required this.jweHeader});
 
   Future<({Uint8List ze, Uint8List zs})> getEncryptionSecrets({
-    required Wallet senderWallet,
-    required String senderKeyId,
+    required KeyPair senderKeyPair,
   });
 
   Future<({Uint8List ze, Uint8List zs})> getDecryptionSecrets({
-    required Wallet recipientWallet,
-    required String recipientKeyId,
+    required KeyPair recipientKeyPair,
   });
 
   @override
   Future<Uint8List> encryptData({
-    required Wallet senderWallet,
-    required String senderKeyId,
+    required KeyPair senderKeyPair,
     required Uint8List data,
   }) async {
     final secrets = await getEncryptionSecrets(
-      senderWallet: senderWallet,
-      senderKeyId: senderKeyId,
+      senderKeyPair: senderKeyPair,
     );
-    final sharedSecret = _generateSharedSecret(secrets.ze, secrets.zs);
 
+    final sharedSecret = _generateSharedSecret(secrets.ze, secrets.zs);
     final kw = _getKeyWrappingEncrypter(sharedSecret);
+
     return kw.encrypt(data).data;
   }
 
   @override
   Future<Uint8List> decryptData({
-    required Wallet recipientWallet,
-    required String recipientKeyId,
+    required KeyPair recipientKeyPair,
     required Uint8List data,
   }) async {
     final secrets = await getDecryptionSecrets(
-      recipientWallet: recipientWallet,
-      recipientKeyId: recipientKeyId,
+      recipientKeyPair: recipientKeyPair,
     );
 
     final sharedSecret = _generateSharedSecret(secrets.ze, secrets.zs);

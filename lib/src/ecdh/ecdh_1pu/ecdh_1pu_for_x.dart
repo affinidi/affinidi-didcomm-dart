@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:ssi/ssi.dart';
 import 'package:x25519/x25519.dart' as x25519;
 
-import '../../extensions/extensions.dart';
 import 'ecdh_1pu.dart';
 
 class Ecdh1PuForX extends Ecdh1Pu {
@@ -21,8 +20,7 @@ class Ecdh1PuForX extends Ecdh1Pu {
 
   @override
   Future<({Uint8List ze, Uint8List zs})> getEncryptionSecrets({
-    required Wallet senderWallet,
-    required String senderKeyId,
+    required KeyPair senderKeyPair,
   }) async {
     if (privateKeyBytes1 == null) {
       throw Exception('Private key needed for encryption data.');
@@ -30,9 +28,8 @@ class Ecdh1PuForX extends Ecdh1Pu {
 
     final ze = x25519.X25519(privateKeyBytes1!.sublist(0, 32), publicKeyBytes1);
 
-    final zs = await senderWallet.computeEcdhSecret(
-      keyId: senderKeyId,
-      othersPublicKeyBytes: publicKeyBytes2,
+    final zs = await senderKeyPair.computeEcdhSecret(
+      publicKeyBytes2,
     );
 
     return (ze: ze, zs: zs);
@@ -40,17 +37,14 @@ class Ecdh1PuForX extends Ecdh1Pu {
 
   @override
   Future<({Uint8List ze, Uint8List zs})> getDecryptionSecrets({
-    required Wallet recipientWallet,
-    required String recipientKeyId,
+    required KeyPair recipientKeyPair,
   }) async {
-    final ze = await recipientWallet.computeEcdhSecret(
-      keyId: recipientKeyId,
-      othersPublicKeyBytes: publicKeyBytes1,
+    final ze = await recipientKeyPair.computeEcdhSecret(
+      publicKeyBytes1,
     );
 
-    final zs = await recipientWallet.computeEcdhSecret(
-      keyId: recipientKeyId,
-      othersPublicKeyBytes: publicKeyBytes2,
+    final zs = await recipientKeyPair.computeEcdhSecret(
+      publicKeyBytes2,
     );
 
     return (ze: ze, zs: zs);

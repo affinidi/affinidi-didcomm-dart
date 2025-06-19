@@ -26,12 +26,10 @@ class EcdhEsForX extends EcdhEs {
 
   @override
   Future<Uint8List> getDecryptionSecret({
-    required Wallet recipientWallet,
-    required String recipientKeyId,
+    required KeyPair recipientKeyPair,
   }) async {
-    return await recipientWallet.computeEcdhSecret(
-      keyId: recipientKeyId,
-      othersPublicKeyBytes: publicKeyBytes,
+    return await recipientKeyPair.computeEcdhSecret(
+      publicKeyBytes,
     );
   }
 }
