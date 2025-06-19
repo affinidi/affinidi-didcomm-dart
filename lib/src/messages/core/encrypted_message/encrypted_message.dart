@@ -77,12 +77,14 @@ class EncryptedMessage extends DidcommMessage {
   static Future<EncryptedMessage> packWithAuthentication(
     DidcommMessage message, {
     required KeyPair keyPair,
+    required String keyPairJwkId,
     required List<Jwks> jwksPerRecipient,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
     return await EncryptedMessage.pack(
       message,
       keyPair: keyPair,
+      keyPairJwkId: keyPairJwkId,
       jwksPerRecipient: jwksPerRecipient,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -92,6 +94,7 @@ class EncryptedMessage extends DidcommMessage {
   static Future<EncryptedMessage> pack(
     DidcommMessage message, {
     required KeyPair keyPair,
+    String? keyPairJwkId,
     required List<Jwks> jwksPerRecipient,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
@@ -115,6 +118,7 @@ class EncryptedMessage extends DidcommMessage {
 
     final jweHeader = await JweHeader.fromKeyPair(
       keyPair,
+      subjectKeyId: keyPairJwkId,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
       jwksPerRecipient: jwksPerRecipient,

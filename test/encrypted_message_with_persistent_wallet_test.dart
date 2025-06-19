@@ -109,6 +109,9 @@ void main() async {
                         keyPair: await aliceWallet.getKeyPair(
                           aliceMatchedKeyIds.first,
                         ),
+                        keyPairJwkId: aliceWallet.getJwkIdByKeyId(
+                          aliceMatchedKeyIds.first,
+                        )!,
                         jwksPerRecipient: [bobJwks],
                         encryptionAlgorithm: encryptionAlgorithm,
                         keyWrappingAlgorithm: isAuthenticated
@@ -173,6 +176,9 @@ void main() async {
                         keyPair: await aliceWallet.getKeyPair(
                           aliceMatchedKeyIds.first,
                         ),
+                        keyPairJwkId: aliceWallet.getJwkIdByKeyId(
+                          aliceMatchedKeyIds.first,
+                        )!,
                         jwksPerRecipient: [bobJwks],
                         encryptionAlgorithm: encryptionAlgorithm,
                       );

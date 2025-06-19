@@ -52,25 +52,32 @@ class JweHeader {
 
   static Future<JweHeader> fromKeyPair(
     KeyPair keyPair, {
+    String? subjectKeyId,
     required List<Jwks> jwksPerRecipient,
     required Uint8List ephemeralPrivateKeyBytes,
     Uint8List? ephemeralPublicKeyBytes,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
-    final (subjectKeyId, curve, senderPublicKey) = await _buildHeaderParts(
-      keyWrappingAlgorithm,
-      keyPair,
-    );
+    final curve = keyPair.publicKey.type.asDidcommCompatibleCurve();
+
+    if (subjectKeyId == null &&
+        keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
+      throw ArgumentError(
+        'subjectKeyId is required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
+      );
+    }
 
     return JweHeader(
-      subjectKeyId: subjectKeyId,
+      subjectKeyId: keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu
+          ? subjectKeyId
+          : null,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
       ephemeralKey: _buildEphemeralKey(
         ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
         ephemeralPublicKeyBytes: ephemeralPublicKeyBytes,
-        senderPublicKey: senderPublicKey,
+        keyType: keyPair.publicKey.type,
         curve: curve,
       ),
       agreementPartyVInfo: _buildAgreementPartyVInfo(jwksPerRecipient, curve),
@@ -85,40 +92,6 @@ class JweHeader {
       _$JweHeaderFromJson(json);
 
   Map<String, dynamic> toJson() => _$JweHeaderToJson(this);
-
-  // TODO: add support for DID web and peer
-  static Future<(String?, CurveType, PublicKey)> _buildHeaderParts(
-    KeyWrappingAlgorithm keyWrapAlgorithm,
-    KeyPair keyPair,
-  ) async {
-    final publicKey = keyPair.publicKey;
-    final curve = publicKey.type.asDidcommCompatibleCurve();
-
-    final DidDocument didDocument;
-
-    if (curve.isSecp256OrPCurve()) {
-      didDocument = DidKey.generateDocument(publicKey);
-    } else if (curve.isXCurve()) {
-      // TODO: revisit, when X curve is added to Dart SSI
-      final x25519PublicKey =
-          await (keyPair as Ed25519KeyPair).ed25519KeyToX25519PublicKey();
-      final x25519PublicKeyBytes = Uint8List.fromList(x25519PublicKey.bytes);
-
-      didDocument = DidKey.generateDocument(
-        PublicKey(publicKey.id, x25519PublicKeyBytes, KeyType.x25519),
-      );
-    } else {
-      throw UnsupportedCurveError(curve);
-    }
-
-    // TODO: revisit taking the first key agreement
-
-    final subjectKeyId = keyWrapAlgorithm == KeyWrappingAlgorithm.ecdh1Pu
-        ? didDocument.keyAgreement.first.id
-        : null;
-
-    return (subjectKeyId, curve, publicKey);
-  }
 
   static String _buildAgreementPartyVInfo(
     List<Jwks> jwksPerRecipient,
@@ -157,13 +130,13 @@ class JweHeader {
   static EphemeralKey _buildEphemeralKey({
     required Uint8List ephemeralPrivateKeyBytes,
     Uint8List? ephemeralPublicKeyBytes,
-    required PublicKey senderPublicKey,
+    required KeyType keyType,
     required CurveType curve,
   }) {
     if (curve.isSecp256OrPCurve()) {
       final privateKey = getPrivateKeyFromBytes(
         ephemeralPrivateKeyBytes,
-        keyType: senderPublicKey.type,
+        keyType: keyType,
       );
 
       return EphemeralKey(

@@ -16,6 +16,7 @@ import '../extensions/extensions.dart';
 class MediatorClient {
   final DidDocument mediatorDidDocument;
   final KeyPair keyPair;
+  final String keyPairJwkId;
   final DidSigner signer;
   final ForwardMessageOptions forwardMessageOptions;
   final WebSocketOptions webSocketOptions;
@@ -26,6 +27,7 @@ class MediatorClient {
   MediatorClient({
     required this.mediatorDidDocument,
     required this.keyPair,
+    required this.keyPairJwkId,
     required this.signer,
     this.forwardMessageOptions = const ForwardMessageOptions(),
     this.webSocketOptions = const WebSocketOptions(),
@@ -36,6 +38,7 @@ class MediatorClient {
   static Future<MediatorClient> fromMediatorDidDocumentUri(
     Uri didDocumentUrl, {
     required KeyPair keyPair,
+    required String keyPairJwkId,
     required DidSigner signer,
   }) async {
     return MediatorClient(
@@ -43,6 +46,7 @@ class MediatorClient {
         didDocumentUrl.toString(),
       ),
       keyPair: keyPair,
+      keyPairJwkId: keyPairJwkId,
       signer: signer,
     );
   }
@@ -199,6 +203,7 @@ class MediatorClient {
       messageToSend = await EncryptedMessage.pack(
         messageToSend,
         keyPair: keyPair,
+        keyPairJwkId: keyPairJwkId,
         jwksPerRecipient: [
           mediatorDidDocument.keyAgreement.toJwks(),
         ],

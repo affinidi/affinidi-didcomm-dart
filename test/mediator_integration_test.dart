@@ -143,9 +143,17 @@ void main() async {
         )!,
       );
 
+      final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsWithCommonType(
+        wallet: aliceWallet,
+        otherDidDocuments: [
+          bobDidDocument,
+        ],
+      );
+
       aliceMediatorClient = MediatorClient(
         mediatorDidDocument: bobMediatorDocument,
         keyPair: aliceKeyPair,
+        keyPairJwkId: aliceWallet.getJwkIdByKeyId(aliceMatchedKeyIds.first)!,
         signer: aliceSigner,
 
         // optional. if omitted defaults will be used
@@ -160,6 +168,7 @@ void main() async {
       bobMediatorClient = MediatorClient(
         mediatorDidDocument: bobMediatorDocument,
         keyPair: bobKeyPair,
+        keyPairJwkId: bobWallet.getJwkIdByKeyId(bobKeyId)!,
         signer: bobSigner,
 
         // optional. if omitted defaults will be used
@@ -210,6 +219,7 @@ void main() async {
           await DidcommMessage.packIntoSignedAndEncryptedMessages(
         alicePlainTextMassage,
         keyPair: await aliceWallet.getKeyPair(aliceMatchedKeyIds.first),
+        keyPairJwkId: aliceWallet.getJwkIdByKeyId(aliceMatchedKeyIds.first)!,
         jwksPerRecipient: [bobJwks],
         keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
         encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
@@ -299,6 +309,7 @@ void main() async {
             await DidcommMessage.packIntoSignedAndEncryptedMessages(
           alicePlainTextMassage,
           keyPair: await aliceWallet.getKeyPair(aliceMatchedKeyIds.first),
+          keyPairJwkId: aliceWallet.getJwkIdByKeyId(aliceMatchedKeyIds.first)!,
           jwksPerRecipient: [bobJwks],
           keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
           encryptionAlgorithm: EncryptionAlgorithm.a256cbc,

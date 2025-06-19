@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:collection/collection.dart';
 import 'package:ssi/ssi.dart';
 
 import '../../didcomm.dart';
@@ -46,5 +47,12 @@ extension WalletExtension on Wallet {
 
   String? getKeyIdByJwkId(String jwkKeyId) {
     return _walletsMeta[this]?[_WalletMetaType.jwkToKeyId]?[jwkKeyId];
+  }
+
+  String? getJwkIdByKeyId(String keyId) {
+    return _walletsMeta[this]?[_WalletMetaType.jwkToKeyId]
+        ?.entries
+        .firstWhereOrNull((entry) => entry.value == keyId)
+        ?.key;
   }
 }
