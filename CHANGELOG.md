@@ -3,6 +3,31 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2025-06-20
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
+ - [`didcomm` - `v0.0.4+1`](#didcomm---v0041)
+
+---
+
+#### `didcomm` - `v0.0.4+1`
+
+ - **FIX**: formatting.
+
+## 0.0.4+1
+
+ - **FIX**: formatting.
+
+
 ## 2025-06-18
 
 ### Changes
