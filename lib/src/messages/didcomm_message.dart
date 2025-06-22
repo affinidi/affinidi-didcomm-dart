@@ -1,4 +1,7 @@
+import 'package:collection/collection.dart';
 import 'package:didcomm/didcomm.dart';
+import 'package:didcomm/src/common/did.dart';
+import 'package:didcomm/src/converters/jwe_header_converter.dart';
 import 'package:ssi/ssi.dart';
 import 'package:meta/meta.dart';
 
@@ -6,6 +9,8 @@ class DidcommMessage {
   DidcommMessage();
 
   static final mediaType = 'application/didcomm-plain+json';
+  static final _unorderedEquality = const UnorderedIterableEquality();
+
   final Map<String, dynamic> _customHeaders = {};
 
   dynamic operator [](String key) => _customHeaders[key];
@@ -122,10 +127,34 @@ class DidcommMessage {
   }) async {
     var currentMessage = message;
 
+    List<Recipient>? recipients;
+    KeyWrappingAlgorithm? keyWrappingAlgorithm;
+
     while (EncryptedMessage.isEncryptedMessage(currentMessage) ||
         SignedMessage.isSignedMessage(currentMessage)) {
       if (EncryptedMessage.isEncryptedMessage(currentMessage)) {
         final encryptedMessage = EncryptedMessage.fromJson(currentMessage);
+
+        // for case anoncrypt(authcrypt)
+        if (recipients != null) {
+          final areEqual = _unorderedEquality.equals(
+            recipients,
+            encryptedMessage.recipients,
+          );
+
+          if (!areEqual) {
+            throw ArgumentError(
+              'Recipients for outer and inners Encrypted Messages do not match',
+              'message',
+            );
+          }
+        }
+
+        keyWrappingAlgorithm = JweHeaderConverter()
+            .fromJson(encryptedMessage.protected)
+            .keyWrappingAlgorithm;
+        recipients = encryptedMessage.recipients;
+
         currentMessage = await encryptedMessage.unpack(
           recipientWallet: recipientWallet,
         );
@@ -143,7 +172,34 @@ class DidcommMessage {
     }
 
     if (messageTypeToStopUnpacking == PlainTextMessage) {
-      return (null, PlainTextMessage.fromJson(currentMessage));
+      final plainTextMessage = PlainTextMessage.fromJson(currentMessage);
+
+      // https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
+      final recipientKeyIds = recipients?.map(
+        (recipient) => getDidFromId(recipient.header.keyId),
+      );
+
+      if (recipientKeyIds != null) {
+        if (plainTextMessage.to == null) {
+          throw ArgumentError(
+            'to header is required if a Plain Message is inside of Encrypted Message',
+            'message',
+          );
+        }
+
+        final areEqual = _unorderedEquality.equals(
+          recipientKeyIds,
+          plainTextMessage.to,
+        );
+
+        if (!areEqual) {
+          throw ArgumentError(
+            'Recipients in an Encrypted Message do not match recipients IDs in a Plain Text Message',
+          );
+        }
+      }
+
+      return (null, plainTextMessage);
     }
 
     return (null, null);
