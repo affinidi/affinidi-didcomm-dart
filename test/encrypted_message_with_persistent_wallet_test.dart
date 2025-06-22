@@ -126,8 +126,10 @@ void main() async {
                       );
 
                       expect(actualPlainTextMessage, isNotNull);
-                      expect(actualPlainTextMessage!.body?['content'],
-                          expectedBodyContent);
+                      expect(
+                        actualPlainTextMessage.body?['content'],
+                        expectedBodyContent,
+                      );
 
                       final actualJweHeader = JweHeaderConverter().fromJson(
                         sut.protected,

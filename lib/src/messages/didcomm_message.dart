@@ -60,47 +60,44 @@ class DidcommMessage {
     );
   }
 
-  static Future<PlainTextMessage?> unpackToPlainTextMessage({
+  static Future<PlainTextMessage> unpackToPlainTextMessage({
     required Map<String, dynamic> message,
     required Wallet recipientWallet,
   }) async {
-    // TODO: add recursiv check for cases when there multiple encryption or signed leyars
-    var currentMessage = message;
+    final (_, plaintextMessage) = await _unpack(
+      messageTypeToStopUnpacking: PlainTextMessage,
+      message: message,
+      recipientWallet: recipientWallet,
+    );
 
-    if (EncryptedMessage.isEncryptedMessage(currentMessage)) {
-      final encryptedMessage = EncryptedMessage.fromJson(currentMessage);
-      currentMessage = await encryptedMessage.unpack(
-        recipientWallet: recipientWallet,
+    if (plaintextMessage == null) {
+      throw ArgumentError(
+        'Failed to find Plain Text Message during unpacking',
+        'message',
       );
     }
 
-    if (SignedMessage.isSignedMessage(currentMessage)) {
-      final signedMessage = SignedMessage.fromJson(currentMessage);
-      currentMessage = await signedMessage.unpack();
-    }
-
-    return PlainTextMessage.fromJson(currentMessage);
+    return plaintextMessage;
   }
 
-  static Future<SignedMessage?> unpackToSignedMessage({
+  static Future<SignedMessage> unpackToSignedMessage({
     required Map<String, dynamic> message,
     required Wallet recipientWallet,
   }) async {
-    // TODO: add recursiv check for cases when there multiple encryption or signed leyars
-    var currentMessage = message;
+    final (signedMessage, _) = await _unpack(
+      messageTypeToStopUnpacking: SignedMessage,
+      message: message,
+      recipientWallet: recipientWallet,
+    );
 
-    if (EncryptedMessage.isEncryptedMessage(currentMessage)) {
-      final encryptedMessage = EncryptedMessage.fromJson(currentMessage);
-      currentMessage = await encryptedMessage.unpack(
-        recipientWallet: recipientWallet,
+    if (signedMessage == null) {
+      throw ArgumentError(
+        'Failed to find Signed Message during unpacking',
+        'message',
       );
     }
 
-    if (SignedMessage.isSignedMessage(currentMessage)) {
-      return SignedMessage.fromJson(currentMessage);
-    }
-
-    return null;
+    return signedMessage;
   }
 
   @protected
@@ -115,5 +112,40 @@ class DidcommMessage {
     for (final key in customHeaders) {
       this[key] = json[key];
     }
+  }
+
+  static Future<(SignedMessage?, PlainTextMessage?)> _unpack({
+    required Map<String, dynamic> message,
+    required Wallet recipientWallet,
+    // Singed or Plain Text Message
+    required Type messageTypeToStopUnpacking,
+  }) async {
+    var currentMessage = message;
+
+    while (EncryptedMessage.isEncryptedMessage(currentMessage) ||
+        SignedMessage.isSignedMessage(currentMessage)) {
+      if (EncryptedMessage.isEncryptedMessage(currentMessage)) {
+        final encryptedMessage = EncryptedMessage.fromJson(currentMessage);
+        currentMessage = await encryptedMessage.unpack(
+          recipientWallet: recipientWallet,
+        );
+      }
+
+      if (SignedMessage.isSignedMessage(currentMessage)) {
+        final signedMessage = SignedMessage.fromJson(currentMessage);
+
+        if (messageTypeToStopUnpacking == SignedMessage) {
+          return (signedMessage, null);
+        }
+
+        currentMessage = await signedMessage.unpack();
+      }
+    }
+
+    if (messageTypeToStopUnpacking == PlainTextMessage) {
+      return (null, PlainTextMessage.fromJson(currentMessage));
+    }
+
+    return (null, null);
   }
 }
