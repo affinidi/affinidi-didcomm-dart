@@ -61,6 +61,7 @@ class EncryptedMessage extends DidcommMessage {
     required KeyPair keyPair,
     required List<DidDocument> recipientDidDocuments,
     required EncryptionAlgorithm encryptionAlgorithm,
+    bool validateAddressingConsistency = true,
   }) async {
     return await EncryptedMessage.pack(
       message,
@@ -68,6 +69,7 @@ class EncryptedMessage extends DidcommMessage {
       recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
       encryptionAlgorithm: encryptionAlgorithm,
+      validateAddressingConsistency: validateAddressingConsistency,
     );
   }
 
@@ -77,6 +79,7 @@ class EncryptedMessage extends DidcommMessage {
     required String didKeyId,
     required List<DidDocument> recipientDidDocuments,
     required EncryptionAlgorithm encryptionAlgorithm,
+    bool validateAddressingConsistency = true,
   }) async {
     return await EncryptedMessage.pack(
       message,
@@ -85,6 +88,7 @@ class EncryptedMessage extends DidcommMessage {
       recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
       encryptionAlgorithm: encryptionAlgorithm,
+      validateAddressingConsistency: validateAddressingConsistency,
     );
   }
 
@@ -95,6 +99,7 @@ class EncryptedMessage extends DidcommMessage {
     required List<DidDocument> recipientDidDocuments,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
+    bool validateAddressingConsistency = true,
   }) async {
     final publicKey = keyPair.publicKey;
     final ephemeralKeyPair = generateEphemeralKeyPair(publicKey.type);
@@ -142,10 +147,11 @@ class EncryptedMessage extends DidcommMessage {
       jweHeader: jweHeader,
     );
 
-    await _validate(
+    await _validateAddressingConsistencyIfNeeded(
       innerMessage: message.toJson(),
       recipients: recipients,
       jweHeader: jweHeader,
+      validateAddressingConsistency: validateAddressingConsistency,
     );
 
     return EncryptedMessage(
@@ -157,7 +163,10 @@ class EncryptedMessage extends DidcommMessage {
     );
   }
 
-  Future<Map<String, dynamic>> unpack({required Wallet recipientWallet}) async {
+  Future<Map<String, dynamic>> unpack({
+    required Wallet recipientWallet,
+    bool validateAddressingConsistency = true,
+  }) async {
     final self = await _findSelfAsRecipient(recipientWallet);
     final jweHeader = JweHeaderConverter().fromJson(protected);
 
@@ -199,10 +208,11 @@ class EncryptedMessage extends DidcommMessage {
 
     final innerMessage = jsonDecode(utf8.decode(decrypted));
 
-    _validate(
+    _validateAddressingConsistencyIfNeeded(
       innerMessage: innerMessage,
       recipients: recipients,
       jweHeader: jweHeader,
+      validateAddressingConsistency: validateAddressingConsistency,
     );
 
     return innerMessage;
@@ -310,11 +320,16 @@ class EncryptedMessage extends DidcommMessage {
     return Future.wait(futures);
   }
 
-  static Future<void> _validate({
+  static Future<void> _validateAddressingConsistencyIfNeeded({
     required Map<String, dynamic> innerMessage,
     required List<Recipient> recipients,
     required JweHeader jweHeader,
+    required bool validateAddressingConsistency,
   }) async {
+    if (!validateAddressingConsistency) {
+      return;
+    }
+
     // skip if message to pack is also Encrypted Message
     if (isEncryptedMessage(innerMessage)) {
       return;

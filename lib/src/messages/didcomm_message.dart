@@ -14,8 +14,13 @@ abstract class DidcommMessage {
   static Future<SignedMessage> packIntoSignedMessage(
     PlainTextMessage message, {
     required DidSigner signer,
+    bool validateAddressingConsistency = true,
   }) async {
-    return await SignedMessage.pack(message, signer: signer);
+    return await SignedMessage.pack(
+      message,
+      signer: signer,
+      validateAddressingConsistency: validateAddressingConsistency,
+    );
   }
 
   static Future<EncryptedMessage> packIntoEncryptedMessage(
@@ -25,6 +30,7 @@ abstract class DidcommMessage {
     required List<DidDocument> recipientDidDocuments,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
+    bool validateAddressingConsistency = true,
   }) async {
     return await EncryptedMessage.pack(
       message,
@@ -33,6 +39,7 @@ abstract class DidcommMessage {
       recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
+      validateAddressingConsistency: validateAddressingConsistency,
     );
   }
 
@@ -44,10 +51,12 @@ abstract class DidcommMessage {
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
     required DidSigner signer,
+    bool validateAddressingConsistency = true,
   }) async {
     final signedMessage = await SignedMessage.pack(
       message,
       signer: signer,
+      validateAddressingConsistency: validateAddressingConsistency,
     );
 
     return await EncryptedMessage.pack(
@@ -57,17 +66,20 @@ abstract class DidcommMessage {
       recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
+      validateAddressingConsistency: validateAddressingConsistency,
     );
   }
 
   static Future<PlainTextMessage> unpackToPlainTextMessage({
     required Map<String, dynamic> message,
     required Wallet recipientWallet,
+    bool validateAddressingConsistency = true,
   }) async {
     final (_, plaintextMessage) = await _unpack(
       messageTypeToStopUnpacking: PlainTextMessage,
       message: message,
       recipientWallet: recipientWallet,
+      validateAddressingConsistency: validateAddressingConsistency,
     );
 
     if (plaintextMessage == null) {
@@ -83,11 +95,13 @@ abstract class DidcommMessage {
   static Future<SignedMessage> unpackToSignedMessage({
     required Map<String, dynamic> message,
     required Wallet recipientWallet,
+    bool validateAddressingConsistency = true,
   }) async {
     final (signedMessage, _) = await _unpack(
       messageTypeToStopUnpacking: SignedMessage,
       message: message,
       recipientWallet: recipientWallet,
+      validateAddressingConsistency: validateAddressingConsistency,
     );
 
     if (signedMessage == null) {
@@ -119,6 +133,7 @@ abstract class DidcommMessage {
     required Wallet recipientWallet,
     // Singed or Plain Text Message
     required Type messageTypeToStopUnpacking,
+    bool validateAddressingConsistency = true,
   }) async {
     var currentMessage = message;
 
@@ -129,6 +144,7 @@ abstract class DidcommMessage {
 
         currentMessage = await encryptedMessage.unpack(
           recipientWallet: recipientWallet,
+          validateAddressingConsistency: validateAddressingConsistency,
         );
       }
 
@@ -139,7 +155,9 @@ abstract class DidcommMessage {
           return (signedMessage, null);
         }
 
-        currentMessage = await signedMessage.unpack();
+        currentMessage = await signedMessage.unpack(
+          validateAddressingConsistency: validateAddressingConsistency,
+        );
       }
     }
 
