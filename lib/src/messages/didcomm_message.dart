@@ -128,31 +128,18 @@ class DidcommMessage {
     var currentMessage = message;
 
     List<Recipient>? recipients;
-    KeyWrappingAlgorithm? keyWrappingAlgorithm;
+    String? encryptionKeyId;
+    List<String>? signingKeyIds;
 
     while (EncryptedMessage.isEncryptedMessage(currentMessage) ||
         SignedMessage.isSignedMessage(currentMessage)) {
       if (EncryptedMessage.isEncryptedMessage(currentMessage)) {
         final encryptedMessage = EncryptedMessage.fromJson(currentMessage);
 
-        // for case anoncrypt(authcrypt)
-        if (recipients != null) {
-          final areEqual = _unorderedEquality.equals(
-            recipients,
-            encryptedMessage.recipients,
-          );
-
-          if (!areEqual) {
-            throw ArgumentError(
-              'Recipients for outer and inners Encrypted Messages do not match',
-              'message',
-            );
-          }
-        }
-
-        keyWrappingAlgorithm = JweHeaderConverter()
+        encryptionKeyId = JweHeaderConverter()
             .fromJson(encryptedMessage.protected)
-            .keyWrappingAlgorithm;
+            .subjectKeyId;
+
         recipients = encryptedMessage.recipients;
 
         currentMessage = await encryptedMessage.unpack(
@@ -162,6 +149,10 @@ class DidcommMessage {
 
       if (SignedMessage.isSignedMessage(currentMessage)) {
         final signedMessage = SignedMessage.fromJson(currentMessage);
+
+        signingKeyIds = signedMessage.signatures
+            .map((signature) => signature.header.keyId)
+            .toList();
 
         if (messageTypeToStopUnpacking == SignedMessage) {
           return (signedMessage, null);
@@ -174,34 +165,79 @@ class DidcommMessage {
     if (messageTypeToStopUnpacking == PlainTextMessage) {
       final plainTextMessage = PlainTextMessage.fromJson(currentMessage);
 
-      // https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
-      final recipientKeyIds = recipients?.map(
-        (recipient) => getDidFromId(recipient.header.keyId),
+      verifyToHeader(
+        recipients: recipients,
+        message: plainTextMessage,
       );
 
-      if (recipientKeyIds != null) {
-        if (plainTextMessage.to == null) {
-          throw ArgumentError(
-            'to header is required if a Plain Message is inside of Encrypted Message',
-            'message',
-          );
-        }
-
-        final areEqual = _unorderedEquality.equals(
-          recipientKeyIds,
-          plainTextMessage.to,
-        );
-
-        if (!areEqual) {
-          throw ArgumentError(
-            'Recipients in an Encrypted Message do not match recipients IDs in a Plain Text Message',
-          );
-        }
-      }
+      verifyFromHeader(
+        encryptionKeyId: encryptionKeyId,
+        signatureKeyIds: signingKeyIds,
+        message: plainTextMessage,
+      );
 
       return (null, plainTextMessage);
     }
 
     return (null, null);
+  }
+
+  // https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
+  static void verifyToHeader({
+    required List<Recipient>? recipients,
+    required PlainTextMessage message,
+  }) {
+    final recipientKeyIds = recipients?.map(
+      (recipient) => getDidFromId(recipient.header.keyId),
+    );
+
+    if (recipientKeyIds != null) {
+      if (message.to == null) {
+        throw ArgumentError(
+          'to header is required if a Plain Message is inside of Encrypted Message',
+          'message',
+        );
+      }
+
+      final areEqual = _unorderedEquality.equals(
+        recipientKeyIds,
+        message.to,
+      );
+
+      if (!areEqual) {
+        throw ArgumentError(
+          'Recipients in an Encrypted Message do not match recipients IDs in a Plain Text Message',
+          'message',
+        );
+      }
+    }
+  }
+
+  // https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
+  static void verifyFromHeader({
+    required String? encryptionKeyId,
+    required List<String>? signatureKeyIds,
+    required PlainTextMessage message,
+  }) {
+    final senderDid =
+        encryptionKeyId == null ? null : getDidFromId(encryptionKeyId);
+
+    final signerDids = signatureKeyIds?.map(
+      (signatureKeyId) => getDidFromId(signatureKeyId),
+    );
+
+    if (signerDids != null && !signerDids.contains(message.from)) {
+      throw ArgumentError(
+        'from header in a Plain Text Message can not be found in signatures of a Signed Message'
+        'message',
+      );
+    }
+
+    if (senderDid != null && message.from != senderDid) {
+      throw ArgumentError(
+        'from header in a Plain Text Message does not match skid header in an Encrypted Message',
+        'message',
+      );
+    }
   }
 }
