@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'signature_header.g.dart';
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class SignatureHeader {
   @JsonKey(name: 'kid')
   final String keyId;

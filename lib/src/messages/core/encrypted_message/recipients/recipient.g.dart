@@ -14,5 +14,5 @@ Recipient _$RecipientFromJson(Map<String, dynamic> json) => Recipient(
 
 Map<String, dynamic> _$RecipientToJson(Recipient instance) => <String, dynamic>{
       'encrypted_key': const Base64UrlConverter().toJson(instance.encryptedKey),
-      'header': instance.header,
+      'header': instance.header.toJson(),
     };

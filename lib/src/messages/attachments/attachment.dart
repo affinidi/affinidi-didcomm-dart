@@ -5,7 +5,7 @@ import 'attachment_data.dart';
 
 part 'attachment.g.dart';
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class Attachment {
   final String? id;
   final String? description;

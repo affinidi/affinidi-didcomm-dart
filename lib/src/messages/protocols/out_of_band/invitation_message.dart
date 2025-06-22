@@ -3,7 +3,7 @@ import '../../didcomm_message.dart';
 
 part 'invitation_message.g.dart';
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class InvitationMessage extends DidcommMessage {
   InvitationMessage();
 

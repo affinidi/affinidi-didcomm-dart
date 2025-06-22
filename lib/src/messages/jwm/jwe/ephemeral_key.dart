@@ -9,7 +9,7 @@ import 'ephemeral_key_type.dart';
 part 'ephemeral_key.g.dart';
 
 // TODO: replace with JWK from this package
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class EphemeralKey {
   @JsonKey(name: 'kty')
   final EphemeralKeyType keyType;

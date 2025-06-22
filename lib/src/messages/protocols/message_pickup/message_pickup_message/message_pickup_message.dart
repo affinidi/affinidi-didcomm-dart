@@ -8,7 +8,7 @@ part 'message_pickup_message.g.dart';
 part 'message_pickup_message.own_json_props.g.dart';
 
 @OwnJsonProperties()
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class MessagePickupMessage extends PlainTextMessage {
   @JsonKey(name: 'return_route')
   final String returnRoute;

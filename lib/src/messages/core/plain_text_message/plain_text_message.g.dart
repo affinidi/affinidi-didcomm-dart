@@ -41,7 +41,9 @@ Map<String, dynamic> _$PlainTextMessageToJson(PlainTextMessage instance) =>
           case final value?)
         'expires_time': value,
       if (instance.body case final value?) 'body': value,
-      if (instance.attachments case final value?) 'attachments': value,
+      if (instance.attachments?.map((e) => e.toJson()).toList()
+          case final value?)
+        'attachments': value,
     };
 
 Value? _$JsonConverterFromJson<Json, Value>(

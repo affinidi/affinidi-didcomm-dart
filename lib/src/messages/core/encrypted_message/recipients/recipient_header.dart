@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'recipient_header.g.dart';
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class RecipientHeader {
   @JsonKey(name: 'kid')
   final String keyId;

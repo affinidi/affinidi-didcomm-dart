@@ -23,7 +23,7 @@ Map<String, dynamic> _$JweHeaderToJson(JweHeader instance) => <String, dynamic>{
       if (instance.subjectKeyId case final value?) 'skid': value,
       'alg': _$KeyWrappingAlgorithmEnumMap[instance.keyWrappingAlgorithm]!,
       'enc': _$EncryptionAlgorithmEnumMap[instance.encryptionAlgorithm]!,
-      'epk': instance.ephemeralKey,
+      'epk': instance.ephemeralKey.toJson(),
       if (instance.agreementPartyUInfo case final value?) 'apu': value,
       if (instance.agreementPartyVInfo case final value?) 'apv': value,
     };

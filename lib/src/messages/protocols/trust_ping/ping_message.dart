@@ -3,7 +3,7 @@ import '../../didcomm_message.dart';
 
 part 'ping_message.g.dart';
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class PingMessage extends DidcommMessage {
   PingMessage();
 

@@ -3,7 +3,7 @@ import '../../didcomm_message.dart';
 
 part 'problem_report_message.g.dart';
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class ProblemReportMessage extends DidcommMessage {
   ProblemReportMessage();
 
