@@ -27,8 +27,9 @@ class SignedMessage extends DidcommMessage {
   });
 
   static Future<SignedMessage> pack(
-    PlainTextMessage message, {
+    DidcommMessage message, {
     required DidSigner signer,
+    bool validateAddressingConsistency = true,
   }) async {
     final jwsHeader = JwsHeader(
       mimeType: mediaType,
@@ -50,7 +51,10 @@ class SignedMessage extends DidcommMessage {
       ),
     ];
 
-    message.validateConsistencyWithSignedMessage(signatures: signatures);
+    if (validateAddressingConsistency && message is PlainTextMessage) {
+      // TODO: check if it is Plain Text Message. decide if we support only Plain Text Message inside Singed Message
+      message.validateConsistencyWithSignedMessage(signatures: signatures);
+    }
 
     return SignedMessage(
       payload: encodedPayload,
@@ -58,7 +62,9 @@ class SignedMessage extends DidcommMessage {
     );
   }
 
-  Future<Map<String, dynamic>> unpack() async {
+  Future<Map<String, dynamic>> unpack({
+    bool validateAddressingConsistency = true,
+  }) async {
     if (!(await areSignaturesValid())) {
       Exception('Invalid signature was found');
     }
@@ -66,11 +72,13 @@ class SignedMessage extends DidcommMessage {
     final payloadBytes = base64UrlDecodeWithPadding(payload);
     final innerMessage = json.decode(utf8.decode(payloadBytes));
 
-    // TODO: check if it is Plain Text Message. decide if we support only Plain Text Message inside Singed Message
-    PlainTextMessage.fromJson(innerMessage)
-        .validateConsistencyWithSignedMessage(
-      signatures: signatures,
-    );
+    if (validateAddressingConsistency) {
+      // TODO: check if it is Plain Text Message. decide if we support only Plain Text Message inside Singed Message
+      PlainTextMessage.fromJson(innerMessage)
+          .validateConsistencyWithSignedMessage(
+        signatures: signatures,
+      );
+    }
 
     return innerMessage;
   }
