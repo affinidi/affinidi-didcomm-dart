@@ -17,5 +17,5 @@ Signature _$SignatureFromJson(Map<String, dynamic> json) => Signature(
 Map<String, dynamic> _$SignatureToJson(Signature instance) => <String, dynamic>{
       'protected': const JwsHeaderConverter().toJson(instance.protected),
       'signature': const Base64UrlConverter().toJson(instance.signature),
-      'header': instance.header,
+      'header': instance.header.toJson(),
     };

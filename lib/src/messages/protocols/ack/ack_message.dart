@@ -3,7 +3,7 @@ import '../../didcomm_message.dart';
 
 part 'ack_message.g.dart';
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class AckMessage extends DidcommMessage {
   AckMessage();
 

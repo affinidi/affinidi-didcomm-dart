@@ -22,7 +22,7 @@ part 'encrypted_message.g.dart';
 part 'encrypted_message.own_json_props.g.dart';
 
 @OwnJsonProperties()
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class EncryptedMessage extends DidcommMessage {
   static final mediaType = 'application/didcomm-encrypted+json';
 
@@ -142,7 +142,11 @@ class EncryptedMessage extends DidcommMessage {
       jweHeader: jweHeader,
     );
 
-    await _validate(message, recipients, jweHeader);
+    await _validate(
+      innerMessage: message.toJson(),
+      recipients: recipients,
+      jweHeader: jweHeader,
+    );
 
     return EncryptedMessage(
       cipherText: encryptedInnerMessage.data,
@@ -193,7 +197,15 @@ class EncryptedMessage extends DidcommMessage {
       ),
     );
 
-    return jsonDecode(utf8.decode(decrypted));
+    final innerMessage = jsonDecode(utf8.decode(decrypted));
+
+    _validate(
+      innerMessage: innerMessage,
+      recipients: recipients,
+      jweHeader: jweHeader,
+    );
+
+    return innerMessage;
   }
 
   Future<Jwk> _getSenderJwk(String subjectKeyId) async {
@@ -233,6 +245,7 @@ class EncryptedMessage extends DidcommMessage {
     return message;
   }
 
+  @override
   Map<String, dynamic> toJson() =>
       withCustomHeaders(_$EncryptedMessageToJson(this));
 
@@ -297,21 +310,35 @@ class EncryptedMessage extends DidcommMessage {
     return Future.wait(futures);
   }
 
-  static Future<void> _validate(
-    DidcommMessage message,
-    List<Recipient> recipients,
-    JweHeader jweHeader,
-  ) async {
-    if (message is! EncryptedMessage) {
-      final (signedMessage, plainTextMessage) = message is SignedMessage
-          ? (message, PlainTextMessage.fromJson(await message.unpack()))
-          : (null, message as PlainTextMessage);
-
-      plainTextMessage.validate(
-        recipientsFromEncryptedMessage: recipients,
-        encryptionKeyId: jweHeader.subjectKeyId,
-        signatures: signedMessage?.signatures,
-      );
+  static Future<void> _validate({
+    required Map<String, dynamic> innerMessage,
+    required List<Recipient> recipients,
+    required JweHeader jweHeader,
+  }) async {
+    // skip if message to pack is also Encrypted Message
+    if (isEncryptedMessage(innerMessage)) {
+      return;
     }
+
+    final SignedMessage? signedMessage;
+    final PlainTextMessage plainTextMessage;
+
+    if (SignedMessage.isSignedMessage(innerMessage)) {
+      signedMessage = SignedMessage.fromJson(innerMessage);
+
+      // TODO: check if it is Plain Text Message
+      plainTextMessage = PlainTextMessage.fromJson(
+        await signedMessage.unpack(),
+      );
+    } else {
+      signedMessage = null;
+      plainTextMessage = PlainTextMessage.fromJson(innerMessage);
+    }
+
+    plainTextMessage.validate(
+      recipientsFromEncryptedMessage: recipients,
+      encryptionKeyId: jweHeader.subjectKeyId,
+      signatures: signedMessage?.signatures,
+    );
   }
 }

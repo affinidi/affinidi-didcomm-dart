@@ -16,7 +16,7 @@ import 'ephemeral_key.dart';
 
 part 'jwe_header.g.dart';
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class JweHeader {
   @JsonKey(name: 'typ')
   final String type;

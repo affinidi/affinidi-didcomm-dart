@@ -17,5 +17,5 @@ SignedMessage _$SignedMessageFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$SignedMessageToJson(SignedMessage instance) =>
     <String, dynamic>{
       'payload': instance.payload,
-      'signatures': instance.signatures,
+      'signatures': instance.signatures.map((e) => e.toJson()).toList(),
     };

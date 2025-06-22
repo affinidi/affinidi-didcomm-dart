@@ -14,7 +14,7 @@ part 'signed_message.g.dart';
 part 'signed_message.own_json_props.g.dart';
 
 @OwnJsonProperties()
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class SignedMessage extends DidcommMessage {
   static final mediaType = 'application/didcomm-signed+json';
 
@@ -104,6 +104,7 @@ class SignedMessage extends DidcommMessage {
     return message;
   }
 
+  @override
   Map<String, dynamic> toJson() =>
       withCustomHeaders(_$SignedMessageToJson(this));
 }

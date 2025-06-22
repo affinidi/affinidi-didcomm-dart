@@ -4,7 +4,7 @@ import '../../converters/epoch_seconds_converter.dart';
 
 part 'authentication_tokens.g.dart';
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class AuthenticationTokens {
   @JsonKey(name: 'access_token')
   final String accessToken;

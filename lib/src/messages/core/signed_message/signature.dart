@@ -7,7 +7,7 @@ import '../../jwm.dart';
 
 part 'signature.g.dart';
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class Signature {
   @JwsHeaderConverter()
   final JwsHeader protected;

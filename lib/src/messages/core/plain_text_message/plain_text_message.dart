@@ -10,7 +10,7 @@ part 'plain_text_message.g.dart';
 part 'plain_text_message.own_json_props.g.dart';
 
 @OwnJsonProperties()
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class PlainTextMessage extends DidcommMessage {
   static final _unorderedEquality = const UnorderedIterableEquality();
 
@@ -56,6 +56,7 @@ class PlainTextMessage extends DidcommMessage {
     return message;
   }
 
+  @override
   Map<String, dynamic> toJson() =>
       withCustomHeaders(_$PlainTextMessageToJson(this));
 

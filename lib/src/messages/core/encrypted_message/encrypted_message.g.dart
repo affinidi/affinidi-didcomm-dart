@@ -24,7 +24,7 @@ Map<String, dynamic> _$EncryptedMessageToJson(EncryptedMessage instance) =>
     <String, dynamic>{
       'ciphertext': const Base64UrlConverter().toJson(instance.cipherText),
       'protected': instance.protected,
-      'recipients': instance.recipients,
+      'recipients': instance.recipients.map((e) => e.toJson()).toList(),
       'tag': const Base64UrlConverter().toJson(instance.authenticationTag),
       'iv': const Base64UrlConverter().toJson(instance.initializationVector),
     };

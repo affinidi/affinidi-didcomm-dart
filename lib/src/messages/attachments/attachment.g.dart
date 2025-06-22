@@ -31,7 +31,7 @@ Map<String, dynamic> _$AttachmentToJson(Attachment instance) =>
               instance.lastModifiedTime, const EpochSecondsConverter().toJson)
           case final value?)
         'lastmod_time': value,
-      if (instance.data case final value?) 'data': value,
+      if (instance.data?.toJson() case final value?) 'data': value,
       if (instance.byteCount case final value?) 'byte_count': value,
     };
 

@@ -1,9 +1,8 @@
 import 'package:didcomm/didcomm.dart';
-import 'package:didcomm/src/converters/jwe_header_converter.dart';
 import 'package:ssi/ssi.dart';
 import 'package:meta/meta.dart';
 
-class DidcommMessage {
+abstract class DidcommMessage {
   DidcommMessage();
 
   static final mediaType = 'application/didcomm-plain+json';
@@ -123,20 +122,10 @@ class DidcommMessage {
   }) async {
     var currentMessage = message;
 
-    List<Recipient>? recipients;
-    String? encryptionKeyId;
-    List<Signature>? signatures;
-
     while (EncryptedMessage.isEncryptedMessage(currentMessage) ||
         SignedMessage.isSignedMessage(currentMessage)) {
       if (EncryptedMessage.isEncryptedMessage(currentMessage)) {
         final encryptedMessage = EncryptedMessage.fromJson(currentMessage);
-
-        encryptionKeyId = JweHeaderConverter()
-            .fromJson(encryptedMessage.protected)
-            .subjectKeyId;
-
-        recipients = encryptedMessage.recipients;
 
         currentMessage = await encryptedMessage.unpack(
           recipientWallet: recipientWallet,
@@ -145,8 +134,6 @@ class DidcommMessage {
 
       if (SignedMessage.isSignedMessage(currentMessage)) {
         final signedMessage = SignedMessage.fromJson(currentMessage);
-
-        signatures = signedMessage.signatures;
 
         if (messageTypeToStopUnpacking == SignedMessage) {
           return (signedMessage, null);
@@ -157,16 +144,12 @@ class DidcommMessage {
     }
 
     if (messageTypeToStopUnpacking == PlainTextMessage) {
-      final plainTextMessage = PlainTextMessage.fromJson(currentMessage)
-        ..validate(
-          recipientsFromEncryptedMessage: recipients,
-          encryptionKeyId: encryptionKeyId,
-          signatures: signatures,
-        );
-
+      final plainTextMessage = PlainTextMessage.fromJson(currentMessage);
       return (null, plainTextMessage);
     }
 
     return (null, null);
   }
+
+  Map<String, dynamic> toJson();
 }
