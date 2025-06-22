@@ -21,7 +21,10 @@ class SignedMessage extends DidcommMessage {
   final String payload;
   final List<Signature> signatures;
 
-  SignedMessage({required this.payload, required this.signatures});
+  SignedMessage({
+    required this.payload,
+    required this.signatures,
+  });
 
   static Future<SignedMessage> pack(
     PlainTextMessage message, {
@@ -38,17 +41,20 @@ class SignedMessage extends DidcommMessage {
     final encodedHeader = base64UrlEncodeNoPadding(jwsHeader.toJsonBytes());
 
     final signingInput = ascii.encode('$encodedHeader.$encodedPayload');
-    final signature = await signer.sign(signingInput);
+
+    final signatures = [
+      Signature(
+        signature: await signer.sign(signingInput),
+        protected: jwsHeader,
+        header: SignatureHeader(keyId: signer.keyId),
+      ),
+    ];
+
+    message.validateConsistencyWithSignedMessage(signatures: signatures);
 
     return SignedMessage(
       payload: encodedPayload,
-      signatures: [
-        Signature(
-          signature: signature,
-          protected: jwsHeader,
-          header: SignatureHeader(keyId: signer.keyId),
-        )
-      ],
+      signatures: signatures,
     );
   }
 
@@ -58,7 +64,15 @@ class SignedMessage extends DidcommMessage {
     }
 
     final payloadBytes = base64UrlDecodeWithPadding(payload);
-    return json.decode(utf8.decode(payloadBytes));
+    final innerMessage = json.decode(utf8.decode(payloadBytes));
+
+    // TODO: check if it is Plain Text Message. decide if we support only Plain Text Message inside Singed Message
+    PlainTextMessage.fromJson(innerMessage)
+        .validateConsistencyWithSignedMessage(
+      signatures: signatures,
+    );
+
+    return innerMessage;
   }
 
   // TODO: add issuer check

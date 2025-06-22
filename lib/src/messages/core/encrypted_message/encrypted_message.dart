@@ -320,25 +320,22 @@ class EncryptedMessage extends DidcommMessage {
       return;
     }
 
-    final SignedMessage? signedMessage;
     final PlainTextMessage plainTextMessage;
 
     if (SignedMessage.isSignedMessage(innerMessage)) {
-      signedMessage = SignedMessage.fromJson(innerMessage);
+      final signedMessage = SignedMessage.fromJson(innerMessage);
 
-      // TODO: check if it is Plain Text Message
+      // TODO: check if it is Plain Text Message. decide if we support only Plain Text Message inside Singed Message
       plainTextMessage = PlainTextMessage.fromJson(
         await signedMessage.unpack(),
       );
     } else {
-      signedMessage = null;
       plainTextMessage = PlainTextMessage.fromJson(innerMessage);
     }
 
-    plainTextMessage.validate(
-      recipientsFromEncryptedMessage: recipients,
+    plainTextMessage.validateConsistencyWithEncryptedMessage(
+      recipients: recipients,
       encryptionKeyId: jweHeader.subjectKeyId,
-      signatures: signedMessage?.signatures,
     );
   }
 }

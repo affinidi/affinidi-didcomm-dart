@@ -61,27 +61,34 @@ class PlainTextMessage extends DidcommMessage {
       withCustomHeaders(_$PlainTextMessageToJson(this));
 
   // https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
-  void validate({
-    required List<Recipient>? recipientsFromEncryptedMessage,
+  void validateConsistencyWithEncryptedMessage({
+    required List<Recipient>? recipients,
     required String? encryptionKeyId,
-    required List<Signature>? signatures,
   }) {
     _validateFromHeader(
       encryptionKeyId: encryptionKeyId,
+    );
+
+    _validateToHeader(
+      recipientsFromEncryptedMessage: recipients,
+    );
+  }
+
+  // https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
+  void validateConsistencyWithSignedMessage({
+    required List<Signature>? signatures,
+  }) {
+    _validateFromHeader(
       signatureKeyIds: signatures
           ?.map(
             (signature) => signature.header.keyId,
           )
           .toList(),
     );
-
-    _validateToHeader(
-      recipientsFromEncryptedMessage: recipientsFromEncryptedMessage,
-    );
   }
 
   void _validateToHeader({
-    required List<Recipient>? recipientsFromEncryptedMessage,
+    List<Recipient>? recipientsFromEncryptedMessage,
   }) {
     final recipientKeyIds = recipientsFromEncryptedMessage?.map(
       (recipient) => getDidFromId(recipient.header.keyId),
@@ -110,8 +117,8 @@ class PlainTextMessage extends DidcommMessage {
   }
 
   void _validateFromHeader({
-    required String? encryptionKeyId,
-    required List<String>? signatureKeyIds,
+    String? encryptionKeyId,
+    List<String>? signatureKeyIds,
   }) {
     final senderDid =
         encryptionKeyId == null ? null : getDidFromId(encryptionKeyId);
