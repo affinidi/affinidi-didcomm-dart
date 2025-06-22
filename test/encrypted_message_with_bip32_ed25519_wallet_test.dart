@@ -133,7 +133,7 @@ void main() {
                   );
 
                   expect(actual, isNotNull);
-                  expect(actual!.body?['content'], content);
+                  expect(actual.body?['content'], content);
 
                   final actualJweHeader = JweHeaderConverter().fromJson(
                     sut.protected,

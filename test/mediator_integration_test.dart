@@ -265,7 +265,7 @@ void main() async {
       );
 
       final actualBodyContents = actualUnpackedMessages
-          .map<String?>((message) => message?.body?['content'])
+          .map<String?>((message) => message.body?['content'])
           .toList();
 
       expect(
@@ -339,7 +339,7 @@ void main() async {
               recipientWallet: bobWallet,
             );
 
-            final content = unpackedMessage?.body?['content'];
+            final content = unpackedMessage.body?['content'];
 
             if (content == expectedBodyContent) {
               actualBodyContent = content;
