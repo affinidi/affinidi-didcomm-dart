@@ -96,20 +96,6 @@ class EncryptedMessage extends DidcommMessage {
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
-    // if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
-    //   final plainTextMessage = DidcommMessage.unpackPlainTextMessage(
-    //     message: message,
-    //     wallet: wallet,
-    //   );
-
-    //   if (plainTextMessage.from == null) {
-    //     throw ArgumentError(
-    //       'authcrypt envelope requires from header to be set in the plaintext message',
-    //       'message',
-    //     );
-    //   }
-    // }
-
     final publicKey = keyPair.publicKey;
     final ephemeralKeyPair = generateEphemeralKeyPair(publicKey.type);
 
@@ -155,6 +141,8 @@ class EncryptedMessage extends DidcommMessage {
       ephemeralPrivateKeyBytes: ephemeralKeyPair.privateKeyBytes,
       jweHeader: jweHeader,
     );
+
+    await _validate(message, recipients, jweHeader);
 
     return EncryptedMessage(
       cipherText: encryptedInnerMessage.data,
@@ -307,5 +295,23 @@ class EncryptedMessage extends DidcommMessage {
     });
 
     return Future.wait(futures);
+  }
+
+  static Future<void> _validate(
+    DidcommMessage message,
+    List<Recipient> recipients,
+    JweHeader jweHeader,
+  ) async {
+    if (message is! EncryptedMessage) {
+      final (signedMessage, plainTextMessage) = message is SignedMessage
+          ? (message, PlainTextMessage.fromJson(await message.unpack()))
+          : (null, message as PlainTextMessage);
+
+      plainTextMessage.validate(
+        recipientsFromEncryptedMessage: recipients,
+        encryptionKeyId: jweHeader.subjectKeyId,
+        signatures: signedMessage?.signatures,
+      );
+    }
   }
 }

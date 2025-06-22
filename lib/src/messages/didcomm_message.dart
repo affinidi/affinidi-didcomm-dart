@@ -1,6 +1,4 @@
-import 'package:collection/collection.dart';
 import 'package:didcomm/didcomm.dart';
-import 'package:didcomm/src/common/did.dart';
 import 'package:didcomm/src/converters/jwe_header_converter.dart';
 import 'package:ssi/ssi.dart';
 import 'package:meta/meta.dart';
@@ -9,15 +7,13 @@ class DidcommMessage {
   DidcommMessage();
 
   static final mediaType = 'application/didcomm-plain+json';
-  static final _unorderedEquality = const UnorderedIterableEquality();
-
   final Map<String, dynamic> _customHeaders = {};
 
   dynamic operator [](String key) => _customHeaders[key];
   void operator []=(String key, dynamic value) => _customHeaders[key] = value;
 
   static Future<SignedMessage> packIntoSignedMessage(
-    DidcommMessage message, {
+    PlainTextMessage message, {
     required DidSigner signer,
   }) async {
     return await SignedMessage.pack(message, signer: signer);
@@ -42,7 +38,7 @@ class DidcommMessage {
   }
 
   static Future<EncryptedMessage> packIntoSignedAndEncryptedMessages(
-    DidcommMessage message, {
+    PlainTextMessage message, {
     required KeyPair keyPair,
     required String didKeyId,
     required List<DidDocument> recipientDidDocuments,
@@ -129,7 +125,7 @@ class DidcommMessage {
 
     List<Recipient>? recipients;
     String? encryptionKeyId;
-    List<String>? signingKeyIds;
+    List<Signature>? signatures;
 
     while (EncryptedMessage.isEncryptedMessage(currentMessage) ||
         SignedMessage.isSignedMessage(currentMessage)) {
@@ -150,9 +146,7 @@ class DidcommMessage {
       if (SignedMessage.isSignedMessage(currentMessage)) {
         final signedMessage = SignedMessage.fromJson(currentMessage);
 
-        signingKeyIds = signedMessage.signatures
-            .map((signature) => signature.header.keyId)
-            .toList();
+        signatures = signedMessage.signatures;
 
         if (messageTypeToStopUnpacking == SignedMessage) {
           return (signedMessage, null);
@@ -163,81 +157,16 @@ class DidcommMessage {
     }
 
     if (messageTypeToStopUnpacking == PlainTextMessage) {
-      final plainTextMessage = PlainTextMessage.fromJson(currentMessage);
-
-      verifyToHeader(
-        recipients: recipients,
-        message: plainTextMessage,
-      );
-
-      verifyFromHeader(
-        encryptionKeyId: encryptionKeyId,
-        signatureKeyIds: signingKeyIds,
-        message: plainTextMessage,
-      );
+      final plainTextMessage = PlainTextMessage.fromJson(currentMessage)
+        ..validate(
+          recipientsFromEncryptedMessage: recipients,
+          encryptionKeyId: encryptionKeyId,
+          signatures: signatures,
+        );
 
       return (null, plainTextMessage);
     }
 
     return (null, null);
-  }
-
-  // https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
-  static void verifyToHeader({
-    required List<Recipient>? recipients,
-    required PlainTextMessage message,
-  }) {
-    final recipientKeyIds = recipients?.map(
-      (recipient) => getDidFromId(recipient.header.keyId),
-    );
-
-    if (recipientKeyIds != null) {
-      if (message.to == null) {
-        throw ArgumentError(
-          'to header is required if a Plain Message is inside of Encrypted Message',
-          'message',
-        );
-      }
-
-      final areEqual = _unorderedEquality.equals(
-        recipientKeyIds,
-        message.to,
-      );
-
-      if (!areEqual) {
-        throw ArgumentError(
-          'Recipients in an Encrypted Message do not match recipients IDs in a Plain Text Message',
-          'message',
-        );
-      }
-    }
-  }
-
-  // https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
-  static void verifyFromHeader({
-    required String? encryptionKeyId,
-    required List<String>? signatureKeyIds,
-    required PlainTextMessage message,
-  }) {
-    final senderDid =
-        encryptionKeyId == null ? null : getDidFromId(encryptionKeyId);
-
-    final signerDids = signatureKeyIds?.map(
-      (signatureKeyId) => getDidFromId(signatureKeyId),
-    );
-
-    if (signerDids != null && !signerDids.contains(message.from)) {
-      throw ArgumentError(
-        'from header in a Plain Text Message can not be found in signatures of a Signed Message'
-        'message',
-      );
-    }
-
-    if (senderDid != null && message.from != senderDid) {
-      throw ArgumentError(
-        'from header in a Plain Text Message does not match skid header in an Encrypted Message',
-        'message',
-      );
-    }
   }
 }

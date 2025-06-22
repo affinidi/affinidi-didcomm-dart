@@ -193,7 +193,7 @@ class MediatorClient {
 
     if (messageOptions.shouldSign) {
       messageToSend = await SignedMessage.pack(
-        messageToSend,
+        message,
         signer: signer,
       );
     }

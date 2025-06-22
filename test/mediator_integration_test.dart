@@ -225,6 +225,7 @@ void main() async {
       final forwardMessage = ForwardMessage(
         id: Uuid().v4(),
         to: [bobMediatorDocument.id],
+        from: aliceDidDocument.id,
         next: bobDidDocument.id,
         expiresTime: expiresTime,
         attachments: [
@@ -315,6 +316,7 @@ void main() async {
         final forwardMessage = ForwardMessage(
           id: Uuid().v4(),
           to: [bobMediatorDocument.id],
+          from: aliceDidDocument.id,
           next: bobDidDocument.id,
           expiresTime: expiresTime,
           attachments: [
