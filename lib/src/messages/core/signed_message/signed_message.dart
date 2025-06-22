@@ -4,9 +4,8 @@ import 'package:didcomm/src/common/did.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:ssi/ssi.dart';
 
+import '../../../../didcomm.dart';
 import '../../jwm.dart';
-import 'signature.dart';
-import '../../didcomm_message.dart';
 import '../../../annotations/own_json_properties.dart';
 import '../../../common/encoding.dart';
 import '../../../extensions/extensions.dart';
@@ -25,7 +24,7 @@ class SignedMessage extends DidcommMessage {
   SignedMessage({required this.payload, required this.signatures});
 
   static Future<SignedMessage> pack(
-    DidcommMessage message, {
+    PlainTextMessage message, {
     required DidSigner signer,
   }) async {
     final jwsHeader = JwsHeader(

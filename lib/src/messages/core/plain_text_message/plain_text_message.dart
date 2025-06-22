@@ -1,9 +1,10 @@
+import 'package:collection/collection.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../../../didcomm.dart';
 import '../../../annotations/own_json_properties.dart';
+import '../../../common/did.dart';
 import '../../../converters/epoch_seconds_converter.dart';
-import '../../didcomm_message.dart';
-import '../../attachments/attachment.dart';
 
 part 'plain_text_message.g.dart';
 part 'plain_text_message.own_json_props.g.dart';
@@ -11,6 +12,8 @@ part 'plain_text_message.own_json_props.g.dart';
 @OwnJsonProperties()
 @JsonSerializable(includeIfNull: false)
 class PlainTextMessage extends DidcommMessage {
+  static final _unorderedEquality = const UnorderedIterableEquality();
+
   final String id;
   final Uri type;
   final String? from;
@@ -55,4 +58,79 @@ class PlainTextMessage extends DidcommMessage {
 
   Map<String, dynamic> toJson() =>
       withCustomHeaders(_$PlainTextMessageToJson(this));
+
+  // https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
+  void validate({
+    required List<Recipient>? recipientsFromEncryptedMessage,
+    required String? encryptionKeyId,
+    required List<Signature>? signatures,
+  }) {
+    _validateFromHeader(
+      encryptionKeyId: encryptionKeyId,
+      signatureKeyIds: signatures
+          ?.map(
+            (signature) => signature.header.keyId,
+          )
+          .toList(),
+    );
+
+    _validateToHeader(
+      recipientsFromEncryptedMessage: recipientsFromEncryptedMessage,
+    );
+  }
+
+  void _validateToHeader({
+    required List<Recipient>? recipientsFromEncryptedMessage,
+  }) {
+    final recipientKeyIds = recipientsFromEncryptedMessage?.map(
+      (recipient) => getDidFromId(recipient.header.keyId),
+    );
+
+    if (recipientKeyIds != null) {
+      if (to == null) {
+        throw ArgumentError(
+          'to header is required if a Plain Message is inside of Encrypted Message',
+          'message',
+        );
+      }
+
+      final areEqual = _unorderedEquality.equals(
+        recipientKeyIds,
+        to,
+      );
+
+      if (!areEqual) {
+        throw ArgumentError(
+          'Recipients in an Encrypted Message do not match recipients IDs in a Plain Text Message',
+          'message',
+        );
+      }
+    }
+  }
+
+  void _validateFromHeader({
+    required String? encryptionKeyId,
+    required List<String>? signatureKeyIds,
+  }) {
+    final senderDid =
+        encryptionKeyId == null ? null : getDidFromId(encryptionKeyId);
+
+    final signerDids = signatureKeyIds?.map(
+      (signatureKeyId) => getDidFromId(signatureKeyId),
+    );
+
+    if (signerDids != null && !signerDids.contains(from)) {
+      throw ArgumentError(
+        'from header in a Plain Text Message can not be found in signatures of a Signed Message'
+        'message',
+      );
+    }
+
+    if (senderDid != null && from != senderDid) {
+      throw ArgumentError(
+        'from header in a Plain Text Message does not match skid header in an Encrypted Message',
+        'message',
+      );
+    }
+  }
 }

@@ -9,6 +9,7 @@ class ForwardMessage extends PlainTextMessage {
     required super.attachments,
     required this.next,
     super.expiresTime,
+    super.from,
   }) : super(
           type: Uri.parse('https://didcomm.org/routing/2.0/forward'),
           body: {'next': next},
