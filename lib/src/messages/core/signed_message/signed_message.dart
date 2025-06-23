@@ -51,15 +51,17 @@ class SignedMessage extends DidcommMessage {
       ),
     ];
 
-    if (validateAddressingConsistency && message is PlainTextMessage) {
-      // TODO: check if it is Plain Text Message. decide if we support only Plain Text Message inside Singed Message
-      message.validateConsistencyWithSignedMessage(signatures: signatures);
-    }
-
-    return SignedMessage(
+    final signedMessage = SignedMessage(
       payload: encodedPayload,
       signatures: signatures,
     );
+
+    if (validateAddressingConsistency && message is PlainTextMessage) {
+      // TODO: check if it is Plain Text Message. decide if we support only Plain Text Message inside Singed Message
+      message.validateConsistencyWithSignedMessage(signedMessage);
+    }
+
+    return signedMessage;
   }
 
   Future<Map<String, dynamic>> unpack({
@@ -76,7 +78,7 @@ class SignedMessage extends DidcommMessage {
       // TODO: check if it is Plain Text Message. decide if we support only Plain Text Message inside Singed Message
       PlainTextMessage.fromJson(innerMessage)
           .validateConsistencyWithSignedMessage(
-        signatures: signatures,
+        this,
       );
     }
 

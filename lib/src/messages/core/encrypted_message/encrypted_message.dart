@@ -147,20 +147,21 @@ class EncryptedMessage extends DidcommMessage {
       jweHeader: jweHeader,
     );
 
-    await _validateAddressingConsistencyIfNeeded(
-      innerMessage: message.toJson(),
-      recipients: recipients,
-      jweHeader: jweHeader,
-      validateAddressingConsistency: validateAddressingConsistency,
-    );
-
-    return EncryptedMessage(
+    final encryptedMessage = EncryptedMessage(
       cipherText: encryptedInnerMessage.data,
       protected: protected,
       recipients: recipients,
       authenticationTag: encryptedInnerMessage.authenticationTag!,
       initializationVector: encryptedInnerMessage.initializationVector!,
     );
+
+    await _validateAddressingConsistencyIfNeeded(
+      innerMessage: message.toJson(),
+      outerMessage: encryptedMessage,
+      validateAddressingConsistency: validateAddressingConsistency,
+    );
+
+    return encryptedMessage;
   }
 
   Future<Map<String, dynamic>> unpack({
@@ -208,10 +209,9 @@ class EncryptedMessage extends DidcommMessage {
 
     final innerMessage = jsonDecode(utf8.decode(decrypted));
 
-    _validateAddressingConsistencyIfNeeded(
+    await _validateAddressingConsistencyIfNeeded(
+      outerMessage: this,
       innerMessage: innerMessage,
-      recipients: recipients,
-      jweHeader: jweHeader,
       validateAddressingConsistency: validateAddressingConsistency,
     );
 
@@ -321,9 +321,8 @@ class EncryptedMessage extends DidcommMessage {
   }
 
   static Future<void> _validateAddressingConsistencyIfNeeded({
+    required EncryptedMessage outerMessage,
     required Map<String, dynamic> innerMessage,
-    required List<Recipient> recipients,
-    required JweHeader jweHeader,
     required bool validateAddressingConsistency,
   }) async {
     if (!validateAddressingConsistency) {
@@ -348,9 +347,6 @@ class EncryptedMessage extends DidcommMessage {
       plainTextMessage = PlainTextMessage.fromJson(innerMessage);
     }
 
-    plainTextMessage.validateConsistencyWithEncryptedMessage(
-      recipients: recipients,
-      encryptionKeyId: jweHeader.subjectKeyId,
-    );
+    plainTextMessage.validateConsistencyWithEncryptedMessage(outerMessage);
   }
 }
