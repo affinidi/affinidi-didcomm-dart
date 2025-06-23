@@ -77,7 +77,7 @@ class PlainTextMessage extends DidcommMessage {
   void validateConsistencyWithSignedMessage(SignedMessage message) {
     _validateFromHeader(
       signatureKeyIds: message.signatures
-          ?.map(
+          .map(
             (signature) => signature.header.keyId,
           )
           .toList(),
