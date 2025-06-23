@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:didcomm/src/converters/jwe_header_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../../../../didcomm.dart';
@@ -61,25 +62,21 @@ class PlainTextMessage extends DidcommMessage {
       withCustomHeaders(_$PlainTextMessageToJson(this));
 
   // https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
-  void validateConsistencyWithEncryptedMessage({
-    required List<Recipient>? recipients,
-    required String? encryptionKeyId,
-  }) {
+  void validateConsistencyWithEncryptedMessage(EncryptedMessage message) {
     _validateFromHeader(
-      encryptionKeyId: encryptionKeyId,
+      encryptionKeyId:
+          JweHeaderConverter().fromJson(message.protected).subjectKeyId,
     );
 
     _validateToHeader(
-      recipientsFromEncryptedMessage: recipients,
+      recipientsFromEncryptedMessage: message.recipients,
     );
   }
 
   // https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
-  void validateConsistencyWithSignedMessage({
-    required List<Signature>? signatures,
-  }) {
+  void validateConsistencyWithSignedMessage(SignedMessage message) {
     _validateFromHeader(
-      signatureKeyIds: signatures
+      signatureKeyIds: message.signatures
           ?.map(
             (signature) => signature.header.keyId,
           )
@@ -97,7 +94,7 @@ class PlainTextMessage extends DidcommMessage {
     if (recipientKeyIds != null) {
       if (to == null) {
         throw ArgumentError(
-          'to header is required if a Plain Message is inside of Encrypted Message',
+          'to header is required if a Plain Text Message is inside of Encrypted Message',
           'message',
         );
       }
