@@ -33,18 +33,11 @@ void main() async {
     receiverKeyPair.publicKey,
   );
 
-  await receiverDidDocument.copyServicesByTypeFromResolvedDid(
-    DidDocumentServiceType.didCommMessaging,
-    await readDid('./example/mediator/mediator_did.txt'),
-  );
-
   // Serialized receiverMediatorDocument needs to shared with sender
   prettyPrint('Receiver DID Document', receiverDidDocument);
 
   final receiverMediatorDocument = await UniversalDIDResolver.resolve(
-    receiverDidDocument.getFirstServiceDidByType(
-      DidDocumentServiceType.didCommMessaging,
-    )!,
+    await readDid('./example/mediator/mediator_did.txt'),
   );
 
   final receiverSigner = DidSigner(
