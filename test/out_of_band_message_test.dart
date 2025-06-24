@@ -7,29 +7,25 @@ void main() {
     const from = 'did:example:alice';
     const goal = 'To connect';
     const goalCode = 'connect';
-    final body = {'foo': 'bar'};
+    final body = {'content': 'Hello, Bob!', goal: goal, goalCode: goalCode};
 
     test('toURL returns valid URL for simple message', () {
       final msg = OutOfBandMessage(
         id: id,
         from: from,
-        goal: goal,
-        goalCode: goalCode,
         body: body,
       );
       final origin = 'https://example.com';
       final url = msg.toURL(origin: origin);
-      expect(url.startsWith(origin), isTrue);
-      expect(url.contains('oob='), isTrue);
-      expect(url.length <= 2048, isTrue);
+      expect(url.toString(), startsWith(origin));
+      expect(url.queryParameters['oob'], isNotNull);
+      expect(url.queryParameters['oob'], isNotEmpty);
     });
 
     test('toURL throws on empty origin', () {
       final msg = OutOfBandMessage(
         id: id,
         from: from,
-        goal: goal,
-        goalCode: goalCode,
         body: body,
       );
       expect(() => msg.toURL(origin: ''), throwsArgumentError);
@@ -39,8 +35,6 @@ void main() {
       final msg = OutOfBandMessage(
         id: id,
         from: from,
-        goal: goal,
-        goalCode: goalCode,
         body: body,
       );
       expect(() => msg.toURL(origin: 'not a url'), throwsArgumentError);
@@ -50,12 +44,24 @@ void main() {
       final msg = OutOfBandMessage(
         id: id,
         from: from,
-        goal: goal,
-        goalCode: goalCode,
-        body: {'a': 'x' * 3000},
+        body: {'content': 'Hello, Bob!' * 3000},
       );
       expect(() => msg.toURL(origin: 'https://example.com'),
           throwsFormatException);
+    });
+
+    test('it return original message from url', () {
+      final msg = OutOfBandMessage(
+        id: id,
+        from: from,
+        body: body,
+      );
+      final origin = 'https://example.com';
+      final url = msg.toURL(origin: origin);
+      final parsedMsg = OutOfBandMessage.fromURL(url.toString());
+      expect(parsedMsg.id, equals(msg.id));
+      expect(parsedMsg.from, equals(msg.from));
+      expect(parsedMsg.body, equals(msg.body));
     });
   });
 }
