@@ -81,7 +81,7 @@ extension DidDocumentExtension on DidDocument {
         : null;
   }
 
-  void addMediatorReferencesFromDidDocument(
+  void addMediatorsFromDidDocument(
     DidDocument didDocument,
   ) {
     final mediators = didDocument.getServicesByType(
@@ -106,11 +106,11 @@ extension DidDocumentExtension on DidDocument {
     service.addAll(servicesToAdd);
   }
 
-  Future<void> addMediatorReferencesFromResolvedDid(
+  Future<void> addMediatorsFromResolvedDid(
     String did,
   ) async {
     final didDocument = await UniversalDIDResolver.resolve(did);
-    addMediatorReferencesFromDidDocument(didDocument);
+    addMediatorsFromDidDocument(didDocument);
   }
 
   List<String> matchKeysInKeyAgreement({
