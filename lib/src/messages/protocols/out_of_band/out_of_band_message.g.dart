@@ -7,7 +7,23 @@ part of 'out_of_band_message.dart';
 // **************************************************************************
 
 OutOfBandMessage _$OutOfBandMessageFromJson(Map<String, dynamic> json) =>
-    OutOfBandMessage();
+    OutOfBandMessage(
+      id: json['id'] as String,
+      from: json['from'] as String,
+      goal: json['goal'] as String,
+      goalCode: json['goalCode'] as String,
+      body: json['body'] as Map<String, dynamic>,
+      attachments: (json['attachments'] as List<dynamic>?)
+          ?.map((e) => e as Map<String, dynamic>)
+          .toList(),
+    );
 
 Map<String, dynamic> _$OutOfBandMessageToJson(OutOfBandMessage instance) =>
-    <String, dynamic>{};
+    <String, dynamic>{
+      'id': instance.id,
+      'from': instance.from,
+      'goal': instance.goal,
+      'goalCode': instance.goalCode,
+      'body': instance.body,
+      if (instance.attachments case final value?) 'attachments': value,
+    };
