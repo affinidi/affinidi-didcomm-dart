@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
 
-import '../../didcomm_message.dart';
+import '../../../../didcomm.dart';
 
 part 'out_of_band_message.g.dart';
 
@@ -12,8 +12,8 @@ class OutOfBandMessage extends DidcommMessage {
   final String from;
   final String goal;
   final String goalCode;
-  final Map<String, dynamic> body;
-  final List<Map<String, dynamic>>? attachments;
+  final Map<String, dynamic>? body;
+  final List<Attachment>? attachments;
 
   OutOfBandMessage({
     required this.id,

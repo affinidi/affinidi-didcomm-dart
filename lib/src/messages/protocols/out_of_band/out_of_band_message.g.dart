@@ -12,9 +12,9 @@ OutOfBandMessage _$OutOfBandMessageFromJson(Map<String, dynamic> json) =>
       from: json['from'] as String,
       goal: json['goal'] as String,
       goalCode: json['goalCode'] as String,
-      body: json['body'] as Map<String, dynamic>,
+      body: json['body'] as Map<String, dynamic>?,
       attachments: (json['attachments'] as List<dynamic>?)
-          ?.map((e) => e as Map<String, dynamic>)
+          ?.map((e) => Attachment.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
@@ -24,6 +24,8 @@ Map<String, dynamic> _$OutOfBandMessageToJson(OutOfBandMessage instance) =>
       'from': instance.from,
       'goal': instance.goal,
       'goalCode': instance.goalCode,
-      'body': instance.body,
-      if (instance.attachments case final value?) 'attachments': value,
+      if (instance.body case final value?) 'body': value,
+      if (instance.attachments?.map((e) => e.toJson()).toList()
+          case final value?)
+        'attachments': value,
     };
