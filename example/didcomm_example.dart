@@ -70,7 +70,7 @@ void main() async {
   );
 
   // find keys whose curve is common in other DID Documents
-  final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsWithCommonType(
+  final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
     wallet: aliceWallet,
     otherDidDocuments: [
       bobDidDocument,

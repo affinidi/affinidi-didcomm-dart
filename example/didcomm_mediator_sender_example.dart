@@ -100,7 +100,7 @@ void main() async {
   prettyPrint('Plain Text Message for Receiver', senderPlainTextMassage);
 
   // find keys whose curve is common in other DID Documents
-  final senderMatchedKeyIds = senderDidDocument.getKeyIdsWithCommonType(
+  final senderMatchedKeyIds = senderDidDocument.matchKeysInKeyAgreement(
     wallet: senderWallet,
     otherDidDocuments: [
       receiverDidDocument,

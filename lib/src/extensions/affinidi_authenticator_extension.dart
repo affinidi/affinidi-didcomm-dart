@@ -38,12 +38,15 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
       body: challengeResponse.data['data'],
     );
 
-    final encryptedMessage = await EncryptedMessage.packWithAuthentication(
+    final encryptedMessage =
+        await DidcommMessage.packIntoSignedAndEncryptedMessages(
       plainTextMessage,
       keyPair: keyPair,
       didKeyId: didKeyId,
       recipientDidDocuments: [mediatorDidDocument],
       encryptionAlgorithm: encryptionAlgorithm,
+      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+      signer: signer,
     );
 
     final authenticateResponse = await dio.post(

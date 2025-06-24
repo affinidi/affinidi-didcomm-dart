@@ -1,7 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/authentication_tokens/authentication_tokens.dart';
-import 'package:didcomm/src/common/did_document_service_type.dart';
 import 'package:didcomm/src/common/encoding.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:ssi/ssi.dart';
@@ -112,11 +111,6 @@ void main() async {
       final bobKeyPair = await bobWallet.getKeyPair(bobKeyId);
       bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
 
-      await bobDidDocument.copyServicesByTypeFromResolvedDid(
-        DidDocumentServiceType.didCommMessaging,
-        await readDid(mediatorDidPath),
-      );
-
       bobSigner = DidSigner(
         didDocument: bobDidDocument,
         keyPair: bobKeyPair,
@@ -131,12 +125,10 @@ void main() async {
       }
 
       bobMediatorDocument = await UniversalDIDResolver.resolve(
-        bobDidDocument.getFirstServiceDidByType(
-          DidDocumentServiceType.didCommMessaging,
-        )!,
+        await readDid(mediatorDidPath),
       );
 
-      final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsWithCommonType(
+      final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
         wallet: aliceWallet,
         otherDidDocuments: [
           bobDidDocument,
@@ -201,7 +193,7 @@ void main() async {
       alicePlainTextMassage['custom-header'] = 'custom-value';
 
       // find keys whose curve is common in other DID Documents
-      final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsWithCommonType(
+      final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
         wallet: aliceWallet,
         otherDidDocuments: [
           bobDidDocument,
@@ -292,7 +284,7 @@ void main() async {
 
         alicePlainTextMassage['custom-header'] = 'custom-value';
 
-        final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsWithCommonType(
+        final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
           wallet: aliceWallet,
           otherDidDocuments: [
             bobDidDocument,

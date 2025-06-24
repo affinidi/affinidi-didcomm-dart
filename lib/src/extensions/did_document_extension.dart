@@ -67,49 +67,60 @@ extension DidDocumentExtension on DidDocument {
     return service.where((item) => item.type == serviceType.value).toList();
   }
 
-  ServiceEndpoint? getServiceById(String serviceId) {
-    return service.firstWhereOrNull((item) => item.id == serviceId);
-  }
-
-  ServiceEndpoint? getServiceByDid(String serviceDid) {
-    return service.firstWhereOrNull(
-      (item) => getDidFromId(item.id) == serviceDid,
-    );
-  }
-
   ServiceEndpoint? getFirstServiceByType(DidDocumentServiceType serviceType) {
     return service.firstWhereOrNull((item) => item.type == serviceType.value);
   }
 
-  String? getFirstServiceDidByType(DidDocumentServiceType serviceType) {
-    final service = getFirstServiceByType(serviceType);
-    return service != null ? getDidFromId(service.id) : null;
+  String? getFirstMediatorDid() {
+    final service = getFirstServiceByType(
+      DidDocumentServiceType.didCommMessaging,
+    );
+
+    return service != null
+        ? getDidFromId(service.serviceEndpoint.first.uri)
+        : null;
   }
 
-  void copyServicesByTypeFromDidDocument(
-    DidDocumentServiceType serviceType,
+  void addMediatorReferencesFromDidDocument(
     DidDocument didDocument,
   ) {
-    final services = didDocument.getServicesByType(serviceType);
-    service.addAll(services);
+    final mediators = didDocument.getServicesByType(
+      DidDocumentServiceType.didCommMessaging,
+    );
+
+    final servicesToAdd = mediators.map(
+      (service) => ServiceEndpoint(
+        id: service.id.replaceFirst(getDidFromId(service.id), id),
+        type: service.type,
+        serviceEndpoint: [
+          // TODO: revisit after ServiceEndpoint update in Dart SSI. only uri is needed
+          DIDCommServiceEndpoint(
+            accept: [],
+            routingKeys: [],
+            uri: getDidFromId(service.id),
+          )
+        ],
+      ),
+    );
+
+    service.addAll(servicesToAdd);
   }
 
-  Future<void> copyServicesByTypeFromResolvedDid(
-    DidDocumentServiceType serviceType,
+  Future<void> addMediatorReferencesFromResolvedDid(
     String did,
   ) async {
     final didDocument = await UniversalDIDResolver.resolve(did);
-    copyServicesByTypeFromDidDocument(serviceType, didDocument);
+    addMediatorReferencesFromDidDocument(didDocument);
   }
 
-  List<String> getKeyIdsWithCommonType({
+  List<String> matchKeysInKeyAgreement({
     required Wallet wallet,
     required List<DidDocument> otherDidDocuments,
   }) {
     final ownCurves = Set<CurveType>.from(
       keyAgreement
           .map(
-            (keyAgreement) => getCurveFromKeyAgreement(keyAgreement),
+            (keyAgreement) => getCurve(keyAgreement),
           )
           .where(
             (type) => type != null,
@@ -119,7 +130,7 @@ extension DidDocumentExtension on DidDocument {
     final matchedCurves = ownCurves.where(
       (ownCurve) => otherDidDocuments.every(
         (doc) => doc.keyAgreement.any(
-          (keyAgreement) => getCurveFromKeyAgreement(keyAgreement) == ownCurve,
+          (keyAgreement) => getCurve(keyAgreement) == ownCurve,
         ),
       ),
     );
@@ -127,7 +138,7 @@ extension DidDocumentExtension on DidDocument {
     return matchedCurves.map((curve) {
       final didKeyId = keyAgreement
           .firstWhere(
-            (keyAgreement) => getCurveFromKeyAgreement(keyAgreement) == curve,
+            (keyAgreement) => getCurve(keyAgreement) == curve,
           )
           .id;
 
@@ -143,7 +154,7 @@ extension DidDocumentExtension on DidDocument {
     }).toList();
   }
 
-  CurveType? getCurveFromKeyAgreement(VerificationMethod keyAgreement) {
+  CurveType? getCurve(VerificationMethod keyAgreement) {
     final jwk = Jwk.fromJson(keyAgreement.asJwk().toJson());
     return jwk.curve;
   }

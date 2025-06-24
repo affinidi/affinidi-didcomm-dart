@@ -1,5 +1,4 @@
 import 'package:didcomm/didcomm.dart';
-import 'package:didcomm/src/common/did_document_service_type.dart';
 import 'package:didcomm/src/common/encoding.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:ssi/ssi.dart';
@@ -67,18 +66,11 @@ void main() async {
   final bobKeyPair = await bobWallet.getKeyPair(bobKeyId);
   final bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
 
-  await bobDidDocument.copyServicesByTypeFromResolvedDid(
-    DidDocumentServiceType.didCommMessaging,
-    await readDid('./example/mediator/mediator_did.txt'),
-  );
-
   // Serialized bobDidDocument needs to shared with sender
   prettyPrint('Bob DID Document', bobDidDocument);
 
   final bobMediatorDocument = await UniversalDIDResolver.resolve(
-    bobDidDocument.getFirstServiceDidByType(
-      DidDocumentServiceType.didCommMessaging,
-    )!,
+    await readDid('./example/mediator/mediator_did.txt'),
   );
 
   final bobSigner = DidSigner(
@@ -106,7 +98,7 @@ void main() async {
   prettyPrint('Plain Text Message for Bob', alicePlainTextMassage);
 
   // find keys whose curve is common in other DID Documents
-  final aliceMatchedKeyIds = aliceDidDocument.getKeyIdsWithCommonType(
+  final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
     wallet: aliceWallet,
     otherDidDocuments: [
       bobDidDocument,
