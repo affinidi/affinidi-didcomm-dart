@@ -1,6 +1,6 @@
 name: didcomm
 description: A starting point for Dart libraries or applications.
-version: 0.0.5
+version: 0.0.6
 repository: https://github.com/affinidi/didcomm-dart
 
 environment:

@@ -3,6 +3,45 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2025-06-24
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
+ - [`didcomm` - `v0.0.6`](#didcomm---v006)
+
+---
+
+#### `didcomm` - `v0.0.6`
+
+ - **FEAT**: update after review.
+ - **FEAT**: update test.
+ - **FEAT**: add basic test and update model.
+ - **FEAT**: update model.
+ - **FEAT**: update exports.
+ - **FEAT**: update OOB message class.
+ - **FEAT**: delete invitation message as oob message generalizes the interface for it.
+ - **FEAT**: add overrides.
+
+## 0.0.6
+
+ - **FEAT**: update after review.
+ - **FEAT**: update test.
+ - **FEAT**: add basic test and update model.
+ - **FEAT**: update model.
+ - **FEAT**: update exports.
+ - **FEAT**: update OOB message class.
+ - **FEAT**: delete invitation message as oob message generalizes the interface for it.
+ - **FEAT**: add overrides.
+
+
 ## 2025-06-23
 
 ### Changes
