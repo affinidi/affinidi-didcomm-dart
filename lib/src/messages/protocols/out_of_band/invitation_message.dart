@@ -10,5 +10,6 @@ class InvitationMessage extends DidcommMessage {
   factory InvitationMessage.fromJson(Map<String, dynamic> json) =>
       _$InvitationMessageFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$InvitationMessageToJson(this);
 }

@@ -10,5 +10,6 @@ class OutOfBandMessage extends DidcommMessage {
   factory OutOfBandMessage.fromJson(Map<String, dynamic> json) =>
       _$OutOfBandMessageFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$OutOfBandMessageToJson(this);
 }
