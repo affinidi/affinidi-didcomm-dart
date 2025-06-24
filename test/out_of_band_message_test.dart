@@ -1,6 +1,5 @@
 import 'package:didcomm/didcomm.dart';
 import 'package:test/test.dart';
-import 'dart:convert';
 
 void main() {
   group('OutOfBandMessage', () {
