@@ -10,5 +10,6 @@ class DiscloseMessage extends DidcommMessage {
   factory DiscloseMessage.fromJson(Map<String, dynamic> json) =>
       _$DiscloseMessageFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$DiscloseMessageToJson(this);
 }

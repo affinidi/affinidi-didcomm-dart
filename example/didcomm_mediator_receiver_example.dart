@@ -1,6 +1,4 @@
 import 'package:didcomm/didcomm.dart';
-import 'package:didcomm/src/common/did_document_service_type.dart';
-import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:ssi/ssi.dart';
 
 import 'helpers.dart';

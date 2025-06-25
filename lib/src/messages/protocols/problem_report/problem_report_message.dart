@@ -10,5 +10,6 @@ class ProblemReportMessage extends DidcommMessage {
   factory ProblemReportMessage.fromJson(Map<String, dynamic> json) =>
       _$ProblemReportMessageFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$ProblemReportMessageToJson(this);
 }
