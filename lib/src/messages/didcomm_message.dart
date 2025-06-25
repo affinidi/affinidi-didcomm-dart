@@ -104,10 +104,41 @@ abstract class DidcommMessage {
     return plainTextMessage;
   }
 
+  @protected
+  Map<String, dynamic> withCustomHeaders(Map<String, dynamic> json) {
+    return {...json, ..._customHeaders};
+  }
+
+  @protected
+  void assignCustomHeaders(Map<String, dynamic> json, List<String> ownHeaders) {
+    final customHeaders = json.keys.where((key) => !ownHeaders.contains(key));
+
+    for (final key in customHeaders) {
+      this[key] = json[key];
+    }
+  }
+
+  Map<String, dynamic> toJson();
+
   static void _validate({
     required List<DidcommMessage> messages,
     required List<MessageWrappingType>? expectedMessageWrappingTypes,
     required bool validateAddressingConsistency,
+  }) {
+    _validateMessageWrappingType(
+      messages: messages,
+      expectedMessageWrappingTypes: expectedMessageWrappingTypes,
+    );
+
+    _validateAddressingConsistency(
+      messages: messages,
+      validateAddressingConsistency: validateAddressingConsistency,
+    );
+  }
+
+  static void _validateMessageWrappingType({
+    required List<MessageWrappingType>? expectedMessageWrappingTypes,
+    required List<DidcommMessage> messages,
   }) {
     if (expectedMessageWrappingTypes != null) {
       final currentMessageWrappingType =
@@ -126,7 +157,12 @@ abstract class DidcommMessage {
         );
       }
     }
+  }
 
+  static void _validateAddressingConsistency({
+    required List<DidcommMessage> messages,
+    required bool validateAddressingConsistency,
+  }) {
     if (validateAddressingConsistency && messages.length > 1) {
       final iterator = messages.reversed.iterator;
 
@@ -160,20 +196,4 @@ abstract class DidcommMessage {
       }
     }
   }
-
-  @protected
-  Map<String, dynamic> withCustomHeaders(Map<String, dynamic> json) {
-    return {...json, ..._customHeaders};
-  }
-
-  @protected
-  void assignCustomHeaders(Map<String, dynamic> json, List<String> ownHeaders) {
-    final customHeaders = json.keys.where((key) => !ownHeaders.contains(key));
-
-    for (final key in customHeaders) {
-      this[key] = json[key];
-    }
-  }
-
-  Map<String, dynamic> toJson();
 }
