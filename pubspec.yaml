@@ -6,6 +6,8 @@ repository: https://github.com/affinidi/didcomm-dart
 environment:
   sdk: ^3.6.0
 
+publish_to: none
+
 dependencies:
   analyzer: ^7.4.5
   build: ^2.4.2
