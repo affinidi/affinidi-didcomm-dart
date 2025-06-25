@@ -58,23 +58,13 @@ class SignedMessage extends DidcommMessage {
     return signedMessage;
   }
 
-  Future<Map<String, dynamic>> unpack({
-    bool validateAddressingConsistency = true,
-  }) async {
+  Future<Map<String, dynamic>> unpack() async {
     if (!(await areSignaturesValid())) {
       Exception('Invalid signature was found');
     }
 
     final payloadBytes = base64UrlDecodeWithPadding(payload);
     final innerMessage = json.decode(utf8.decode(payloadBytes));
-
-    if (validateAddressingConsistency) {
-      // TODO: check if it is Plain Text Message. decide if we support only Plain Text Message inside Singed Message
-      PlainTextMessage.fromJson(innerMessage)
-          .validateConsistencyWithSignedMessage(
-        this,
-      );
-    }
 
     return innerMessage;
   }

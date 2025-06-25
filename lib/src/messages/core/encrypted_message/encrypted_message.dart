@@ -155,7 +155,6 @@ class EncryptedMessage extends DidcommMessage {
 
   Future<Map<String, dynamic>> unpack({
     required Wallet recipientWallet,
-    bool validateAddressingConsistency = true,
   }) async {
     final self = await _findSelfAsRecipient(recipientWallet);
     final jweHeader = JweHeaderConverter().fromJson(protected);
@@ -197,13 +196,6 @@ class EncryptedMessage extends DidcommMessage {
     );
 
     final innerMessage = jsonDecode(utf8.decode(decrypted));
-
-    await _validateAddressingConsistencyIfNeeded(
-      outerMessage: this,
-      innerMessage: innerMessage,
-      validateAddressingConsistency: validateAddressingConsistency,
-    );
-
     return innerMessage;
   }
 
@@ -307,35 +299,5 @@ class EncryptedMessage extends DidcommMessage {
     });
 
     return Future.wait(futures);
-  }
-
-  static Future<void> _validateAddressingConsistencyIfNeeded({
-    required EncryptedMessage outerMessage,
-    required Map<String, dynamic> innerMessage,
-    required bool validateAddressingConsistency,
-  }) async {
-    if (!validateAddressingConsistency) {
-      return;
-    }
-
-    // skip if message to pack is also Encrypted Message
-    if (isEncryptedMessage(innerMessage)) {
-      return;
-    }
-
-    final PlainTextMessage plainTextMessage;
-
-    if (SignedMessage.isSignedMessage(innerMessage)) {
-      final signedMessage = SignedMessage.fromJson(innerMessage);
-
-      // TODO: check if it is Plain Text Message. decide if we support only Plain Text Message inside Singed Message
-      plainTextMessage = PlainTextMessage.fromJson(
-        await signedMessage.unpack(),
-      );
-    } else {
-      plainTextMessage = PlainTextMessage.fromJson(innerMessage);
-    }
-
-    plainTextMessage.validateConsistencyWithEncryptedMessage(outerMessage);
   }
 }
