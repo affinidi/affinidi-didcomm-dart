@@ -123,6 +123,9 @@ void main() async {
                           await DidcommMessage.unpackToPlainTextMessage(
                         message: jsonDecode(sharedMessageToBobInJson),
                         recipientWallet: bobWallet,
+                        expectedMessageWrappingTypes: [
+                          MessageWrappingType.authcryptSignPlaintext,
+                        ],
                       );
 
                       expect(actualPlainTextMessage, isNotNull);
