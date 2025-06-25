@@ -1,25 +1,24 @@
 import 'dart:convert';
+import 'package:didcomm/src/messages/core.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../../annotations/own_json_properties.dart';
 import '../../attachments/attachment.dart';
-import '../../didcomm_message.dart';
 
 part 'out_of_band_message.g.dart';
+part 'out_of_band_message.own_json_props.g.dart';
 
+@OwnJsonProperties()
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
-class OutOfBandMessage extends DidcommMessage {
-  final Uri type;
-  final String id;
-  final String from;
-  final Map<String, dynamic>? body;
-  final List<Attachment>? attachments;
-
+class OutOfBandMessage extends PlainTextMessage {
   OutOfBandMessage({
-    required this.id,
-    required this.from,
-    this.attachments,
-    this.body,
-  }) : type = Uri.parse("https://didcomm.org/out-of-band/2.0/invitation");
+    required super.id,
+    required super.from,
+    super.attachments,
+    super.body,
+  }) : super(
+          type: Uri.parse('https://didcomm.org/out-of-band/2.0/invitation'),
+        );
 
   static const maxUrlCharactersLength = 2048;
   static const oobQueryParam = 'oob';
@@ -72,9 +71,14 @@ class OutOfBandMessage extends DidcommMessage {
     return OutOfBandMessage.fromJson(jsonDecodedMessage);
   }
 
-  factory OutOfBandMessage.fromJson(Map<String, dynamic> json) =>
-      _$OutOfBandMessageFromJson(json);
+  factory OutOfBandMessage.fromJson(Map<String, dynamic> json) {
+    final message = _$OutOfBandMessageFromJson(json)
+      ..assignCustomHeaders(json, _$ownJsonProperties);
+
+    return message;
+  }
 
   @override
-  Map<String, dynamic> toJson() => _$OutOfBandMessageToJson(this);
+  Map<String, dynamic> toJson() =>
+      withCustomHeaders(_$OutOfBandMessageToJson(this));
 }
