@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:didcomm/didcomm.dart';
 import 'package:ssi/ssi.dart';
 import 'package:meta/meta.dart';
@@ -67,44 +68,53 @@ abstract class DidcommMessage {
     required Map<String, dynamic> message,
     required Wallet recipientWallet,
     bool validateAddressingConsistency = true,
+    List<MessageWrappingType>? expectedMessageWrappingTypes,
   }) async {
-    final (_, plaintextMessage) = await _unpack(
-      messageTypeToStopUnpacking: PlainTextMessage,
-      message: message,
-      recipientWallet: recipientWallet,
-      validateAddressingConsistency: validateAddressingConsistency,
-    );
+    var currentMessage = message;
 
-    if (plaintextMessage == null) {
-      throw ArgumentError(
-        'Failed to find Plain Text Message during unpacking',
-        'message',
-      );
+    final currentTypeChain = <Type>[];
+    final listEquality = const ListEquality();
+
+    while (EncryptedMessage.isEncryptedMessage(currentMessage) ||
+        SignedMessage.isSignedMessage(currentMessage)) {
+      if (EncryptedMessage.isEncryptedMessage(currentMessage)) {
+        final encryptedMessage = EncryptedMessage.fromJson(currentMessage);
+
+        currentMessage = await encryptedMessage.unpack(
+          recipientWallet: recipientWallet,
+          validateAddressingConsistency: validateAddressingConsistency,
+        );
+
+        currentTypeChain.add(EncryptedMessage);
+      }
+
+      if (SignedMessage.isSignedMessage(currentMessage)) {
+        final signedMessage = SignedMessage.fromJson(currentMessage);
+
+        currentMessage = await signedMessage.unpack(
+          validateAddressingConsistency: validateAddressingConsistency,
+        );
+
+        currentTypeChain.add(SignedMessage);
+      }
     }
 
-    return plaintextMessage;
-  }
+    currentTypeChain.add(PlainTextMessage);
 
-  static Future<SignedMessage> unpackToSignedMessage({
-    required Map<String, dynamic> message,
-    required Wallet recipientWallet,
-    bool validateAddressingConsistency = true,
-  }) async {
-    final (signedMessage, _) = await _unpack(
-      messageTypeToStopUnpacking: SignedMessage,
-      message: message,
-      recipientWallet: recipientWallet,
-      validateAddressingConsistency: validateAddressingConsistency,
-    );
-
-    if (signedMessage == null) {
-      throw ArgumentError(
-        'Failed to find Signed Message during unpacking',
-        'message',
+    if (expectedMessageWrappingTypes != null) {
+      final match = expectedMessageWrappingTypes.firstWhereOrNull(
+        (item) => listEquality.equals(item.messageTypeChain, currentTypeChain),
       );
+
+      if (match == null) {
+        throw ArgumentError(
+          'Unexpected message wrapping type chain: $currentTypeChain',
+          'message',
+        );
+      }
     }
 
-    return signedMessage;
+    return PlainTextMessage.fromJson(currentMessage);
   }
 
   @protected
@@ -119,47 +129,6 @@ abstract class DidcommMessage {
     for (final key in customHeaders) {
       this[key] = json[key];
     }
-  }
-
-  static Future<(SignedMessage?, PlainTextMessage?)> _unpack({
-    required Map<String, dynamic> message,
-    required Wallet recipientWallet,
-    // Singed or Plain Text Message
-    required Type messageTypeToStopUnpacking,
-    bool validateAddressingConsistency = true,
-  }) async {
-    var currentMessage = message;
-
-    while (EncryptedMessage.isEncryptedMessage(currentMessage) ||
-        SignedMessage.isSignedMessage(currentMessage)) {
-      if (EncryptedMessage.isEncryptedMessage(currentMessage)) {
-        final encryptedMessage = EncryptedMessage.fromJson(currentMessage);
-
-        currentMessage = await encryptedMessage.unpack(
-          recipientWallet: recipientWallet,
-          validateAddressingConsistency: validateAddressingConsistency,
-        );
-      }
-
-      if (SignedMessage.isSignedMessage(currentMessage)) {
-        final signedMessage = SignedMessage.fromJson(currentMessage);
-
-        if (messageTypeToStopUnpacking == SignedMessage) {
-          return (signedMessage, null);
-        }
-
-        currentMessage = await signedMessage.unpack(
-          validateAddressingConsistency: validateAddressingConsistency,
-        );
-      }
-    }
-
-    if (messageTypeToStopUnpacking == PlainTextMessage) {
-      final plainTextMessage = PlainTextMessage.fromJson(currentMessage);
-      return (null, plainTextMessage);
-    }
-
-    return (null, null);
   }
 
   Map<String, dynamic> toJson();

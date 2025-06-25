@@ -253,6 +253,9 @@ void main() async {
           (message) => DidcommMessage.unpackToPlainTextMessage(
             message: message,
             recipientWallet: bobWallet,
+            expectedMessageWrappingTypes: [
+              MessageWrappingType.authcryptSignPlaintext,
+            ],
           ),
         ),
       );
@@ -331,6 +334,9 @@ void main() async {
                 await DidcommMessage.unpackToPlainTextMessage(
               message: message,
               recipientWallet: bobWallet,
+              expectedMessageWrappingTypes: [
+                MessageWrappingType.authcryptSignPlaintext,
+              ],
             );
 
             final content = unpackedMessage.body?['content'];

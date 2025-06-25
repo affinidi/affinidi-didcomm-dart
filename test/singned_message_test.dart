@@ -9,6 +9,9 @@ void main() async {
     final aliceKeyStore = InMemoryKeyStore();
     final aliceWallet = PersistentWallet(aliceKeyStore);
 
+    final bobKeyStore = InMemoryKeyStore();
+    final bobWallet = PersistentWallet(bobKeyStore);
+
     group('Persisted wallet', () {
       for (final keyType in [
         KeyType.p256,
@@ -59,10 +62,18 @@ void main() async {
                 signedMessage.signatures[0].header.keyId,
                 aliceSigner.keyId,
               );
-              final unpackedSignedMessage = await signedMessage.unpack();
 
-              expect(unpackedSignedMessage, isNotNull);
-              expect(unpackedSignedMessage['body']['content'], content);
+              final unpackedPlainTextMessage =
+                  await DidcommMessage.unpackToPlainTextMessage(
+                message: signedMessage.toJson(),
+                recipientWallet: bobWallet,
+                expectedMessageWrappingTypes: [
+                  MessageWrappingType.signedPlaintext,
+                ],
+              );
+
+              expect(unpackedPlainTextMessage, isNotNull);
+              expect(unpackedPlainTextMessage.body!['content'], content);
             });
           });
         }
