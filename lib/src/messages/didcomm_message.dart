@@ -14,12 +14,10 @@ abstract class DidcommMessage {
   static Future<SignedMessage> packIntoSignedMessage(
     PlainTextMessage message, {
     required DidSigner signer,
-    bool validateAddressingConsistency = true,
   }) async {
     return await SignedMessage.pack(
       message,
       signer: signer,
-      validateAddressingConsistency: validateAddressingConsistency,
     );
   }
 
@@ -30,7 +28,6 @@ abstract class DidcommMessage {
     required List<DidDocument> recipientDidDocuments,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
-    bool validateAddressingConsistency = true,
   }) async {
     return await EncryptedMessage.pack(
       message,
@@ -39,7 +36,6 @@ abstract class DidcommMessage {
       recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
-      validateAddressingConsistency: validateAddressingConsistency,
     );
   }
 
@@ -51,12 +47,10 @@ abstract class DidcommMessage {
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
     required DidSigner signer,
-    bool validateAddressingConsistency = true,
   }) async {
     final signedMessage = await SignedMessage.pack(
       message,
       signer: signer,
-      validateAddressingConsistency: validateAddressingConsistency,
     );
 
     return await EncryptedMessage.pack(
@@ -66,7 +60,6 @@ abstract class DidcommMessage {
       recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
-      validateAddressingConsistency: validateAddressingConsistency,
     );
   }
 

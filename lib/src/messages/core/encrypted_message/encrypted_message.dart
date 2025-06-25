@@ -61,7 +61,6 @@ class EncryptedMessage extends DidcommMessage {
     required KeyPair keyPair,
     required List<DidDocument> recipientDidDocuments,
     required EncryptionAlgorithm encryptionAlgorithm,
-    bool validateAddressingConsistency = true,
   }) async {
     return await EncryptedMessage.pack(
       message,
@@ -69,7 +68,6 @@ class EncryptedMessage extends DidcommMessage {
       recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
       encryptionAlgorithm: encryptionAlgorithm,
-      validateAddressingConsistency: validateAddressingConsistency,
     );
   }
 
@@ -79,7 +77,6 @@ class EncryptedMessage extends DidcommMessage {
     required String didKeyId,
     required List<DidDocument> recipientDidDocuments,
     required EncryptionAlgorithm encryptionAlgorithm,
-    bool validateAddressingConsistency = true,
   }) async {
     return await EncryptedMessage.pack(
       message,
@@ -88,7 +85,6 @@ class EncryptedMessage extends DidcommMessage {
       recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
       encryptionAlgorithm: encryptionAlgorithm,
-      validateAddressingConsistency: validateAddressingConsistency,
     );
   }
 
@@ -99,7 +95,6 @@ class EncryptedMessage extends DidcommMessage {
     required List<DidDocument> recipientDidDocuments,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
-    bool validateAddressingConsistency = true,
   }) async {
     final publicKey = keyPair.publicKey;
     final ephemeralKeyPair = generateEphemeralKeyPair(publicKey.type);
@@ -153,12 +148,6 @@ class EncryptedMessage extends DidcommMessage {
       recipients: recipients,
       authenticationTag: encryptedInnerMessage.authenticationTag!,
       initializationVector: encryptedInnerMessage.initializationVector!,
-    );
-
-    await _validateAddressingConsistencyIfNeeded(
-      innerMessage: message.toJson(),
-      outerMessage: encryptedMessage,
-      validateAddressingConsistency: validateAddressingConsistency,
     );
 
     return encryptedMessage;
