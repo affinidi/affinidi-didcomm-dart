@@ -10,5 +10,6 @@ class PingResponseMessage extends DidcommMessage {
   factory PingResponseMessage.fromJson(Map<String, dynamic> json) =>
       _$PingResponseMessageFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$PingResponseMessageToJson(this);
 }

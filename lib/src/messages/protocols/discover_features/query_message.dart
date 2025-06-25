@@ -10,5 +10,6 @@ class QueryMessage extends DidcommMessage {
   factory QueryMessage.fromJson(Map<String, dynamic> json) =>
       _$QueryMessageFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$QueryMessageToJson(this);
 }

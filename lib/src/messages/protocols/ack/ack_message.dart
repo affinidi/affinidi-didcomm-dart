@@ -10,5 +10,6 @@ class AckMessage extends DidcommMessage {
   factory AckMessage.fromJson(Map<String, dynamic> json) =>
       _$AckMessageFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$AckMessageToJson(this);
 }
