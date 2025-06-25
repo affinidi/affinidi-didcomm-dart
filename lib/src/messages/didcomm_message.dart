@@ -68,6 +68,7 @@ abstract class DidcommMessage {
     required Wallet recipientWallet,
     bool validateAddressingConsistency = true,
     List<MessageWrappingType>? expectedMessageWrappingTypes,
+    List<String>? expectedSigners,
   }) async {
     final foundMessages = <DidcommMessage>[];
     var currentMessage = message;
@@ -97,8 +98,9 @@ abstract class DidcommMessage {
 
     _validate(
       messages: foundMessages,
-      expectedMessageWrappingTypes: expectedMessageWrappingTypes,
       validateAddressingConsistency: validateAddressingConsistency,
+      expectedMessageWrappingTypes: expectedMessageWrappingTypes,
+      expectedSigners: expectedSigners,
     );
 
     return plainTextMessage;
@@ -122,12 +124,18 @@ abstract class DidcommMessage {
 
   static void _validate({
     required List<DidcommMessage> messages,
-    required List<MessageWrappingType>? expectedMessageWrappingTypes,
-    required bool validateAddressingConsistency,
+    bool validateAddressingConsistency = false,
+    List<MessageWrappingType>? expectedMessageWrappingTypes,
+    List<String>? expectedSigners,
   }) {
     _validateMessageWrappingType(
       messages: messages,
       expectedMessageWrappingTypes: expectedMessageWrappingTypes,
+    );
+
+    _validateSigners(
+      messages: messages,
+      expectedSigners: expectedSigners,
     );
 
     _validateAddressingConsistency(
@@ -192,6 +200,45 @@ abstract class DidcommMessage {
       if (iterator.moveNext()) {
         plainTextMessage.validateConsistencyWithEncryptedMessage(
           iterator.current as EncryptedMessage,
+        );
+      }
+    }
+  }
+
+  static void _validateSigners({
+    required List<DidcommMessage> messages,
+    List<String>? expectedSigners,
+  }) {
+    if (expectedSigners != null) {
+      if (messages.length < 2) {
+        throw ArgumentError(
+          'It should be at least 2 messages to start signers validation: Signer Message and Plain Text message',
+          'message',
+        );
+      }
+
+      // the last is Plain Text Message, which follows Signed Message
+      final message = messages[messages.length - 2];
+
+      if (message is! SignedMessage) {
+        throw ArgumentError(
+          'Can not find Signed Messages that wraps Plain Text Message',
+          'message',
+        );
+      }
+
+      final expectedSignerSet = expectedSigners.toSet();
+
+      final actualSignerSet = message.signatures
+          .map(
+            (signature) => signature.header.keyId,
+          )
+          .toSet();
+
+      if (!actualSignerSet.containsAll(expectedSigners)) {
+        throw ArgumentError(
+          'Can not match expected signers: ${expectedSignerSet.difference(actualSignerSet)}',
+          'message',
         );
       }
     }

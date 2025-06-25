@@ -121,10 +121,14 @@ void main() {
                   final actual = await DidcommMessage.unpackToPlainTextMessage(
                     message: jsonDecode(sharedMessageToBobInJson),
                     recipientWallet: bobWallet,
+                    validateAddressingConsistency: true,
                     expectedMessageWrappingTypes: [
                       isAuthenticated
                           ? MessageWrappingType.authcryptSignPlaintext
                           : MessageWrappingType.anoncryptSignPlaintext,
+                    ],
+                    expectedSigners: [
+                      aliceSigner.didKeyId,
                     ],
                   );
 

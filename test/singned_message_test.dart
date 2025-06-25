@@ -67,8 +67,12 @@ void main() async {
                   await DidcommMessage.unpackToPlainTextMessage(
                 message: signedMessage.toJson(),
                 recipientWallet: bobWallet,
+                validateAddressingConsistency: true,
                 expectedMessageWrappingTypes: [
                   MessageWrappingType.signedPlaintext,
+                ],
+                expectedSigners: [
+                  aliceSigner.didKeyId,
                 ],
               );
 
