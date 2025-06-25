@@ -29,7 +29,6 @@ class SignedMessage extends DidcommMessage {
   static Future<SignedMessage> pack(
     DidcommMessage message, {
     required DidSigner signer,
-    bool validateAddressingConsistency = true,
   }) async {
     final jwsHeader = JwsHeader(
       mimeType: mediaType,
@@ -55,11 +54,6 @@ class SignedMessage extends DidcommMessage {
       payload: encodedPayload,
       signatures: signatures,
     );
-
-    if (validateAddressingConsistency && message is PlainTextMessage) {
-      // TODO: check if it is Plain Text Message. decide if we support only Plain Text Message inside Singed Message
-      message.validateConsistencyWithSignedMessage(signedMessage);
-    }
 
     return signedMessage;
   }
