@@ -195,6 +195,9 @@ void main() async {
           await DidcommMessage.unpackToPlainTextMessage(
         message: message,
         recipientWallet: bobWallet,
+        expectedMessageWrappingTypes: [
+          MessageWrappingType.authcryptPlaintext,
+        ],
       );
 
       prettyPrint(

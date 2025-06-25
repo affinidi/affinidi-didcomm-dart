@@ -109,6 +109,9 @@ void main() async {
   final unpackedMessageByBob = await DidcommMessage.unpackToPlainTextMessage(
     message: jsonDecode(sentMessageByAlice),
     recipientWallet: bobWallet,
+    expectedMessageWrappingTypes: [
+      MessageWrappingType.authcryptPlaintext,
+    ],
   );
 
   prettyPrint(

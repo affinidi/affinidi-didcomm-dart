@@ -1,5 +1,5 @@
-import 'package:collection/collection.dart';
 import 'package:didcomm/didcomm.dart';
+import 'package:didcomm/src/converters/jwe_header_converter.dart';
 import 'package:ssi/ssi.dart';
 import 'package:meta/meta.dart';
 
@@ -70,10 +70,11 @@ abstract class DidcommMessage {
     bool validateAddressingConsistency = true,
     List<MessageWrappingType>? expectedMessageWrappingTypes,
   }) async {
+    final jweHeaderConverter = JweHeaderConverter();
     var currentMessage = message;
 
-    final currentTypeChain = <Type>[];
-    final listEquality = const ListEquality();
+    final messageTypeChain = <Type>[];
+    final keyWrappingAlgorithmChain = <KeyWrappingAlgorithm>[];
 
     while (EncryptedMessage.isEncryptedMessage(currentMessage) ||
         SignedMessage.isSignedMessage(currentMessage)) {
@@ -85,7 +86,12 @@ abstract class DidcommMessage {
           validateAddressingConsistency: validateAddressingConsistency,
         );
 
-        currentTypeChain.add(EncryptedMessage);
+        final jweHeader = jweHeaderConverter.fromJson(
+          encryptedMessage.protected,
+        );
+
+        keyWrappingAlgorithmChain.add(jweHeader.keyWrappingAlgorithm);
+        messageTypeChain.add(EncryptedMessage);
       }
 
       if (SignedMessage.isSignedMessage(currentMessage)) {
@@ -95,20 +101,27 @@ abstract class DidcommMessage {
           validateAddressingConsistency: validateAddressingConsistency,
         );
 
-        currentTypeChain.add(SignedMessage);
+        messageTypeChain.add(SignedMessage);
       }
     }
 
-    currentTypeChain.add(PlainTextMessage);
+    messageTypeChain.add(PlainTextMessage);
 
     if (expectedMessageWrappingTypes != null) {
-      final match = expectedMessageWrappingTypes.firstWhereOrNull(
-        (item) => listEquality.equals(item.messageTypeChain, currentTypeChain),
+      final currentMessageWrappingType = MessageWrappingType.find(
+        messageTypeChain: messageTypeChain,
+        keyWrappingAlgorithmChain: keyWrappingAlgorithmChain,
       );
 
-      if (match == null) {
+      if (currentMessageWrappingType == null) {
+        throw UnsupportedError(
+          'Can not find matching MessageWrappingType for $messageTypeChain and $keyWrappingAlgorithmChain',
+        );
+      }
+
+      if (!expectedMessageWrappingTypes.contains(currentMessageWrappingType)) {
         throw ArgumentError(
-          'Unexpected message wrapping type chain: $currentTypeChain',
+          'Unexpected message wrapping type: $currentMessageWrappingType',
           'message',
         );
       }

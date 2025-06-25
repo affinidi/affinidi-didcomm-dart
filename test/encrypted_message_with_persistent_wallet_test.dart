@@ -124,7 +124,9 @@ void main() async {
                         message: jsonDecode(sharedMessageToBobInJson),
                         recipientWallet: bobWallet,
                         expectedMessageWrappingTypes: [
-                          MessageWrappingType.authcryptSignPlaintext,
+                          isAuthenticated
+                              ? MessageWrappingType.authcryptSignPlaintext
+                              : MessageWrappingType.anoncryptSignPlaintext,
                         ],
                       );
 
