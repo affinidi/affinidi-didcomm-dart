@@ -112,6 +112,9 @@ void main() async {
     expectedMessageWrappingTypes: [
       MessageWrappingType.authcryptPlaintext,
     ],
+    expectedSigners: [
+      aliceSigner.didKeyId,
+    ],
   );
 
   prettyPrint(
