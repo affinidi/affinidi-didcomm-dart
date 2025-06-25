@@ -95,9 +95,23 @@ abstract class DidcommMessage {
     final plainTextMessage = PlainTextMessage.fromJson(currentMessage);
     foundMessages.add(plainTextMessage);
 
+    _validate(
+      messages: foundMessages,
+      expectedMessageWrappingTypes: expectedMessageWrappingTypes,
+      validateAddressingConsistency: validateAddressingConsistency,
+    );
+
+    return plainTextMessage;
+  }
+
+  static void _validate({
+    required List<DidcommMessage> messages,
+    required List<MessageWrappingType>? expectedMessageWrappingTypes,
+    required bool validateAddressingConsistency,
+  }) {
     if (expectedMessageWrappingTypes != null) {
       final currentMessageWrappingType =
-          MessageWrappingType.findFromMessages(foundMessages);
+          MessageWrappingType.findFromMessages(messages);
 
       if (currentMessageWrappingType == null) {
         throw UnsupportedError(
@@ -113,7 +127,38 @@ abstract class DidcommMessage {
       }
     }
 
-    return plainTextMessage;
+    if (validateAddressingConsistency && messages.length > 1) {
+      final iterator = messages.reversed.iterator;
+
+      // the 1st message is always Plain Text Message
+      iterator.moveNext();
+      final plainTextMessage = iterator.current as PlainTextMessage;
+
+      // the 2nd message can be Signed Message or Encrypted Message
+      iterator.moveNext();
+
+      if (iterator.current is EncryptedMessage) {
+        plainTextMessage.validateConsistencyWithEncryptedMessage(
+          iterator.current as EncryptedMessage,
+        );
+
+        // encrypted message can't be signed
+        return;
+      }
+
+      if (iterator.current is SignedMessage) {
+        plainTextMessage.validateConsistencyWithSignedMessage(
+          iterator.current as SignedMessage,
+        );
+      }
+
+      // if there is a 3rd message, it is always Encrypted Message
+      if (iterator.moveNext()) {
+        plainTextMessage.validateConsistencyWithEncryptedMessage(
+          iterator.current as EncryptedMessage,
+        );
+      }
+    }
   }
 
   @protected
