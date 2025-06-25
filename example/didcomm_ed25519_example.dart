@@ -31,13 +31,7 @@ void main() async {
     keyType: KeyType.ed25519,
   );
 
-  final aliceX25519PublicKey = await aliceWallet.getX25519PublicKey(
-    aliceKeyPair.id,
-  );
-
-  final aliceDidDocument = DidKey.generateDocument(
-    PublicKey(aliceKeyId, aliceX25519PublicKey, KeyType.x25519),
-  );
+  final aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
 
   final aliceSigner = DidSigner(
     didDocument: aliceDidDocument,
@@ -58,11 +52,7 @@ void main() async {
     keyType: KeyType.ed25519,
   );
 
-  final bobX25519PublicKey = await bobWallet.getX25519PublicKey(bobKeyPair.id);
-
-  final bobDidDocument = DidKey.generateDocument(
-    PublicKey(bobKeyId, bobX25519PublicKey, KeyType.x25519),
-  );
+  final bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
 
   for (var keyAgreement in bobDidDocument.keyAgreement) {
     // Important! link JWK, so the wallet should be able to find the key pair by JWK
