@@ -2,6 +2,7 @@
 import 'package:collection/collection.dart';
 
 import '../../didcomm.dart';
+import '../converters/jwe_header_converter.dart';
 
 enum MessageWrappingType {
   plaintext(
@@ -67,30 +68,49 @@ enum MessageWrappingType {
     ],
   );
 
-  final List<Type> messageTypeChain;
-  final List<KeyWrappingAlgorithm> keyWrappingAlgorithmChain;
+  final List<Type> messageTypes;
+  final List<KeyWrappingAlgorithm> keyWrappingAlgorithms;
 
   static final _listEquality = const ListEquality();
+  static final _jweHeaderConverter = JweHeaderConverter();
 
   const MessageWrappingType(
-    this.messageTypeChain,
-    this.keyWrappingAlgorithmChain,
+    this.messageTypes,
+    this.keyWrappingAlgorithms,
   );
 
-  static MessageWrappingType? find({
-    required List<Type> messageTypeChain,
-    required List<KeyWrappingAlgorithm> keyWrappingAlgorithmChain,
-  }) {
+  static MessageWrappingType? findFromMessages(
+    List<DidcommMessage> messages,
+  ) {
     return MessageWrappingType.values.firstWhereOrNull(
-      (item) =>
-          _listEquality.equals(
-            item.messageTypeChain,
-            messageTypeChain,
-          ) &&
-          _listEquality.equals(
-            item.keyWrappingAlgorithmChain,
-            keyWrappingAlgorithmChain,
-          ),
+      (item) {
+        final messageTypes = <Type>[];
+        final keyWrappingAlgorithms = <KeyWrappingAlgorithm>[];
+
+        for (final message in messages) {
+          if (message is EncryptedMessage) {
+            final jweHeader = _jweHeaderConverter.fromJson(
+              message.protected,
+            );
+
+            keyWrappingAlgorithms.add(jweHeader.keyWrappingAlgorithm);
+            messageTypes.add(EncryptedMessage);
+          } else if (message is SignedMessage) {
+            messageTypes.add(SignedMessage);
+          } else {
+            messageTypes.add(PlainTextMessage);
+          }
+        }
+
+        return _listEquality.equals(
+              item.messageTypes,
+              messageTypes,
+            ) &&
+            _listEquality.equals(
+              item.keyWrappingAlgorithms,
+              keyWrappingAlgorithms,
+            );
+      },
     );
   }
 }

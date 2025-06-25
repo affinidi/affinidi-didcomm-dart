@@ -1,5 +1,4 @@
 import 'package:didcomm/didcomm.dart';
-import 'package:didcomm/src/converters/jwe_header_converter.dart';
 import 'package:ssi/ssi.dart';
 import 'package:meta/meta.dart';
 
@@ -70,11 +69,8 @@ abstract class DidcommMessage {
     bool validateAddressingConsistency = true,
     List<MessageWrappingType>? expectedMessageWrappingTypes,
   }) async {
-    final jweHeaderConverter = JweHeaderConverter();
+    final foundMessages = <DidcommMessage>[];
     var currentMessage = message;
-
-    final messageTypeChain = <Type>[];
-    final keyWrappingAlgorithmChain = <KeyWrappingAlgorithm>[];
 
     while (EncryptedMessage.isEncryptedMessage(currentMessage) ||
         SignedMessage.isSignedMessage(currentMessage)) {
@@ -83,51 +79,41 @@ abstract class DidcommMessage {
 
         currentMessage = await encryptedMessage.unpack(
           recipientWallet: recipientWallet,
-          validateAddressingConsistency: validateAddressingConsistency,
         );
 
-        final jweHeader = jweHeaderConverter.fromJson(
-          encryptedMessage.protected,
-        );
-
-        keyWrappingAlgorithmChain.add(jweHeader.keyWrappingAlgorithm);
-        messageTypeChain.add(EncryptedMessage);
+        foundMessages.add(encryptedMessage);
       }
 
       if (SignedMessage.isSignedMessage(currentMessage)) {
         final signedMessage = SignedMessage.fromJson(currentMessage);
+        currentMessage = await signedMessage.unpack();
 
-        currentMessage = await signedMessage.unpack(
-          validateAddressingConsistency: validateAddressingConsistency,
-        );
-
-        messageTypeChain.add(SignedMessage);
+        foundMessages.add(signedMessage);
       }
     }
 
-    messageTypeChain.add(PlainTextMessage);
+    final plainTextMessage = PlainTextMessage.fromJson(currentMessage);
+    foundMessages.add(plainTextMessage);
 
     if (expectedMessageWrappingTypes != null) {
-      final currentMessageWrappingType = MessageWrappingType.find(
-        messageTypeChain: messageTypeChain,
-        keyWrappingAlgorithmChain: keyWrappingAlgorithmChain,
-      );
+      final currentMessageWrappingType =
+          MessageWrappingType.findFromMessages(foundMessages);
 
       if (currentMessageWrappingType == null) {
         throw UnsupportedError(
-          'Can not find matching MessageWrappingType for $messageTypeChain and $keyWrappingAlgorithmChain',
+          'Can not find matching MessageWrappingType',
         );
       }
 
       if (!expectedMessageWrappingTypes.contains(currentMessageWrappingType)) {
         throw ArgumentError(
-          'Unexpected message wrapping type: $currentMessageWrappingType',
+          '$currentMessageWrappingType in not in expected list: $expectedMessageWrappingTypes',
           'message',
         );
       }
     }
 
-    return PlainTextMessage.fromJson(currentMessage);
+    return plainTextMessage;
   }
 
   @protected
