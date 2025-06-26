@@ -3,18 +3,30 @@
 import 'dart:async';
 
 import 'package:analyzer/dart/element/element.dart';
+import 'package:build/build.dart';
 import 'package:collection/collection.dart';
 import 'package:source_gen/source_gen.dart';
 
 import '../annotations/own_json_properties.dart';
 
+/// A code generator for the [OwnJsonProperties] annotation.
+///
+/// This generator collects all non-static, non-synthetic fields (including inherited fields)
+/// from a class annotated with [OwnJsonProperties] and generates a constant list of property names when they are serialized to JSON.
 class OwnJsonPropertiesGenerator
     extends GeneratorForAnnotation<OwnJsonProperties> {
+  /// Generates a constant list of JSON property names for the annotated class.
+  ///
+  /// [declaration]: The element being annotated (should be a [ClassElement]).
+  /// [annotation]: The annotation instance.
+  /// [buildStep]: The current build step.
+  ///
+  /// Throws [InvalidGenerationSourceError] if the annotation is not used on a class.
   @override
   FutureOr<String> generateForAnnotatedElement(
-    declaration,
-    annotation,
-    buildStep,
+    Element declaration,
+    ConstantReader annotation,
+    BuildStep buildStep,
   ) async {
     if (declaration is! ClassElement) {
       throw InvalidGenerationSourceError(
