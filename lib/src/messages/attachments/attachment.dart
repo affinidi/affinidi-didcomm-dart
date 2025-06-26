@@ -5,50 +5,56 @@ import 'attachment_data.dart';
 
 part 'attachment.g.dart';
 
-/// Represents an attachment in a DIDComm plain text message.
+/// Represents an attachment in a DIDComm plaintext message, as defined in the
+/// [DIDComm Messaging specification](https://identity.foundation/didcomm-messaging/spec/#attachments).
+///
+/// Attachments allow DIDComm messages to include additional content such as documents,
+/// images, or other media, either embedded or by reference. See the spec for details
+/// on each field's semantics and usage.
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class Attachment {
-  /// The unique identifier of the attachment.
+  /// Identifies attached content within the scope of a given message.
+  /// Should be brief and consist of unreserved URI characters.
   final String? id;
 
-  /// A human-readable description of the attachment.
+  /// A human-readable description of the attachment content.
   final String? description;
 
-  /// The filename of the attachment, if applicable.
+  /// A hint about the name that might be used if this attachment is persisted as a file.
+  /// If present and [mediaType] is not, the extension may be used to infer a MIME type.
   final String? filename;
 
-  /// The media type (MIME type) of the attachment content.
+  /// Describes the media type (MIME type) of the attached content.
   @JsonKey(name: 'media_type')
   final String? mediaType;
 
-  /// The format of the attachment content.
+  /// Further describes the format of the attachment if [mediaType] is not sufficient.
   final String? format;
 
-  /// The last modification time of the attachment as a [DateTime].
-  ///
-  /// This value is serialized and deserialized using [EpochSecondsConverter],
-  /// representing the time as the number of seconds since the Unix epoch (UTC).
+  /// A hint about when the content in this attachment was last modified.
+  /// Serialized/deserialized as seconds since the Unix epoch (UTC).
   @JsonKey(name: 'lastmod_time')
   @EpochSecondsConverter()
   final DateTime? lastModifiedTime;
 
-  /// The data payload of the attachment.
+  /// The data payload of the attachment, which may be embedded or referenced.
+  /// See [AttachmentData] for supported representations.
   final AttachmentData? data;
 
-  /// The size of the attachment in bytes.
+  /// The size of the attachment in bytes, useful when content is included by reference.
   @JsonKey(name: 'byte_count')
   final int? byteCount;
 
   /// Creates a new [Attachment].
   ///
-  /// [id] is the unique identifier.
-  /// [description] is a human-readable description.
-  /// [filename] is the name of the file.
-  /// [mediaType] is the MIME type.
-  /// [format] is the content format.
-  /// [lastModifiedTime] is the last modification time.
-  /// [data] is the attachment data.
-  /// [byteCount] is the size in bytes.
+  /// [id] - Unique identifier for the attachment.
+  /// [description] - Human-readable description.
+  /// [filename] - File name hint.
+  /// [mediaType] - MIME type of the content.
+  /// [format] - Further format description.
+  /// [lastModifiedTime] - Last modification time.
+  /// [data] - The attachment data (see [AttachmentData]).
+  /// [byteCount] - Size in bytes (for reference attachments).
   Attachment({
     this.id,
     this.description,
@@ -62,7 +68,7 @@ class Attachment {
 
   /// Creates an [Attachment] from a JSON map.
   ///
-  /// [json] is the JSON map to parse.
+  /// [json] - The JSON map to parse.
   factory Attachment.fromJson(Map<String, dynamic> json) =>
       _$AttachmentFromJson(json);
 
