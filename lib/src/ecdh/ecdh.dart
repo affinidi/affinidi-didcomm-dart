@@ -112,6 +112,26 @@ abstract class Ecdh {
     );
   }
 
+  /// Encrypts [data] using the sender's key pair and ECDH shared secret.
+  ///
+  /// [senderKeyPair]: The sender's key pair.
+  /// [data]: The plaintext data to encrypt.
+  /// Returns the encrypted data as [Uint8List].
+  Future<Uint8List> encryptData({
+    required KeyPair senderKeyPair,
+    required Uint8List data,
+  });
+
+  /// Decrypts [data] using the recipient's key pair and ECDH shared secret.
+  ///
+  /// [recipientKeyPair]: The recipient's key pair.
+  /// [data]: The encrypted data to decrypt.
+  /// Returns the decrypted data as [Uint8List].
+  Future<Uint8List> decryptData({
+    required KeyPair recipientKeyPair,
+    required Uint8List data,
+  });
+
   static Ecdh _createForSecp256OrPCurveForEncryption({
     required JweHeader jweHeader,
     Uint8List? ephemeralPrivateKeyBytes,
@@ -237,14 +257,4 @@ abstract class Ecdh {
 
     throw UnsupportedKeyWrappingAlgorithmError(keyWrappingAlgorithm);
   }
-
-  Future<Uint8List> encryptData({
-    required KeyPair senderKeyPair,
-    required Uint8List data,
-  });
-
-  Future<Uint8List> decryptData({
-    required KeyPair recipientKeyPair,
-    required Uint8List data,
-  });
 }
