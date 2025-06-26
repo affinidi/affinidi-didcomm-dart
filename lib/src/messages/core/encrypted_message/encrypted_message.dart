@@ -21,35 +21,47 @@ import '../../jwm.dart';
 part 'encrypted_message.g.dart';
 part 'encrypted_message.own_json_props.g.dart';
 
+/// Represents a DIDComm v2 Encrypted Message as defined in the DIDComm Messaging specification.
+///
+/// See: https://identity.foundation/didcomm-messaging/spec/#didcomm-encrypted-messages
 @OwnJsonProperties()
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class EncryptedMessage extends DidcommMessage {
+  /// The default media type for encrypted DIDComm messages as per the spec.
   static final mediaType = 'application/didcomm-encrypted+json';
 
+  /// The ciphertext of the encrypted message.
   @JsonKey(name: 'ciphertext')
   @Base64UrlConverter()
   final Uint8List cipherText;
 
-  // this is base64Url encoded JWE Header.
-  // we can't use JweHeaderConverter annotation here,
-  // because raw protected field is needed for decryption (additionalAuthenticatedData).
-  // if during serialization/deserialization it looses or gains some fields,
-  // decryption fails.
-  // this is why it is important to keep the original value from JSON
+  /// The base64Url-encoded JWE protected header. Use JweHeaderConverter to convert to [JweHeader] if needed.
+  /// This is kept as a raw string for decryption integrity. Converting with JweHeaderConverter during deserialization
+  /// might cause decryption issues later, when message is unpacked.
   final String protected;
 
+  /// List of recipients, each with their own encrypted key and header.
   final List<Recipient> recipients;
 
+  /// The authentication tag for AEAD encryption ("tag" field in DIDComm spec).
   @JsonKey(name: 'tag')
   @Base64UrlConverter()
   final Uint8List authenticationTag;
 
+  /// The initialization vector for AEAD encryption ("iv" field in DIDComm spec).
   @JsonKey(name: 'iv')
   @Base64UrlConverter()
   final Uint8List initializationVector;
 
   static const _jweHeaderConverter = JweHeaderConverter();
 
+  /// Constructs an [EncryptedMessage].
+  ///
+  /// [cipherText]: The encrypted inner DIDComm message.
+  /// [protected]: The base64Url-encoded JWE protected header.
+  /// [recipients]: List of recipients.
+  /// [authenticationTag]: The authentication tag for AEAD encryption.
+  /// [initializationVector]: The initialization vector for AEAD encryption.
   EncryptedMessage({
     required this.cipherText,
     required this.protected,
@@ -58,6 +70,14 @@ class EncryptedMessage extends DidcommMessage {
     required this.initializationVector,
   });
 
+  /// Packs a [DidcommMessage] into an [EncryptedMessage] using anonymous encryption (ECDH-ES).
+  ///
+  /// [message]: The message to encrypt.
+  /// [keyPair]: The sender's key pair.
+  /// [recipientDidDocuments]: List of recipient's DID documents.
+  /// [encryptionAlgorithm]: Algorithm for content encryption.
+  ///
+  /// Returns an [EncryptedMessage].
   static Future<EncryptedMessage> packAnonymously(
     DidcommMessage message, {
     required KeyPair keyPair,
@@ -73,6 +93,15 @@ class EncryptedMessage extends DidcommMessage {
     );
   }
 
+  /// Packs a [DidcommMessage] into an [EncryptedMessage] using authenticated encryption (ECDH-1PU).
+  ///
+  /// [message]: The message to encrypt.
+  /// [keyPair]: The sender's key pair.
+  /// [didKeyId]: The sender's key ID.
+  /// [recipientDidDocuments]: List of recipient's DID documents.
+  /// [encryptionAlgorithm]: Algorithm for content encryption.
+  ///
+  /// Returns an [EncryptedMessage].
   static Future<EncryptedMessage> packWithAuthentication(
     DidcommMessage message, {
     required KeyPair keyPair,
@@ -90,6 +119,16 @@ class EncryptedMessage extends DidcommMessage {
     );
   }
 
+  /// Packs a [DidcommMessage] into an [EncryptedMessage] using the provided cryptographic parameters.
+  ///
+  /// [message]: The message to encrypt.
+  /// [keyPair]: The sender's key pair.
+  /// [didKeyId]: The sender's key ID (optional).
+  /// [recipientDidDocuments]: List of recipient's DID Documents.
+  /// [keyWrappingAlgorithm]: Algorithm for key wrapping.
+  /// [encryptionAlgorithm]: Algorithm for content encryption.
+  ///
+  /// Returns an [EncryptedMessage].
   static Future<EncryptedMessage> pack(
     DidcommMessage message, {
     required KeyPair keyPair,
@@ -155,6 +194,13 @@ class EncryptedMessage extends DidcommMessage {
     return encryptedMessage;
   }
 
+  /// Unpacks and decrypts the encrypted message, returning the inner message as a JSON map.
+  /// Unlike [DidcommMessage.unpackToPlainTextMessage], this method does not recursively unpack nested messages,
+  /// but returns the top most message from the ciphertext.
+  ///
+  /// [recipientWallet]: The wallet to use for decryption.
+  ///
+  /// Returns the decrypted inner message as a JSON map.
   Future<Map<String, dynamic>> unpack({
     required Wallet recipientWallet,
   }) async {
@@ -227,10 +273,14 @@ class EncryptedMessage extends DidcommMessage {
     return self;
   }
 
+  /// Checks if the given [message] map is an encrypted message by verifying required properties.
   static bool isEncryptedMessage(Map<String, dynamic> message) {
     return _$ownJsonProperties.every((prop) => message.containsKey(prop));
   }
 
+  /// Creates an [EncryptedMessage] from a JSON map.
+  ///
+  /// [json]: The JSON map representing the encrypted message.
   factory EncryptedMessage.fromJson(Map<String, dynamic> json) {
     final message = _$EncryptedMessageFromJson(json)
       ..assignCustomHeaders(json, _$ownJsonProperties);
@@ -238,10 +288,12 @@ class EncryptedMessage extends DidcommMessage {
     return message;
   }
 
+  /// Serializes the encrypted message to a JSON map, including custom headers.
   @override
   Map<String, dynamic> toJson() =>
       withCustomHeaders(_$EncryptedMessageToJson(this));
 
+  /// Creates a new symmetric content encryption key for the given [encryptionAlgorithm].
   static ck.SymmetricKey _createContentEncryptionKey(
     EncryptionAlgorithm encryptionAlgorithm,
   ) {
