@@ -18,47 +18,60 @@ part 'jwe_header.g.dart';
 
 /// Represents the protected header of a JWE (JSON Web Encryption) message in DIDComm.
 ///
-/// This class contains all cryptographic parameters
-/// required for decryption and verification of a DIDComm-encrypted message.
+/// This header contains all cryptographic parameters required for decryption and verification
+/// of a DIDComm-encrypted message, as defined in the
+/// [DIDComm Messaging specification](https://identity.foundation/didcomm-messaging/spec).
+///
+/// Fields such as `skid`, `alg`, `enc`, `epk`, `apu`, and `apv` are critical for ECDH-1PU and ECDH-ES
+/// key agreement, and their values must be constructed and validated according to the spec.
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class JweHeader {
   /// The type of the JWE message. Defaults to 'application/didcomm-encrypted+json'.
+  /// See: https://identity.foundation/didcomm-messaging/spec/#iana-media-types
   @JsonKey(name: 'typ')
   final String type;
 
   /// The subject key identifier (skid), used for ECDH-1PU key agreement.
+  /// See: https://identity.foundation/didcomm-messaging/spec/#key-ids
   @JsonKey(name: 'skid')
   final String? subjectKeyId;
 
   /// The key wrapping algorithm (alg) used for encrypting the content encryption key.
+  /// See: https://identity.foundation/didcomm-messaging/spec/#key-wrapping-algorithms
   @JsonKey(name: 'alg')
   final KeyWrappingAlgorithm keyWrappingAlgorithm;
 
   /// The content encryption algorithm (enc) used for encrypting the payload.
+  /// See: https://identity.foundation/didcomm-messaging/spec/#curves-and-content-encryption-algorithms
   @JsonKey(name: 'enc')
   final EncryptionAlgorithm encryptionAlgorithm;
 
   /// The ephemeral public key (epk) used in key agreement.
+  /// See: https://identity.foundation/didcomm-messaging/spec/#ecdh-1pu-key-wrapping-and-common-protected-headers
+  /// and https://identity.foundation/didcomm-messaging/spec/#ecdh-es-key-wrapping-and-common-protected-headers
   @JsonKey(name: 'epk')
   final EphemeralKey ephemeralKey;
 
   /// Agreement PartyUInfo (apu), base64url-encoded sender key ID for ECDH-1PU.
+  /// See: https://identity.foundation/didcomm-messaging/spec/#ecdh-1pu-key-wrapping-and-common-protected-headers
   @JsonKey(name: 'apu')
   final String? agreementPartyUInfo;
 
   /// Agreement PartyVInfo (apv), base64url-encoded hash of recipient key IDs.
+  /// See: https://identity.foundation/didcomm-messaging/spec/#ecdh-1pu-key-wrapping-and-common-protected-headers
+  /// and https://identity.foundation/didcomm-messaging/spec/#ecdh-es-key-wrapping-and-common-protected-headers
   @JsonKey(name: 'apv')
   final String? agreementPartyVInfo;
 
   /// Constructs a [JweHeader] with the given parameters.
   ///
-  /// [type] The type of the JWE message. Defaults to 'application/didcomm-encrypted+json'.
-  /// [subjectKeyId] The subject key identifier (skid), used for ECDH-1PU key agreement.
-  /// [keyWrappingAlgorithm] The key wrapping algorithm (alg) used for encrypting the content encryption key.
-  /// [encryptionAlgorithm] The content encryption algorithm (enc) used for encrypting the payload.
-  /// [ephemeralKey] The ephemeral public key (epk) used in key agreement.
-  /// [agreementPartyUInfo] Agreement PartyUInfo (apu), base64url-encoded sender key ID for ECDH-1PU.
-  /// [agreementPartyVInfo] Agreement PartyVInfo (apv), base64url-encoded hash of recipient key IDs.
+  /// [type] - The type of the JWE message. Defaults to 'application/didcomm-encrypted+json'.
+  /// [subjectKeyId] - The subject key identifier (skid), used for ECDH-1PU key agreement.
+  /// [keyWrappingAlgorithm] - The key wrapping algorithm (alg) used for encrypting the content encryption key.
+  /// [encryptionAlgorithm] - The content encryption algorithm (enc) used for encrypting the payload.
+  /// [ephemeralKey] - The ephemeral public key (epk) used in key agreement.
+  /// [agreementPartyUInfo] - Agreement PartyUInfo (apu), base64url-encoded sender key ID for ECDH-1PU.
+  /// [agreementPartyVInfo] - Agreement PartyVInfo (apv), base64url-encoded hash of recipient key IDs.
   JweHeader({
     this.type = 'application/didcomm-encrypted+json',
     this.subjectKeyId,
