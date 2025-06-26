@@ -10,16 +10,36 @@ import '../../messages/algorithm_types/key_wrapping_algorithm.dart';
 import '../../messages/jwm.dart';
 import '../ecdh.dart';
 
+/// Abstract base class for ECDH-ES key agreement in DIDComm.
+///
+/// Provides methods for computing encryption and decryption secrets and for encrypting/decrypting data.
 abstract class EcdhEs implements Ecdh {
+  /// The JWE header.
   final JweHeader jweHeader;
 
+  /// Constructs an [EcdhEs] instance.
+  ///
+  /// [jweHeader]: The JWE header.
   EcdhEs({required this.jweHeader});
 
+  /// Computes the encryption secret for ECDH-ES.
+  ///
+  /// Returns the shared secret as [Uint8List].
   Future<Uint8List> getEncryptionSecret();
+
+  /// Computes the decryption secret for ECDH-ES.
+  ///
+  /// [recipientKeyPair]: The recipient's key pair.
+  /// Returns the shared secret as [Uint8List].
   Future<Uint8List> getDecryptionSecret({
     required KeyPair recipientKeyPair,
   });
 
+  /// Encrypts [data] using the sender's key pair and ECDH-ES shared secret.
+  ///
+  /// [senderKeyPair]: The sender's key pair.
+  /// [data]: The plaintext data to encrypt.
+  /// Returns the encrypted data as [Uint8List].
   @override
   Future<Uint8List> encryptData({
     required KeyPair senderKeyPair,
@@ -32,6 +52,11 @@ abstract class EcdhEs implements Ecdh {
     return kw.encrypt(data).data;
   }
 
+  /// Decrypts [data] using the recipient's key pair and ECDH-ES shared secret.
+  ///
+  /// [recipientKeyPair]: The recipient's key pair.
+  /// [data]: The encrypted data to decrypt.
+  /// Returns the decrypted data as [Uint8List].
   @override
   Future<Uint8List> decryptData({
     required KeyPair recipientKeyPair,
