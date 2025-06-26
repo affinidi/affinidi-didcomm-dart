@@ -28,6 +28,11 @@ class EphemeralKey {
   final Uint8List? y;
 
   /// Creates an [EphemeralKey] instance.
+  ///
+  /// [keyType] The key type (e.g., OKP, EC).
+  /// [curve] The cryptographic curve used (e.g., Ed25519, P-256).
+  /// [x] The public key's x coordinate, base64url encoded.
+  /// [y] The public key's y coordinate, base64url encoded (optional).
   EphemeralKey({
     required this.keyType,
     required this.curve,
@@ -36,9 +41,13 @@ class EphemeralKey {
   });
 
   /// Creates an [EphemeralKey] from a JSON map.
+  ///
+  /// [json] The JSON map to parse.
   factory EphemeralKey.fromJson(Map<String, dynamic> json) =>
       _$EphemeralKeyFromJson(json);
 
   /// Converts this [EphemeralKey] to a JSON map.
+  ///
+  /// Returns a JSON map representing this [EphemeralKey].
   Map<String, dynamic> toJson() => _$EphemeralKeyToJson(this);
 }

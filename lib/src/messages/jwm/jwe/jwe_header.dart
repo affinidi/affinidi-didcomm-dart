@@ -16,29 +16,49 @@ import 'ephemeral_key_type.dart';
 
 part 'jwe_header.g.dart';
 
+/// Represents the protected header of a JWE (JSON Web Encryption) message in DIDComm.
+///
+/// This class contains all cryptographic parameters
+/// required for decryption and verification of a DIDComm-encrypted message.
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class JweHeader {
+  /// The type of the JWE message. Defaults to 'application/didcomm-encrypted+json'.
   @JsonKey(name: 'typ')
   final String type;
 
+  /// The subject key identifier (skid), used for ECDH-1PU key agreement.
   @JsonKey(name: 'skid')
   final String? subjectKeyId;
 
+  /// The key wrapping algorithm (alg) used for encrypting the content encryption key.
   @JsonKey(name: 'alg')
   final KeyWrappingAlgorithm keyWrappingAlgorithm;
 
+  /// The content encryption algorithm (enc) used for encrypting the payload.
   @JsonKey(name: 'enc')
   final EncryptionAlgorithm encryptionAlgorithm;
 
+  /// The ephemeral public key (epk) used in key agreement.
   @JsonKey(name: 'epk')
   final EphemeralKey ephemeralKey;
 
+  /// Agreement PartyUInfo (apu), base64url-encoded sender key ID for ECDH-1PU.
   @JsonKey(name: 'apu')
   final String? agreementPartyUInfo;
 
+  /// Agreement PartyVInfo (apv), base64url-encoded hash of recipient key IDs.
   @JsonKey(name: 'apv')
   final String? agreementPartyVInfo;
 
+  /// Constructs a [JweHeader] with the given parameters.
+  ///
+  /// [type] The type of the JWE message. Defaults to 'application/didcomm-encrypted+json'.
+  /// [subjectKeyId] The subject key identifier (skid), used for ECDH-1PU key agreement.
+  /// [keyWrappingAlgorithm] The key wrapping algorithm (alg) used for encrypting the content encryption key.
+  /// [encryptionAlgorithm] The content encryption algorithm (enc) used for encrypting the payload.
+  /// [ephemeralKey] The ephemeral public key (epk) used in key agreement.
+  /// [agreementPartyUInfo] Agreement PartyUInfo (apu), base64url-encoded sender key ID for ECDH-1PU.
+  /// [agreementPartyVInfo] Agreement PartyVInfo (apv), base64url-encoded hash of recipient key IDs.
   JweHeader({
     this.type = 'application/didcomm-encrypted+json',
     this.subjectKeyId,
@@ -49,6 +69,17 @@ class JweHeader {
     required this.agreementPartyVInfo,
   });
 
+  /// Creates a [JweHeader] from a key pair and encryption parameters.
+  ///
+  /// [keyPair] The sender's key pair.
+  /// [subjectKeyId] The subject key identifier (skid), required for ECDH-1PU.
+  /// [recipientDidDocuments] The list of recipient DID Documents.
+  /// [ephemeralPrivateKeyBytes] The ephemeral private key bytes.
+  /// [ephemeralPublicKeyBytes] The ephemeral public key bytes.
+  /// [keyWrappingAlgorithm] The key wrapping algorithm (alg) used for encrypting the content encryption key.
+  /// [encryptionAlgorithm] The content encryption algorithm (enc) used for encrypting the payload.
+  ///
+  /// Throws [ArgumentError] if required parameters are missing.
   static Future<JweHeader> fromKeyPair(
     KeyPair keyPair, {
     String? subjectKeyId,
@@ -88,9 +119,13 @@ class JweHeader {
     );
   }
 
+  /// Deserializes a [JweHeader] from JSON.
+  ///
+  /// [json] The JSON map to deserialize.
   factory JweHeader.fromJson(Map<String, dynamic> json) =>
       _$JweHeaderFromJson(json);
 
+  /// Serializes this [JweHeader] to JSON.
   Map<String, dynamic> toJson() => _$JweHeaderToJson(this);
 
   static String _buildAgreementPartyVInfo(
