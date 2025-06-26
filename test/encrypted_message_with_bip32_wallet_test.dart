@@ -10,7 +10,7 @@ import 'package:test/test.dart';
 import 'utils/create_message_assertion.dart';
 
 void main() {
-  group("Encrypted message", () {
+  group('Encrypted message', () {
     final aliceSeed = List<int>.generate(
       32,
       (index) => index + 1,
@@ -22,7 +22,7 @@ void main() {
     final aliceWallet = Bip32Wallet.fromSeed(Uint8List.fromList(aliceSeed));
     final bobWallet = Bip32Wallet.fromSeed(Uint8List.fromList(bobSeed));
 
-    group("BIP32", () {
+    group('BIP32', () {
       final aliceKeyId = "m/44'/60'/0'/0'/0'";
       final bobKeyId = "m/44'/60'/0'/0'/0'";
 
@@ -119,7 +119,9 @@ void main() {
                   final sharedMessageToBobInJson = jsonEncode(sut);
 
                   final actual = await DidcommMessage.unpackToPlainTextMessage(
-                    message: jsonDecode(sharedMessageToBobInJson),
+                    message: jsonDecode(
+                      sharedMessageToBobInJson,
+                    ) as Map<String, dynamic>,
                     recipientWallet: bobWallet,
                     validateAddressingConsistency: true,
                     expectedMessageWrappingTypes: [

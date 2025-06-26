@@ -116,7 +116,9 @@ void main() {
                   final sharedMessageToBobInJson = jsonEncode(sut);
 
                   final actual = await DidcommMessage.unpackToPlainTextMessage(
-                    message: jsonDecode(sharedMessageToBobInJson),
+                    message: jsonDecode(
+                      sharedMessageToBobInJson,
+                    ) as Map<String, dynamic>,
                     recipientWallet: bobWallet,
                     validateAddressingConsistency: true,
                     expectedMessageWrappingTypes: [

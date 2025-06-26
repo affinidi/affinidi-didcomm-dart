@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:didcomm/didcomm.dart';
 import 'package:dio/dio.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
 
+import '../../didcomm.dart';
 import '../common/did_document_service_type.dart';
 import '../extensions/extensions.dart';
 
@@ -63,7 +63,7 @@ class MediatorClient {
     final headers =
         accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
 
-    await _dio.post(
+    await _dio.post<Map<String, dynamic>>(
       '/inbound',
       data: messageToSend,
       options: Options(headers: headers),
@@ -81,14 +81,14 @@ class MediatorClient {
     final headers =
         accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
 
-    final response = await _dio.get(
+    final response = await _dio.get<Map<String, dynamic>>(
       '/list/${sha256.convert(utf8.encode(actorDidDocument.id)).toString()}/inbox',
       options: Options(headers: headers),
     );
 
-    return (response.data['data'] as List<dynamic>)
+    return (response.data!['data'] as List<dynamic>)
         .map(
-          (item) => item['msg_id'] as String,
+          (item) => (item as Map<String, dynamic>)['msg_id'] as String,
         )
         .toList();
   }
@@ -103,15 +103,19 @@ class MediatorClient {
     final headers =
         accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
 
-    final response = await _dio.post(
+    final response = await _dio.post<Map<String, dynamic>>(
       '/outbound',
       data: {'message_ids': messageIds, 'delete': deleteOnMediator},
       options: Options(headers: headers),
     );
 
-    return (response.data['data']['success'] as List<dynamic>)
+    final data = response.data!['data'] as Map<String, dynamic>;
+
+    return (data['success'] as List<dynamic>)
         .map(
-          (item) => jsonDecode(item['msg'] as String) as Map<String, dynamic>,
+          (item) => jsonDecode(
+            (item as Map<String, dynamic>)['msg'] as String,
+          ) as Map<String, dynamic>,
         )
         .toList();
   }
@@ -130,7 +134,9 @@ class MediatorClient {
     await _channel!.ready;
 
     final subscription = _channel.stream.listen(
-      (data) => onMessage(jsonDecode(data)),
+      (data) => onMessage(
+        jsonDecode(data as String) as Map<String, dynamic>,
+      ),
       onError: onError,
       onDone: onDone,
       cancelOnError: cancelOnError,
@@ -140,7 +146,7 @@ class MediatorClient {
 
     if (webSocketOptions.statusRequestMessageOptions.shouldSend) {
       final setupRequestMessage = StatusRequestMessage(
-        id: Uuid().v4(),
+        id: const Uuid().v4(),
         to: [mediatorDidDocument.id],
         from: actorDidDocument.id,
         recipientDid: actorDidDocument.id,
@@ -156,7 +162,7 @@ class MediatorClient {
 
     if (webSocketOptions.liveDeliveryChangeMessageOptions.shouldSend) {
       final liveDeliveryChangeMessage = LiveDeliveryChangeMessage(
-        id: Uuid().v4(),
+        id: const Uuid().v4(),
         to: [mediatorDidDocument.id],
         from: actorDidDocument.id,
         liveDelivery: true,
@@ -212,7 +218,7 @@ class MediatorClient {
     return messageToSend;
   }
 
-  _sendMessageToChannel(DidcommMessage message) {
+  void _sendMessageToChannel(DidcommMessage message) {
     if (_channel == null) {
       throw Exception(
         'WebSockets connection has not configured yet. Call listenForIncomingMessages first.',

@@ -32,7 +32,10 @@ void main() async {
   );
 
   // Serialized receiverMediatorDocument needs to shared with sender
-  prettyPrint('Receiver DID Document', receiverDidDocument);
+  prettyPrint(
+    'Receiver DID Document',
+    object: receiverDidDocument,
+  );
 
   final receiverMediatorDocument = await UniversalDIDResolver.resolve(
     await readDid('./example/mediator/mediator_did.txt'),
@@ -59,7 +62,7 @@ void main() async {
   );
 
   final receiverTokens = await receiverMediatorClient.authenticate();
-  print('Receiver is fetching messages...');
+  prettyPrint('Receiver is fetching messages...');
 
   final messageIds = await receiverMediatorClient.listInboxMessageIds(
     accessToken: receiverTokens.accessToken,
@@ -82,7 +85,7 @@ void main() async {
 
     prettyPrint(
       'Unpacked Plain Text Message received by Receiver via Mediator',
-      originalPlainTextMessageFromSender,
+      object: originalPlainTextMessageFromSender,
     );
   }
 }

@@ -23,7 +23,7 @@ class StatusRequestMessage extends MessagePickupMessage {
     return StatusRequestMessage(
       id: plainTextMessage.id,
       to: plainTextMessage.to,
-      recipientDid: plainTextMessage.body?['recipient_did'],
+      recipientDid: plainTextMessage.body?['recipient_did'] as String,
       from: plainTextMessage.from,
     );
   }

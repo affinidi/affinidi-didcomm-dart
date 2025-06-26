@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -33,7 +35,14 @@ Future<String> readDid(String didPath) async {
   return await File(didPath).readAsString();
 }
 
-void prettyPrint(String name, Object? object) {
+void prettyPrint(
+  String name, {
+  Object? object,
+}) {
+  if (object == null) {
+    print(name);
+  }
+
   if (object is String) {
     print('$name: $object\n');
   } else {

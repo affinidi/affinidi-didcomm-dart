@@ -1,11 +1,11 @@
 import 'package:collection/collection.dart';
-import 'package:didcomm/src/converters/jwe_header_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../../../../didcomm.dart';
 import '../../../annotations/own_json_properties.dart';
 import '../../../common/did.dart';
 import '../../../converters/epoch_seconds_converter.dart';
+import '../../../converters/jwe_header_converter.dart';
 
 part 'plain_text_message.g.dart';
 part 'plain_text_message.own_json_props.g.dart';
@@ -13,8 +13,6 @@ part 'plain_text_message.own_json_props.g.dart';
 @OwnJsonProperties()
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class PlainTextMessage extends DidcommMessage {
-  static final _unorderedEquality = const UnorderedIterableEquality();
-
   final String id;
   final Uri type;
   final String? from;
@@ -36,6 +34,9 @@ class PlainTextMessage extends DidcommMessage {
 
   final Map<String, dynamic>? body;
   final List<Attachment>? attachments;
+
+  static const _unorderedEquality = UnorderedIterableEquality<String>();
+  static const _jweHeaderConverter = JweHeaderConverter();
 
   PlainTextMessage({
     required this.id,
@@ -65,7 +66,7 @@ class PlainTextMessage extends DidcommMessage {
   void validateConsistencyWithEncryptedMessage(EncryptedMessage message) {
     _validateFromHeader(
       encryptionKeyId:
-          JweHeaderConverter().fromJson(message.protected).subjectKeyId,
+          _jweHeaderConverter.fromJson(message.protected).subjectKeyId,
     );
 
     _validateToHeader(
@@ -121,7 +122,7 @@ class PlainTextMessage extends DidcommMessage {
         encryptionKeyId == null ? null : getDidFromId(encryptionKeyId);
 
     final signerDids = signatureKeyIds?.map(
-      (signatureKeyId) => getDidFromId(signatureKeyId),
+      getDidFromId,
     );
 
     if (signerDids != null && !signerDids.contains(from)) {
