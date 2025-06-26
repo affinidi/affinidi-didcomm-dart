@@ -10,7 +10,7 @@ import 'package:test/test.dart';
 import 'utils/create_message_assertion.dart';
 
 void main() {
-  group("Encrypted message", () {
+  group('Encrypted message', () {
     final aliceSeed = List<int>.generate(
       32,
       (index) => index + 1,
@@ -23,7 +23,7 @@ void main() {
         Bip32Ed25519Wallet.fromSeed(Uint8List.fromList(aliceSeed));
     final bobWallet = Bip32Ed25519Wallet.fromSeed(Uint8List.fromList(bobSeed));
 
-    group("BIP32 Ed25519", () {
+    group('BIP32 Ed25519', () {
       final aliceKeyId = "m/44'/60'/0'/0'/0'";
       final bobKeyId = "m/44'/60'/0'/0'/0'";
 
@@ -134,7 +134,7 @@ void main() {
                   expect(actual, isNotNull);
                   expect(actual.body?['content'], content);
 
-                  final actualJweHeader = JweHeaderConverter().fromJson(
+                  final actualJweHeader = const JweHeaderConverter().fromJson(
                     sut.protected,
                   );
 

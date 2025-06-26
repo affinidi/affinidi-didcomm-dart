@@ -1,9 +1,10 @@
 import 'dart:convert';
-import 'package:didcomm/src/messages/core.dart';
+
 import 'package:json_annotation/json_annotation.dart';
 
 import '../../../annotations/own_json_properties.dart';
 import '../../attachments/attachment.dart';
+import '../../core.dart';
 
 part 'out_of_band_message.g.dart';
 part 'out_of_band_message.own_json_props.g.dart';
@@ -57,17 +58,26 @@ class OutOfBandMessage extends PlainTextMessage {
   static OutOfBandMessage fromURL(String url) {
     final uri = Uri.tryParse(url);
     if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
-      throw FormatException('Invalid URL format');
+      throw const FormatException('Invalid URL format');
     }
+
     final oobParam = uri.queryParameters[oobQueryParam];
+
     if (oobParam == null) {
-      throw FormatException('URL does not contain the OOB query parameter');
+      throw const FormatException(
+        'URL does not contain the OOB query parameter',
+      );
     }
+
     final encodedMessage = utf8.decode(base64Url.decode(oobParam));
     final jsonDecodedMessage = jsonDecode(encodedMessage);
+
     if (jsonDecodedMessage is! Map<String, dynamic>) {
-      throw FormatException('Decoded OOB parameter is not a valid JSON object');
+      throw const FormatException(
+        'Decoded OOB parameter is not a valid JSON object',
+      );
     }
+
     return OutOfBandMessage.fromJson(jsonDecodedMessage);
   }
 

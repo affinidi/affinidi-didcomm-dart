@@ -46,7 +46,7 @@ void main() async {
               // Act: create and sign the message
               const content = 'Hello, Bob!';
               final plainTextMessage =
-                  await MessageAssertionService.createPlainTextMessageAssertion(
+                  MessageAssertionService.createPlainTextMessageAssertion(
                 content,
                 from: aliceDidDocument.id,
                 to: ['did:rand:0x1234567890abcdef1234567890abcdef12345678'],

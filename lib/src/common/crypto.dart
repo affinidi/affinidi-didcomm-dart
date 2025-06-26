@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:ssi/ssi.dart' show KeyType;
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
 import 'package:elliptic/elliptic.dart' as ec;
+import 'package:ssi/ssi.dart' show KeyType;
 import 'package:x25519/x25519.dart' as x25519;
 
 import '../errors/errors.dart';

@@ -1,11 +1,11 @@
 import 'package:collection/collection.dart';
-import 'package:didcomm/src/curves/curve_type.dart';
 import 'package:dio/dio.dart';
-import 'package:web_socket_channel/io.dart';
 import 'package:ssi/ssi.dart' hide Jwk;
+import 'package:web_socket_channel/io.dart';
 
 import '../common/did.dart';
 import '../common/did_document_service_type.dart';
+import '../curves/curve_type.dart';
 import '../jwks/jwk.dart';
 import 'wallet_extension.dart';
 
@@ -118,11 +118,7 @@ extension DidDocumentExtension on DidDocument {
     required List<DidDocument> otherDidDocuments,
   }) {
     final ownCurves = Set<CurveType>.from(
-      keyAgreement
-          .map(
-            (keyAgreement) => getCurve(keyAgreement),
-          )
-          .where(
+      keyAgreement.map(getCurve).where(
             (type) => type != null,
           ),
     );

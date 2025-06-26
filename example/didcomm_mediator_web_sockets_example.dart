@@ -196,7 +196,7 @@ void main() async {
 
   final bobTokens = await bobMediatorClient.authenticate();
 
-  print('Bob is waiting for a message...');
+  prettyPrint('Bob is waiting for a message...');
 
   await bobMediatorClient.listenForIncomingMessages(
     (message) async {

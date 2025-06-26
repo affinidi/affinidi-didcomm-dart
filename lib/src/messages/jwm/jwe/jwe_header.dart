@@ -1,18 +1,18 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto/crypto.dart' show sha256;
+import 'package:json_annotation/json_annotation.dart';
 import 'package:ssi/ssi.dart';
 
 import '../../../common/crypto.dart';
 import '../../../common/encoding.dart';
+import '../../../curves/curve_type.dart';
 import '../../../errors/errors.dart';
 import '../../../extensions/extensions.dart';
-import '../../../curves/curve_type.dart';
-import 'ephemeral_key_type.dart';
 import '../../algorithm_types/algorithms_types.dart';
 import 'ephemeral_key.dart';
+import 'ephemeral_key_type.dart';
 
 part 'jwe_header.g.dart';
 

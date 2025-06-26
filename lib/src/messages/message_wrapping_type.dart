@@ -71,8 +71,11 @@ enum MessageWrappingType {
   final List<Type> messageTypes;
   final List<KeyWrappingAlgorithm> keyWrappingAlgorithms;
 
-  static final _listEquality = const ListEquality();
-  static final _jweHeaderConverter = JweHeaderConverter();
+  static final _typeListEquality = const ListEquality<Type>();
+  static final _keyWrappingAlgorithmListEquality =
+      const ListEquality<KeyWrappingAlgorithm>();
+
+  static final _jweHeaderConverter = const JweHeaderConverter();
 
   const MessageWrappingType(
     this.messageTypes,
@@ -102,11 +105,11 @@ enum MessageWrappingType {
           }
         }
 
-        return _listEquality.equals(
+        return _typeListEquality.equals(
               item.messageTypes,
               messageTypes,
             ) &&
-            _listEquality.equals(
+            _keyWrappingAlgorithmListEquality.equals(
               item.keyWrappingAlgorithms,
               keyWrappingAlgorithms,
             );
