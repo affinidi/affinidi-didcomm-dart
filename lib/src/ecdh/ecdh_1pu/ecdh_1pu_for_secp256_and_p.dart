@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:elliptic/elliptic.dart' as ec;
 import 'package:elliptic/ecdh.dart' as ecdh;
+import 'package:elliptic/elliptic.dart' as ec;
 import 'package:ssi/ssi.dart';
 
 import '../../extensions/extensions.dart';

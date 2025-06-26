@@ -1,6 +1,7 @@
-import 'package:didcomm/didcomm.dart';
-import 'package:ssi/ssi.dart';
 import 'package:meta/meta.dart';
+import 'package:ssi/ssi.dart';
+
+import '../../didcomm.dart';
 
 abstract class DidcommMessage {
   DidcommMessage();

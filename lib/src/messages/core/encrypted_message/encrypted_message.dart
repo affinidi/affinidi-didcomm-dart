@@ -48,6 +48,8 @@ class EncryptedMessage extends DidcommMessage {
   @Base64UrlConverter()
   final Uint8List initializationVector;
 
+  static const _jweHeaderConverter = JweHeaderConverter();
+
   EncryptedMessage({
     required this.cipherText,
     required this.protected,
@@ -109,7 +111,7 @@ class EncryptedMessage extends DidcommMessage {
       ephemeralPublicKeyBytes: ephemeralKeyPair.publicKeyBytes,
     );
 
-    final protected = JweHeaderConverter().toJson(jweHeader);
+    final protected = _jweHeaderConverter.toJson(jweHeader);
 
     final contentEncryptionKey = _createContentEncryptionKey(
       encryptionAlgorithm,
@@ -157,7 +159,7 @@ class EncryptedMessage extends DidcommMessage {
     required Wallet recipientWallet,
   }) async {
     final self = await _findSelfAsRecipient(recipientWallet);
-    final jweHeader = JweHeaderConverter().fromJson(protected);
+    final jweHeader = _jweHeaderConverter.fromJson(protected);
 
     final subjectKeyId = jweHeader.subjectKeyId;
 

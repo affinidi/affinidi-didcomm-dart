@@ -1,9 +1,11 @@
 // ignore_for_file: deprecated_member_use
 
 import 'dart:async';
+
 import 'package:analyzer/dart/element/element.dart';
-import 'package:source_gen/source_gen.dart';
 import 'package:collection/collection.dart';
+import 'package:source_gen/source_gen.dart';
+
 import '../annotations/own_json_properties.dart';
 
 class OwnJsonPropertiesGenerator

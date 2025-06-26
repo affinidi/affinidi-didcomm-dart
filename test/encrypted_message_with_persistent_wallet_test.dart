@@ -77,7 +77,7 @@ void main() async {
                     () async {
                       // Act: create, sign, and encrypt the message
                       const content = 'Hello, Bob!';
-                      final plainTextMessage = await MessageAssertionService
+                      final plainTextMessage = MessageAssertionService
                           .createPlainTextMessageAssertion(
                         content,
                         from: aliceDidDocument.id,
@@ -142,7 +142,8 @@ void main() async {
                         expectedBodyContent,
                       );
 
-                      final actualJweHeader = JweHeaderConverter().fromJson(
+                      final actualJweHeader =
+                          const JweHeaderConverter().fromJson(
                         sut.protected,
                       );
 
@@ -162,7 +163,7 @@ void main() async {
                     () async {
                       // Act: create, sign, and encrypt the message
                       const content = 'Hello, Bob!';
-                      final plainTextMessage = await MessageAssertionService
+                      final plainTextMessage = MessageAssertionService
                           .createPlainTextMessageAssertion(
                         content,
                         from: aliceDidDocument.id,

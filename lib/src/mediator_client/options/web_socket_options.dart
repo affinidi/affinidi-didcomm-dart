@@ -1,5 +1,5 @@
-import 'status_request_message_options.dart';
 import 'live_delivery_change_message_options.dart';
+import 'status_request_message_options.dart';
 
 class WebSocketOptions {
   final StatusRequestMessageOptions statusRequestMessageOptions;
