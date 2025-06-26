@@ -17,6 +17,7 @@ const _$ownJsonProperties = [
   'created_time',
   'expires_time',
   'please_ack',
+  'ack',
   'body',
   'attachments'
 ];
