@@ -7,9 +7,16 @@ import '../common/did_document_service_type.dart';
 import '../extensions/extensions.dart';
 
 // TODO: should be eventually moved to TDK
-/// Authentication by mediators are not covered by standard.
-/// This extension method provides authentication for the Affinidi mediator specifically.
+/// Extension for [MediatorClient] to support Affinidi-specific authentication.
+///
+/// Authentication by mediators is not covered by the DIDComm standard.
+/// This extension provides a method to authenticate with an Affinidi mediator.
 extension AffinidiAuthenticatorExtension on MediatorClient {
+  /// Authenticates with an Affinidi mediator.
+  ///
+  /// [encryptionAlgorithm]: The encryption algorithm to use for the authentication message (default: [EncryptionAlgorithm.a256cbc]).
+  ///
+  /// Returns [AuthenticationTokens] containing access and refresh tokens on successful authentication.
   Future<AuthenticationTokens> authenticate({
     EncryptionAlgorithm encryptionAlgorithm = EncryptionAlgorithm.a256cbc,
   }) async {

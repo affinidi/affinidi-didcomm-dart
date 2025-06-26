@@ -9,7 +9,13 @@ import '../curves/curve_type.dart';
 import '../jwks/jwk.dart';
 import 'wallet_extension.dart';
 
+/// Extension methods for [DidDocument] to support DIDComm-specific operations,
+/// such as extracting endpoints, creating transport clients, and key matching.
 extension DidDocumentExtension on DidDocument {
+  /// Creates a [Dio] HTTP client for the given [mediatorServiceType] endpoint in this DID Document.
+  ///
+  /// [mediatorServiceType]: The type of service to use as the HTTP endpoint.
+  /// Throws [ArgumentError] if no matching service or HTTPS endpoint is found.
   Dio toDio({required DidDocumentServiceType mediatorServiceType}) {
     final serviceType = mediatorServiceType.value;
 
@@ -35,6 +41,10 @@ extension DidDocumentExtension on DidDocument {
     ));
   }
 
+  /// Creates a [IOWebSocketChannel] for the `didcomm-messaging` service endpoint in this DID Document.
+  ///
+  /// [accessToken]: Optional access token to include in the WebSocket headers.
+  /// Throws [ArgumentError] if no matching service or WSS endpoint is found.
   IOWebSocketChannel toWebSocketChannel({String? accessToken}) {
     final serviceType = DidDocumentServiceType.didCommMessaging.value;
 
@@ -63,14 +73,17 @@ extension DidDocumentExtension on DidDocument {
     );
   }
 
+  /// Returns all [ServiceEndpoint]s of the given [serviceType] in this DID Document.
   List<ServiceEndpoint> getServicesByType(DidDocumentServiceType serviceType) {
     return service.where((item) => item.type == serviceType.value).toList();
   }
 
+  /// Returns the first [ServiceEndpoint] of the given [serviceType], or null if not found.
   ServiceEndpoint? getFirstServiceByType(DidDocumentServiceType serviceType) {
     return service.firstWhereOrNull((item) => item.type == serviceType.value);
   }
 
+  /// Returns the first mediator DID from the `didcomm-messaging` service, or null if not found.
   String? getFirstMediatorDid() {
     final service = getFirstServiceByType(
       DidDocumentServiceType.didCommMessaging,
@@ -81,6 +94,9 @@ extension DidDocumentExtension on DidDocument {
         : null;
   }
 
+  /// Adds all mediators from another [didDocument] to this DID Document's services.
+  ///
+  /// [didDocument]: The DID Document from which to add mediators.
   void addMediatorsFromDidDocument(
     DidDocument didDocument,
   ) {
@@ -106,6 +122,9 @@ extension DidDocumentExtension on DidDocument {
     service.addAll(servicesToAdd);
   }
 
+  /// Resolves a DID and adds all mediators from the resolved DID Document to this DID Document's services.
+  ///
+  /// [did]: The DID to resolve and add mediators from.
   Future<void> addMediatorsFromResolvedDid(
     String did,
   ) async {
@@ -113,6 +132,11 @@ extension DidDocumentExtension on DidDocument {
     addMediatorsFromDidDocument(didDocument);
   }
 
+  /// Matches and returns key IDs in this DID Document's key agreement section that are compatible with all [otherDidDocuments].
+  ///
+  /// [wallet]: The wallet to use for key ID lookups.
+  /// [otherDidDocuments]: The other DID Documents to match key agreement curves with.
+  /// Throws if no compatible key is found in the wallet.
   List<String> matchKeysInKeyAgreement({
     required Wallet wallet,
     required List<DidDocument> otherDidDocuments,
@@ -150,6 +174,9 @@ extension DidDocumentExtension on DidDocument {
     }).toList();
   }
 
+  /// Extracts the [CurveType] from a [VerificationMethod]'s JWK in the key agreement section.
+  ///
+  /// [keyAgreement]: The verification method to extract the curve from.
   CurveType? getCurve(VerificationMethod keyAgreement) {
     final jwk = Jwk.fromJson(keyAgreement.asJwk().toJson());
     return jwk.curve;
