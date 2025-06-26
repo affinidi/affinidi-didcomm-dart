@@ -10,20 +10,43 @@ import '../../messages/algorithm_types/algorithms_types.dart';
 import '../../messages/jwm.dart';
 import '../ecdh.dart';
 
+/// Abstract base class for ECDH-1PU key agreement in DIDComm.
+///
+/// Provides methods for computing encryption and decryption secrets and for encrypting/decrypting data.
 abstract class Ecdh1Pu implements Ecdh {
+  /// The authentication tag for the JWE.
   final List<int> authenticationTag;
+
+  /// The JWE header.
   final JweHeader jweHeader;
 
+  /// Constructs an [Ecdh1Pu] instance.
+  ///
+  /// [authenticationTag]: The authentication tag for the JWE.
+  /// [jweHeader]: The JWE header.
   Ecdh1Pu({required this.authenticationTag, required this.jweHeader});
 
+  /// Computes the encryption secrets (ze, zs) for ECDH-1PU.
+  ///
+  /// [senderKeyPair]: The sender's key pair.
+  /// Returns a tuple containing [ze] and [zs] as [Uint8List].
   Future<({Uint8List ze, Uint8List zs})> getEncryptionSecrets({
     required KeyPair senderKeyPair,
   });
 
+  /// Computes the decryption secrets (ze, zs) for ECDH-1PU.
+  ///
+  /// [recipientKeyPair]: The recipient's key pair.
+  /// Returns a tuple containing [ze] and [zs] as [Uint8List].
   Future<({Uint8List ze, Uint8List zs})> getDecryptionSecrets({
     required KeyPair recipientKeyPair,
   });
 
+  /// Encrypts [data] using the sender's key pair and ECDH-1PU shared secrets.
+  ///
+  /// [senderKeyPair]: The sender's key pair.
+  /// [data]: The plaintext data to encrypt.
+  /// Returns the encrypted data as [Uint8List].
   @override
   Future<Uint8List> encryptData({
     required KeyPair senderKeyPair,
@@ -39,6 +62,11 @@ abstract class Ecdh1Pu implements Ecdh {
     return kw.encrypt(data).data;
   }
 
+  /// Decrypts [data] using the recipient's key pair and ECDH-1PU shared secrets.
+  ///
+  /// [recipientKeyPair]: The recipient's key pair.
+  /// [data]: The encrypted data to decrypt.
+  /// Returns the decrypted data as [Uint8List].
   @override
   Future<Uint8List> decryptData({
     required KeyPair recipientKeyPair,

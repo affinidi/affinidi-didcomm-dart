@@ -11,7 +11,20 @@ import 'ecdh_1pu/ecdh_1pu_for_x.dart';
 import 'ecdh_es/ecdh_es_for_secp_and_p.dart';
 import 'ecdh_es/ecdh_es_for_x.dart';
 
+/// Abstract base class for ECDH key agreement operations in DIDComm.
+///
+/// Provides static methods for encryption and decryption using various ECDH algorithms and curves.
 abstract class Ecdh {
+  /// Encrypts [data] using the provided key material and JWE header.
+  ///
+  /// [data]: The plaintext data to encrypt.
+  /// [senderKeyPair]: The sender's key pair.
+  /// [recipientJwk]: The recipient's JWK.
+  /// [ephemeralPrivateKeyBytes]: The ephemeral private key bytes.
+  /// [jweHeader]: The JWE header.
+  /// [authenticationTag]: The authentication tag for the JWE.
+  ///
+  /// Throws [UnsupportedCurveError] if the curve is not supported.
   static Future<Uint8List> encrypt(
     Uint8List data, {
     required KeyPair senderKeyPair,
@@ -47,6 +60,16 @@ abstract class Ecdh {
     );
   }
 
+  /// Decrypts [data] using the provided key material and JWE header.
+  ///
+  /// [data]: The encrypted data to decrypt.
+  /// [self]: The recipient.
+  /// [jweHeader]: The JWE header.
+  /// [recipientWallet]: The recipient's wallet.
+  /// [authenticationTag]: The authentication tag for the JWE.
+  /// [senderJwk]: Optional sender's JWK.
+  ///
+  /// Throws [UnsupportedCurveError] if the curve is not supported.
   static Future<Uint8List> decrypt(
     Uint8List data, {
     required Recipient self,
