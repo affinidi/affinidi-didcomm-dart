@@ -3,6 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'jws_header.g.dart';
 
 /// Represents the protected header of a JWS (JSON Web Signature) message in a DIDComm signed message.
+/// It is integrity-protected - included in the signature.
 ///
 /// This header contains cryptographic parameters required for signature verification,
 /// as described in the [DIDComm Messaging specification](https://identity.foundation/didcomm-messaging/spec/#message-signing).
