@@ -13,7 +13,9 @@ class JwsHeaderConverter implements JsonConverter<JwsHeader, String> {
     final bytes = base64UrlDecodeWithPadding(base64UrlInput);
     final jsonString = ascii.decode(bytes);
 
-    return JwsHeader.fromJson(jsonDecode(jsonString));
+    return JwsHeader.fromJson(
+      jsonDecode(jsonString) as Map<String, dynamic>,
+    );
   }
 
   @override

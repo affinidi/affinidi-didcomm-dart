@@ -1,19 +1,19 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:didcomm/src/errors/missing_authentication_tag_error.dart';
-import 'package:didcomm/src/errors/missing_initialization_vector_error.dart';
-import 'package:didcomm/src/errors/missing_key_agreement_error.dart';
-import 'package:json_annotation/json_annotation.dart';
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
+import 'package:json_annotation/json_annotation.dart';
 import 'package:ssi/ssi.dart' hide Jwk;
 
 import '../../../../didcomm.dart';
+import '../../../annotations/own_json_properties.dart';
+import '../../../common/crypto.dart';
 import '../../../converters/base64_url_converter.dart';
 import '../../../converters/jwe_header_converter.dart';
 import '../../../ecdh/ecdh.dart';
-import '../../../annotations/own_json_properties.dart';
-import '../../../common/crypto.dart';
+import '../../../errors/missing_authentication_tag_error.dart';
+import '../../../errors/missing_initialization_vector_error.dart';
+import '../../../errors/missing_key_agreement_error.dart';
 import '../../../extensions/extensions.dart';
 import '../../../jwks/jwk.dart';
 import '../../jwm.dart';
@@ -196,7 +196,7 @@ class EncryptedMessage extends DidcommMessage {
     );
 
     final innerMessage = jsonDecode(utf8.decode(decrypted));
-    return innerMessage;
+    return innerMessage as Map<String, dynamic>;
   }
 
   Future<Jwk> _getSenderJwk(String subjectKeyId) async {

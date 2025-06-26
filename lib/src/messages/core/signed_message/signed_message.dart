@@ -1,14 +1,14 @@
 import 'dart:convert';
 
-import 'package:didcomm/src/common/did.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:ssi/ssi.dart';
 
 import '../../../../didcomm.dart';
-import '../../jwm.dart';
 import '../../../annotations/own_json_properties.dart';
+import '../../../common/did.dart';
 import '../../../common/encoding.dart';
 import '../../../extensions/extensions.dart';
+import '../../jwm.dart';
 
 part 'signed_message.g.dart';
 part 'signed_message.own_json_props.g.dart';
@@ -66,7 +66,7 @@ class SignedMessage extends DidcommMessage {
     final payloadBytes = base64UrlDecodeWithPadding(payload);
     final innerMessage = json.decode(utf8.decode(payloadBytes));
 
-    return innerMessage;
+    return innerMessage as Map<String, dynamic>;
   }
 
   // TODO: add issuer check

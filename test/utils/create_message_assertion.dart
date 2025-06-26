@@ -1,7 +1,7 @@
 import 'package:didcomm/didcomm.dart';
 
 class MessageAssertionService {
-  static createPlainTextMessageAssertion(
+  static PlainTextMessage createPlainTextMessageAssertion(
     String message, {
     required String from,
     required List<String> to,

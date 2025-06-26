@@ -16,7 +16,7 @@ void main() async {
   // Copy its DID Document URL into example/mediator/mediator_did.txt.
 
   // Replace this DID Document with your receiver DID Document
-  final receiverDidDocument = DidDocument.fromJson(jsonDecode("""
+  final receiverDidDocument = DidDocument.fromJson(jsonDecode('''
     {
       "id": "did:key:zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy",
       "@context": [
@@ -47,7 +47,7 @@ void main() async {
         "did:key:zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy#zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy"
       ]
     }
-  """));
+  '''));
 
   final messageForReceiver = 'Hello, Bob!';
 
@@ -70,7 +70,10 @@ void main() async {
   final senderKeyPair = await senderWallet.getKeyPair(senderKeyId);
   final senderDidDocument = DidKey.generateDocument(senderKeyPair.publicKey);
 
-  prettyPrint('Sender DID', senderDidDocument.id);
+  prettyPrint(
+    'Sender DID',
+    object: senderDidDocument.id,
+  );
 
   final senderSigner = DidSigner(
     didDocument: senderDidDocument,
@@ -89,7 +92,7 @@ void main() async {
       await readDidDocument('./example/mediator/mediator_did_document.json');
 
   final senderPlainTextMassage = PlainTextMessage(
-    id: Uuid().v4(),
+    id: const Uuid().v4(),
     from: senderDidDocument.id,
     to: [receiverDidDocument.id],
     type: Uri.parse('https://didcomm.org/example/1.0/message'),
@@ -97,7 +100,10 @@ void main() async {
   );
 
   senderPlainTextMassage['custom-header'] = 'custom-value';
-  prettyPrint('Plain Text Message for Receiver', senderPlainTextMassage);
+  prettyPrint(
+    'Plain Text Message for Receiver',
+    object: senderPlainTextMassage,
+  );
 
   // find keys whose curve is common in other DID Documents
   final senderMatchedKeyIds = senderDidDocument.matchKeysInKeyAgreement(
@@ -122,14 +128,14 @@ void main() async {
 
   prettyPrint(
     'Encrypted and Signed Message by Sender',
-    senderSignedAndEncryptedMessage,
+    object: senderSignedAndEncryptedMessage,
   );
 
   final createdTime = DateTime.now().toUtc();
   final expiresTime = createdTime.add(const Duration(seconds: 60));
 
   final forwardMessage = ForwardMessage(
-    id: Uuid().v4(),
+    id: const Uuid().v4(),
     to: [receiverMediatorDidDocument.id],
     next: receiverDidDocument.id,
     expiresTime: expiresTime,
@@ -147,7 +153,7 @@ void main() async {
 
   prettyPrint(
     'Forward Message for Mediator that wraps Encrypted Message for Receiver',
-    forwardMessage,
+    object: forwardMessage,
   );
 
   final senderMediatorClient = MediatorClient(
@@ -156,7 +162,7 @@ void main() async {
     didKeyId: senderWallet.getDidIdByKeyId(senderMatchedKeyIds.first)!,
     signer: senderSigner,
     // optional. if omitted defaults will be used
-    forwardMessageOptions: ForwardMessageOptions(
+    forwardMessageOptions: const ForwardMessageOptions(
       shouldSign: true,
       shouldEncrypt: true,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
@@ -173,5 +179,5 @@ void main() async {
     accessToken: aliceTokens.accessToken,
   );
 
-  print('The message has been sent');
+  prettyPrint('The message has been sent');
 }

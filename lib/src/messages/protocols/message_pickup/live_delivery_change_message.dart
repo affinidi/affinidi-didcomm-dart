@@ -22,7 +22,7 @@ class LiveDeliveryChangeMessage extends MessagePickupMessage {
     return LiveDeliveryChangeMessage(
       id: plainTextMessage.id,
       to: plainTextMessage.to,
-      liveDelivery: plainTextMessage.body?['live_delivery'],
+      liveDelivery: plainTextMessage.body?['live_delivery'] as bool? ?? false,
       from: plainTextMessage.from,
     );
   }

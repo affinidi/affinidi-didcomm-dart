@@ -142,7 +142,7 @@ void main() async {
         signer: aliceSigner,
 
         // optional. if omitted defaults will be used
-        forwardMessageOptions: ForwardMessageOptions(
+        forwardMessageOptions: const ForwardMessageOptions(
           shouldSign: true,
           shouldEncrypt: true,
           keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
@@ -157,7 +157,7 @@ void main() async {
         signer: bobSigner,
 
         // optional. if omitted defaults will be used
-        webSocketOptions: WebSocketOptions(
+        webSocketOptions: const WebSocketOptions(
           liveDeliveryChangeMessageOptions: LiveDeliveryChangeMessageOptions(
             shouldSend: true,
             shouldSign: true,
@@ -180,10 +180,10 @@ void main() async {
     });
 
     test('REST API works correctly', () async {
-      final expectedBodyContent = Uuid().v4();
+      final expectedBodyContent = const Uuid().v4();
 
       final alicePlainTextMassage = PlainTextMessage(
-        id: Uuid().v4(),
+        id: const Uuid().v4(),
         from: aliceDidDocument.id,
         to: [bobDidDocument.id],
         type: Uri.parse('https://didcomm.org/example/1.0/message'),
@@ -215,7 +215,7 @@ void main() async {
       final expiresTime = createdTime.add(const Duration(seconds: 60));
 
       final forwardMessage = ForwardMessage(
-        id: Uuid().v4(),
+        id: const Uuid().v4(),
         to: [bobMediatorDocument.id],
         from: aliceDidDocument.id,
         next: bobDidDocument.id,
@@ -265,7 +265,7 @@ void main() async {
       );
 
       final actualBodyContents = actualUnpackedMessages
-          .map<String?>((message) => message.body?['content'])
+          .map<String?>((message) => message.body?['content'] as String)
           .toList();
 
       expect(
@@ -279,10 +279,10 @@ void main() async {
     test(
       'WebSockets API works correctly',
       () async {
-        final expectedBodyContent = Uuid().v4();
+        final expectedBodyContent = const Uuid().v4();
 
         final alicePlainTextMassage = PlainTextMessage(
-          id: Uuid().v4(),
+          id: const Uuid().v4(),
           from: aliceDidDocument.id,
           to: [bobDidDocument.id],
           type: Uri.parse('https://didcomm.org/example/1.0/message'),
@@ -313,7 +313,7 @@ void main() async {
         final expiresTime = createdTime.add(const Duration(seconds: 60));
 
         final forwardMessage = ForwardMessage(
-          id: Uuid().v4(),
+          id: const Uuid().v4(),
           to: [bobMediatorDocument.id],
           from: aliceDidDocument.id,
           next: bobDidDocument.id,
@@ -347,15 +347,13 @@ void main() async {
               ],
             );
 
-            final content = unpackedMessage.body?['content'];
+            final content = unpackedMessage.body?['content'] as String;
 
             if (content == expectedBodyContent) {
               actualBodyContent = content;
               await bobMediatorClient.disconnect();
             }
           },
-          onError: (error) => print(error),
-          onDone: () => print('done'),
           accessToken: bobTokens.accessToken,
           cancelOnError: false,
         );

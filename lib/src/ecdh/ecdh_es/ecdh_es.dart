@@ -47,7 +47,7 @@ abstract class EcdhEs implements Ecdh {
     return kw.decrypt(ck.EncryptionResult(data));
   }
 
-  _generateSharedSecret(Uint8List z) {
+  List<int> _generateSharedSecret(Uint8List z) {
     //Didcomm only uses A256KW
     final keyDataLen = 256;
     final suppPubInfo = _int32BigEndianBytes(keyDataLen);

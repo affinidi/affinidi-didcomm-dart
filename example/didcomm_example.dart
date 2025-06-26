@@ -57,7 +57,10 @@ void main() async {
   );
 
   alicePlainTextMassage['custom-header'] = 'custom-value';
-  prettyPrint('Plain Text Message for Bob', alicePlainTextMassage);
+  prettyPrint(
+    'Plain Text Message for Bob',
+    object: alicePlainTextMassage,
+  );
 
   final aliceSignedMessage = await SignedMessage.pack(
     alicePlainTextMassage,
@@ -66,7 +69,7 @@ void main() async {
 
   prettyPrint(
     'Signed Message by Alice',
-    aliceSignedMessage,
+    object: aliceSignedMessage,
   );
 
   // find keys whose curve is common in other DID Documents
@@ -89,13 +92,13 @@ void main() async {
 
   prettyPrint(
     'Encrypted Message by Alice',
-    aliceEncryptedMessage,
+    object: aliceEncryptedMessage,
   );
 
   final sentMessageByAlice = jsonEncode(aliceEncryptedMessage);
 
   final unpackedMessageByBob = await DidcommMessage.unpackToPlainTextMessage(
-    message: jsonDecode(sentMessageByAlice),
+    message: jsonDecode(sentMessageByAlice) as Map<String, dynamic>,
     recipientWallet: bobWallet,
     expectedMessageWrappingTypes: [
       MessageWrappingType.authcryptPlaintext,
@@ -107,6 +110,6 @@ void main() async {
 
   prettyPrint(
     'Unpacked Plain Text Message received by Bob',
-    unpackedMessageByBob,
+    object: unpackedMessageByBob,
   );
 }

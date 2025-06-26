@@ -36,7 +36,10 @@ void main() async {
   final aliceKeyPair = await aliceWallet.getKeyPair(aliceKeyId);
   final aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
 
-  prettyPrint('Alice DID', aliceDidDocument.id);
+  prettyPrint(
+    'Alice DID',
+    object: aliceDidDocument.id,
+  );
 
   final aliceSigner = DidSigner(
     didDocument: aliceDidDocument,
@@ -67,7 +70,10 @@ void main() async {
   final bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
 
   // Serialized bobDidDocument needs to shared with sender
-  prettyPrint('Bob DID Document', bobDidDocument);
+  prettyPrint(
+    'Bob DID Document',
+    object: bobDidDocument,
+  );
 
   final bobMediatorDocument = await UniversalDIDResolver.resolve(
     await readDid('./example/mediator/mediator_did.txt'),
@@ -87,7 +93,7 @@ void main() async {
   }
 
   final alicePlainTextMassage = PlainTextMessage(
-    id: Uuid().v4(),
+    id: const Uuid().v4(),
     from: aliceDidDocument.id,
     to: [bobDidDocument.id],
     type: Uri.parse('https://didcomm.org/example/1.0/message'),
@@ -95,7 +101,10 @@ void main() async {
   );
 
   alicePlainTextMassage['custom-header'] = 'custom-value';
-  prettyPrint('Plain Text Message for Bob', alicePlainTextMassage);
+  prettyPrint(
+    'Plain Text Message for Bob',
+    object: alicePlainTextMassage,
+  );
 
   // find keys whose curve is common in other DID Documents
   final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
@@ -120,14 +129,14 @@ void main() async {
 
   prettyPrint(
     'Encrypted and Signed Message by Alice',
-    aliceSignedAndEncryptedMessage,
+    object: aliceSignedAndEncryptedMessage,
   );
 
   final createdTime = DateTime.now().toUtc();
   final expiresTime = createdTime.add(const Duration(seconds: 60));
 
   final forwardMessage = ForwardMessage(
-    id: Uuid().v4(),
+    id: const Uuid().v4(),
     to: [bobMediatorDocument.id],
     next: bobDidDocument.id,
     expiresTime: expiresTime,
@@ -145,7 +154,7 @@ void main() async {
 
   prettyPrint(
     'Forward Message for Mediator that wraps Encrypted Message for Bob',
-    forwardMessage,
+    object: forwardMessage,
   );
 
   final aliceMediatorClient = MediatorClient(
@@ -155,7 +164,7 @@ void main() async {
       signer: aliceSigner,
 
       // optional. if omitted defaults will be used
-      forwardMessageOptions: ForwardMessageOptions(
+      forwardMessageOptions: const ForwardMessageOptions(
         shouldSign: true,
         shouldEncrypt: true,
         keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
@@ -171,7 +180,7 @@ void main() async {
     keyPair: bobKeyPair,
     didKeyId: bobWallet.getDidIdByKeyId(bobKeyId)!,
     signer: bobSigner,
-    webSocketOptions: WebSocketOptions(
+    webSocketOptions: const WebSocketOptions(
       statusRequestMessageOptions: StatusRequestMessageOptions(
         shouldSend: true,
         shouldSign: true,
@@ -205,13 +214,13 @@ void main() async {
 
       prettyPrint(
         'Unpacked Plain Text Message received by Bob via Mediator',
-        unpackedMessageByBob,
+        object: unpackedMessageByBob,
       );
 
       await bobMediatorClient.disconnect();
     },
-    onError: (error) => print(error),
-    onDone: () => print('done'),
+    onError: prettyPrint,
+    onDone: () => prettyPrint('done'),
     accessToken: bobTokens.accessToken,
     cancelOnError: false,
   );

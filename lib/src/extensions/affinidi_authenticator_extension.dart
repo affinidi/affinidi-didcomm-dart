@@ -1,10 +1,10 @@
-import 'package:didcomm/didcomm.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../didcomm.dart';
+import '../common/authentication_tokens/authentication_tokens.dart';
 import '../common/did_document_service_type.dart';
 import '../extensions/extensions.dart';
-import '../common/authentication_tokens/authentication_tokens.dart';
 
 // TODO: should be eventually moved to TDK
 /// Authentication by mediators are not covered by standard.
@@ -19,7 +19,7 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
 
     final didDocument = DidKey.generateDocument(keyPair.publicKey);
 
-    final challengeResponse = await dio.post(
+    final challengeResponse = await dio.post<Map<String, dynamic>>(
       '/challenge',
       data: {'did': didDocument.id},
     );
@@ -28,14 +28,14 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
     final expiresTime = createdTime.add(const Duration(seconds: 60));
 
     final plainTextMessage = PlainTextMessage(
-      id: Uuid().v4(),
+      id: const Uuid().v4(),
       // this is specific to affinidi mediator
       type: Uri.parse('https://affinidi.com/atm/1.0/authenticate'),
       createdTime: createdTime,
       expiresTime: expiresTime,
       from: didDocument.id,
       to: [mediatorDidDocument.id],
-      body: challengeResponse.data['data'],
+      body: challengeResponse.data!['data'] as Map<String, dynamic>,
     );
 
     final encryptedMessage =
@@ -49,11 +49,13 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
       signer: signer,
     );
 
-    final authenticateResponse = await dio.post(
+    final authenticateResponse = await dio.post<Map<String, dynamic>>(
       '',
       data: encryptedMessage,
     );
 
-    return AuthenticationTokens.fromJson(authenticateResponse.data!['data']);
+    return AuthenticationTokens.fromJson(
+      authenticateResponse.data!['data'] as Map<String, dynamic>,
+    );
   }
 }

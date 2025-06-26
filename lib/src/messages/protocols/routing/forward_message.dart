@@ -20,7 +20,7 @@ class ForwardMessage extends PlainTextMessage {
     return ForwardMessage(
       id: plainTextMessage.id,
       to: plainTextMessage.to,
-      next: plainTextMessage.body?['next'],
+      next: plainTextMessage.body?['next'] as String,
       attachments: plainTextMessage.attachments,
     );
   }

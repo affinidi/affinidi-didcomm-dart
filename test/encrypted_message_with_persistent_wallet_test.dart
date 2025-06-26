@@ -121,7 +121,9 @@ void main() async {
 
                       final actualPlainTextMessage =
                           await DidcommMessage.unpackToPlainTextMessage(
-                        message: jsonDecode(sharedMessageToBobInJson),
+                        message: jsonDecode(
+                          sharedMessageToBobInJson,
+                        ) as Map<String, dynamic>,
                         recipientWallet: bobWallet,
                         validateAddressingConsistency: true,
                         expectedMessageWrappingTypes: [
@@ -193,8 +195,11 @@ void main() async {
                       // Assert: unpack and check success
 
                       // Simulate a missing key by modifying the recipient's key ID
-                      final receivedMessage =
-                          jsonDecode(sharedMessageToBobInJson);
+                      final receivedMessage = jsonDecode(
+                        sharedMessageToBobInJson,
+                      ) as Map<String, dynamic>;
+
+                      // ignore: avoid_dynamic_calls
                       receivedMessage['recipients'][0]['header']['kid'] =
                           'non-existent-key-id';
 
