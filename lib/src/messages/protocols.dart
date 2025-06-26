@@ -1,4 +1,3 @@
-export 'protocols/ack/ack_message.dart';
 export 'protocols/discover_features/disclose_message.dart';
 export 'protocols/discover_features/query_message.dart';
 export 'protocols/message_pickup/live_delivery_change_message.dart';

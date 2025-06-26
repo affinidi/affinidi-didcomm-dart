@@ -1,10 +1,8 @@
-import 'package:json_annotation/json_annotation.dart';
 import '../../core/plain_text_message/plain_text_message.dart';
 
 /// Represents a DIDComm v2 Trust Ping message as defined in the trust-ping protocol.
 ///
 /// See: https://identity.foundation/didcomm-messaging/spec/#trust-ping-protocol-20
-@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class PingMessage extends PlainTextMessage {
   /// Indicates whether a response is requested from the recipient.
   final bool responseRequested;
