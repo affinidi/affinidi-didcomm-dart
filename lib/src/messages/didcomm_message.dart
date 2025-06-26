@@ -3,15 +3,28 @@ import 'package:ssi/ssi.dart';
 
 import '../../didcomm.dart';
 
+/// Abstract base class for DIDComm messages.
+///
+/// Provides common functionality for message packing and unpacking
+/// according to the DIDComm Messaging specification.
+/// See: https://identity.foundation/didcomm-messaging/spec/
 abstract class DidcommMessage {
+  /// Constructs a [DidcommMessage].
   DidcommMessage();
 
+  /// The default media type for plain DIDComm messages as per the spec.
   static final mediaType = 'application/didcomm-plain+json';
   final Map<String, dynamic> _customHeaders = {};
 
+  /// Gets a custom header value by [key].
   dynamic operator [](String key) => _customHeaders[key];
+
+  /// Sets a custom header [value] for the given [key].
   void operator []=(String key, dynamic value) => _customHeaders[key] = value;
 
+  /// Packs a [PlainTextMessage] into a [SignedMessage] using the provided [signer].
+  ///
+  /// Returns a [SignedMessage] containing the signed payload.
   static Future<SignedMessage> packIntoSignedMessage(
     PlainTextMessage message, {
     required DidSigner signer,
@@ -22,6 +35,15 @@ abstract class DidcommMessage {
     );
   }
 
+  /// Packs a [DidcommMessage] into an [EncryptedMessage] using the provided cryptographic parameters.
+  ///
+  /// [keyPair]: The sender's key pair for encryption.
+  /// [didKeyId]: The sender's key ID.
+  /// [recipientDidDocuments]: List of recipient DID Documents.
+  /// [keyWrappingAlgorithm]: Algorithm for key wrapping.
+  /// [encryptionAlgorithm]: Algorithm for content encryption.
+  ///
+  /// Returns an [EncryptedMessage].
   static Future<EncryptedMessage> packIntoEncryptedMessage(
     DidcommMessage message, {
     required KeyPair keyPair,
@@ -40,6 +62,16 @@ abstract class DidcommMessage {
     );
   }
 
+  /// Packs a [PlainTextMessage] into a [SignedMessage] and then into an [EncryptedMessage].
+  ///
+  /// [keyPair]: The sender's key pair for encryption.
+  /// [didKeyId]: The sender's key ID.
+  /// [recipientDidDocuments]: List of recipient DID Documents.
+  /// [keyWrappingAlgorithm]: Algorithm for key wrapping.
+  /// [encryptionAlgorithm]: Algorithm for content encryption.
+  /// [signer]: The signer to use for signing the message.
+  ///
+  /// Returns an [EncryptedMessage] containing the signed payload.
   static Future<EncryptedMessage> packIntoSignedAndEncryptedMessages(
     PlainTextMessage message, {
     required KeyPair keyPair,
@@ -64,6 +96,21 @@ abstract class DidcommMessage {
     );
   }
 
+  /// Unpacks a [PlainTextMessage], recursively decrypting and verifying signatures
+  /// of intermediary [EncryptedMessage] and [SignedMessage].
+  /// Verifies addressing consistency by default.
+  /// Verifies wrapping types (plaintext, authcryptPlaintext, authcryptSignPlaintext, etc)
+  /// against the expected list if provided.
+  /// Verified signers against the expected list if provided.
+  ///
+  /// [message]: The message as a JSON map.
+  /// [recipientWallet]: The wallet to use for decryption.
+  /// [validateAddressingConsistency]: Whether to validate addressing consistency between wrappers (default is true).
+  /// [expectedMessageWrappingTypes]: List of expected message wrapping types (optional).
+  ///   For example: [MessageWrappingType.authcryptSignPlaintext, MessageWrappingType.authcryptPlaintext].
+  /// [expectedSigners]: List of expected signer key IDs (optional).
+  ///
+  /// Returns the [PlainTextMessage].
   static Future<PlainTextMessage> unpackToPlainTextMessage({
     required Map<String, dynamic> message,
     required Wallet recipientWallet,
@@ -107,11 +154,13 @@ abstract class DidcommMessage {
     return plainTextMessage;
   }
 
+  /// Merges [json] with custom headers for serialization.
   @protected
   Map<String, dynamic> withCustomHeaders(Map<String, dynamic> json) {
     return {...json, ..._customHeaders};
   }
 
+  /// Assigns custom headers from [json] that are not in [ownHeaders].
   @protected
   void assignCustomHeaders(Map<String, dynamic> json, List<String> ownHeaders) {
     final customHeaders = json.keys.where((key) => !ownHeaders.contains(key));
@@ -121,6 +170,7 @@ abstract class DidcommMessage {
     }
   }
 
+  /// Serializes the message to a JSON map, including custom headers.
   Map<String, dynamic> toJson();
 
   static void _validate({
