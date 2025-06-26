@@ -39,7 +39,7 @@ class Ecdh1PuForSecp256AndP extends Ecdh1Pu {
   ///
   /// [senderKeyPair]: The sender's key pair.
   /// Throws if [privateKey1] is not provided.
-  /// Returns a tuple containing [ze] and [zs] as [Uint8List].
+  /// Returns a tuple containing ze and zs as [Uint8List].
   @override
   Future<({Uint8List ze, Uint8List zs})> getEncryptionSecrets({
     required KeyPair senderKeyPair,
@@ -59,7 +59,7 @@ class Ecdh1PuForSecp256AndP extends Ecdh1Pu {
   /// Computes the decryption secrets (ze, zs) for ECDH-1PU using secp256k1 or P-256 keys.
   ///
   /// [recipientKeyPair]: The recipient's key pair.
-  /// Returns a tuple containing [ze] and [zs] as [Uint8List].
+  /// Returns a tuple containing ze and zs as [Uint8List].
   @override
   Future<({Uint8List ze, Uint8List zs})> getDecryptionSecrets({
     required KeyPair recipientKeyPair,

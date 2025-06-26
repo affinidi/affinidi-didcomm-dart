@@ -29,7 +29,7 @@ abstract class Ecdh1Pu implements Ecdh {
   /// Computes the encryption secrets (ze, zs) for ECDH-1PU.
   ///
   /// [senderKeyPair]: The sender's key pair.
-  /// Returns a tuple containing [ze] and [zs] as [Uint8List].
+  /// Returns a tuple containing ze and zs as [Uint8List].
   Future<({Uint8List ze, Uint8List zs})> getEncryptionSecrets({
     required KeyPair senderKeyPair,
   });
@@ -37,7 +37,7 @@ abstract class Ecdh1Pu implements Ecdh {
   /// Computes the decryption secrets (ze, zs) for ECDH-1PU.
   ///
   /// [recipientKeyPair]: The recipient's key pair.
-  /// Returns a tuple containing [ze] and [zs] as [Uint8List].
+  /// Returns a tuple containing ze and zs as [Uint8List].
   Future<({Uint8List ze, Uint8List zs})> getDecryptionSecrets({
     required KeyPair recipientKeyPair,
   });
