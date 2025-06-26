@@ -10,34 +10,63 @@ import '../../../converters/jwe_header_converter.dart';
 part 'plain_text_message.g.dart';
 part 'plain_text_message.own_json_props.g.dart';
 
+/// Represents a DIDComm v2 Plain Text Message as defined in the DIDComm Messaging specification.
+///
+/// See: https://identity.foundation/didcomm-messaging/spec/#didcomm-plaintext-messages
 @OwnJsonProperties()
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class PlainTextMessage extends DidcommMessage {
+  /// Unique identifier for the message ("id" field in DIDComm spec).
   final String id;
+
+  /// Message type URI.
   final Uri type;
+
+  /// Sender's DID. Optional.
   final String? from;
+
+  /// List of recipient DIDs. Optional.
   final List<String>? to;
 
+  /// Thread ID for message threading ("thid" field in DIDComm spec). Optional.
   @JsonKey(name: 'thid')
   final String? threadId;
 
+  /// Parent thread ID for nested threading ("pthid" field in DIDComm spec). Optional.
   @JsonKey(name: 'pthid')
   final String? parentThreadId;
 
+  /// Message creation time as a UTC timestamp ("created_time" field in DIDComm spec). Optional.
   @JsonKey(name: 'created_time')
   @EpochSecondsConverter()
   final DateTime? createdTime;
 
+  /// Message expiration time as a UTC timestamp ("expires_time" field in DIDComm spec). Optional.
   @JsonKey(name: 'expires_time')
   @EpochSecondsConverter()
   final DateTime? expiresTime;
 
+  /// Message body, containing protocol-specific content.
   final Map<String, dynamic>? body;
+
+  /// List of attachments. Optional.
   final List<Attachment>? attachments;
 
   static const _unorderedEquality = UnorderedIterableEquality<String>();
   static const _jweHeaderConverter = JweHeaderConverter();
 
+  /// Constructs a [PlainTextMessage].
+  ///
+  /// [id]: Unique message identifier.
+  /// [type]: Message type URI.
+  /// [from]: Sender's DID (optional).
+  /// [to]: List of recipient DIDs (optional).
+  /// [threadId]: Thread ID for message threading (optional).
+  /// [parentThreadId]: Parent thread ID for nested threading (optional).
+  /// [createdTime]: Message creation time (optional).
+  /// [expiresTime]: Message expiration time (optional).
+  /// [body]: Message body (optional).
+  /// [attachments]: List of attachments (optional).
   PlainTextMessage({
     required this.id,
     required this.type,
@@ -51,6 +80,9 @@ class PlainTextMessage extends DidcommMessage {
     this.attachments,
   });
 
+  /// Creates a [PlainTextMessage] from a JSON map.
+  ///
+  /// [json]: The JSON map representing the message.
   factory PlainTextMessage.fromJson(Map<String, dynamic> json) {
     final message = _$PlainTextMessageFromJson(json)
       ..assignCustomHeaders(json, _$ownJsonProperties);
@@ -58,11 +90,16 @@ class PlainTextMessage extends DidcommMessage {
     return message;
   }
 
+  /// Serializes the message to a JSON map, including custom headers.
   @override
   Map<String, dynamic> toJson() =>
       withCustomHeaders(_$PlainTextMessageToJson(this));
 
-  // https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
+  /// Validates addressing consistency between this PlainTextMessage and an [EncryptedMessage].
+  ///
+  /// Throws [ArgumentError] if the addressing is inconsistent.
+  ///
+  /// See: https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
   void validateConsistencyWithEncryptedMessage(EncryptedMessage message) {
     _validateFromHeader(
       encryptionKeyId:
@@ -74,7 +111,11 @@ class PlainTextMessage extends DidcommMessage {
     );
   }
 
-  // https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
+  /// Validates addressing consistency between this PlainTextMessage and a [SignedMessage].
+  ///
+  /// Throws [ArgumentError] if the addressing is inconsistent.
+  ///
+  /// See: https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
   void validateConsistencyWithSignedMessage(SignedMessage message) {
     _validateFromHeader(
       signatureKeyIds: message.signatures
