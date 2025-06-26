@@ -102,7 +102,7 @@ class JweHeader {
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
-    final curve = keyPair.publicKey.type.asDidcommCompatibleCurve();
+    final curve = keyPair.publicKey.type.asEncryptionCapableCurve();
 
     if (subjectKeyId == null &&
         keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {

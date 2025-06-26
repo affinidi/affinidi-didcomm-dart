@@ -282,7 +282,7 @@ class EncryptedMessage extends DidcommMessage {
     final publicKey = keyPair.publicKey;
 
     final futures = recipientDidDocuments.map((didDocument) async {
-      final curve = publicKey.type.asDidcommCompatibleCurve();
+      final curve = publicKey.type.asEncryptionCapableCurve();
       final keyAgreement = didDocument.keyAgreement.firstWithCurve(curve);
 
       final encryptedKey = await Ecdh.encrypt(
