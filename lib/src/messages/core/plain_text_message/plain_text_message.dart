@@ -46,6 +46,14 @@ class PlainTextMessage extends DidcommMessage {
   @EpochSecondsConverter()
   final DateTime? expiresTime;
 
+  /// Massage IDs that need acknowledgment ("please_ack" field in DIDComm spec). Optional.
+  /// The ID of the current message is always implicitly requested to be acknowledged if this field is present.
+  /// The empty list means only the current message should be acknowledged.
+  ///
+  /// See: https://identity.foundation/didcomm-messaging/spec/#acks
+  @JsonKey(name: 'please_ack')
+  final List<String>? pleaseAck;
+
   /// Message body, containing protocol-specific content.
   final Map<String, dynamic>? body;
 
@@ -76,6 +84,7 @@ class PlainTextMessage extends DidcommMessage {
     this.parentThreadId,
     this.createdTime,
     this.expiresTime,
+    this.pleaseAck,
     this.body,
     this.attachments,
   });

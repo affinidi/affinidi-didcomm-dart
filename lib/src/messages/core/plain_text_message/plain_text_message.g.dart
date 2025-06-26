@@ -18,6 +18,9 @@ PlainTextMessage _$PlainTextMessageFromJson(Map<String, dynamic> json) =>
           json['created_time'], const EpochSecondsConverter().fromJson),
       expiresTime: _$JsonConverterFromJson<int, DateTime>(
           json['expires_time'], const EpochSecondsConverter().fromJson),
+      pleaseAck: (json['please_ack'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
       body: json['body'] as Map<String, dynamic>?,
       attachments: (json['attachments'] as List<dynamic>?)
           ?.map((e) => Attachment.fromJson(e as Map<String, dynamic>))
@@ -40,6 +43,7 @@ Map<String, dynamic> _$PlainTextMessageToJson(PlainTextMessage instance) =>
               instance.expiresTime, const EpochSecondsConverter().toJson)
           case final value?)
         'expires_time': value,
+      if (instance.pleaseAck case final value?) 'please_ack': value,
       if (instance.body case final value?) 'body': value,
       if (instance.attachments?.map((e) => e.toJson()).toList()
           case final value?)
