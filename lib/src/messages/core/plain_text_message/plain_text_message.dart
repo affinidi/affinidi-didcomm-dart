@@ -52,7 +52,13 @@ class PlainTextMessage extends DidcommMessage {
   ///
   /// See: https://identity.foundation/didcomm-messaging/spec/#acks
   @JsonKey(name: 'please_ack')
-  final List<String>? pleaseAck;
+  final List<String>? pleaseAcknowledge;
+
+  /// List of message IDs that are being acknowledged by this message ("ack" field in DIDComm spec). Optional.
+  ///
+  /// See: https://identity.foundation/didcomm-messaging/spec/#acks
+  @JsonKey(name: 'ack')
+  final List<String>? acknowledged;
 
   /// Message body, containing protocol-specific content.
   final Map<String, dynamic>? body;
@@ -84,7 +90,8 @@ class PlainTextMessage extends DidcommMessage {
     this.parentThreadId,
     this.createdTime,
     this.expiresTime,
-    this.pleaseAck,
+    this.pleaseAcknowledge,
+    this.acknowledged,
     this.body,
     this.attachments,
   });
