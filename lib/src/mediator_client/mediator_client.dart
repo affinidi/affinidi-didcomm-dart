@@ -12,17 +12,38 @@ import '../../didcomm.dart';
 import '../common/did_document_service_type.dart';
 import '../extensions/extensions.dart';
 
+/// Client for interacting with a DIDComm mediator, supporting message sending, inbox management,
+/// and real-time message delivery via WebSockets.
 class MediatorClient {
+  /// The DID Document of the mediator.
   final DidDocument mediatorDidDocument;
+
+  /// The key pair used for encryption and signing.
   final KeyPair keyPair;
+
+  /// The key ID used for encryption.
   final String didKeyId;
+
+  /// The signer used for signing messages.
   final DidSigner signer;
+
+  /// Options for forwarding messages to the mediator.
   final ForwardMessageOptions forwardMessageOptions;
+
+  /// Options for WebSocket connections.
   final WebSocketOptions webSocketOptions;
 
   final Dio _dio;
   late final IOWebSocketChannel? _channel;
 
+  /// Creates a [MediatorClient] instance.
+  ///
+  /// [mediatorDidDocument] - The mediator's DID Document.
+  /// [keyPair] - The key pair for encryption/signing.
+  /// [didKeyId] - The key ID for encryption.
+  /// [signer] - The signer for signing messages.
+  /// [forwardMessageOptions] - Options for forwarding messages (default: const ForwardMessageOptions()).
+  /// [webSocketOptions] - Options for WebSocket/live delivery (default: const WebSocketOptions()).
   MediatorClient({
     required this.mediatorDidDocument,
     required this.keyPair,
@@ -34,6 +55,12 @@ class MediatorClient {
           mediatorServiceType: DidDocumentServiceType.didCommMessaging,
         );
 
+  /// Creates a [MediatorClient] from a mediator DID Document URI.
+  ///
+  /// [didDocumentUrl] - The URI of the mediator's DID Document.
+  /// [keyPair] - The key pair for encryption/signing.
+  /// [didKeyId] - The key ID for encryption.
+  /// [signer] - The signer for signing messages.
   static Future<MediatorClient> fromMediatorDidDocumentUri(
     Uri didDocumentUrl, {
     required KeyPair keyPair,
@@ -50,12 +77,17 @@ class MediatorClient {
     );
   }
 
-  // TODO: create exception to wrap errors
+  /// Sends a [ForwardMessage] to the mediator.
+  ///
+  /// [message] - The message to send.
+  /// [accessToken] - Optional bearer token for authentication.
+  ///
+  /// Returns the packed [DidcommMessage] that was sent.
   Future<DidcommMessage> sendMessage(
     ForwardMessage message, {
     String? accessToken,
   }) async {
-    DidcommMessage messageToSend = await _packMessage(
+    final messageToSend = await _packMessage(
       message,
       messageOptions: forwardMessageOptions,
     );
@@ -72,7 +104,11 @@ class MediatorClient {
     return messageToSend;
   }
 
-  // TODO: create exception to wrap errors
+  /// Lists message IDs in the inbox for the current actor.
+  ///
+  /// [accessToken] - Optional bearer token for authentication.
+  ///
+  /// Returns a list of message IDs as strings.
   Future<List<String>> listInboxMessageIds({
     String? accessToken,
   }) async {
@@ -93,6 +129,13 @@ class MediatorClient {
         .toList();
   }
 
+  /// Receives messages from the mediator by message IDs.
+  ///
+  /// [messageIds] - The list of message IDs to fetch.
+  /// [deleteOnMediator] - Whether to delete messages from the mediator after fetching (default: true).
+  /// [accessToken] - Optional bearer token for authentication.
+  ///
+  /// Returns a list of message.
   Future<List<Map<String, dynamic>>> receiveMessages({
     required List<String> messageIds,
     bool deleteOnMediator = true,
@@ -120,6 +163,15 @@ class MediatorClient {
         .toList();
   }
 
+  /// Listens for incoming messages from the mediator via WebSocket.
+  ///
+  /// [onMessage] - Callback for each received message.
+  /// [onError] - Optional callback for errors.
+  /// [onDone] - Optional callback when the stream is closed.
+  /// [cancelOnError] - Whether to cancel on error.
+  /// [accessToken] - Optional bearer token for authentication.
+  ///
+  /// Returns a [StreamSubscription] for the WebSocket stream.
   Future<StreamSubscription> listenForIncomingMessages(
     void Function(Map<String, dynamic>) onMessage, {
     Function? onError,
@@ -179,6 +231,7 @@ class MediatorClient {
     return subscription;
   }
 
+  /// Disconnects the WebSocket channel if connected.
   Future<void> disconnect() async {
     if (_channel != null) {
       await _channel.sink.close(status.normalClosure);
