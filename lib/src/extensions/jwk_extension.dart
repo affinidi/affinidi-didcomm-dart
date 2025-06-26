@@ -5,7 +5,12 @@ import '../errors/errors.dart';
 import '../jwks/jwk.dart';
 import 'uint8_list_extension.dart';
 
+/// Extension methods for [Jwk] to support conversion to elliptic curve public keys.
 extension JwkExtension on Jwk {
+  /// Converts this [Jwk] to an [ec.PublicKey] using the curve and point coordinates.
+  ///
+  /// Throws [ArgumentError] if the curve, x, or y fields are missing.
+  /// Throws [UnsupportedCurveError] if the curve is not supported.
   ec.PublicKey toPublicKeyFromPoint() {
     if (curve == null) {
       throw ArgumentError('curve is required', 'curve');

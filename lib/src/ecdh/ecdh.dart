@@ -3,9 +3,9 @@ import 'dart:typed_data';
 import 'package:ssi/ssi.dart' show KeyPair, Wallet;
 
 import '../../didcomm.dart';
+import '../extensions/extensions.dart';
 import '../jwks/jwk.dart';
 import '../messages/jwm.dart';
-import '../extensions/extensions.dart';
 import 'ecdh_1pu/ecdh_1pu_for_secp256_and_p.dart';
 import 'ecdh_1pu/ecdh_1pu_for_x.dart';
 import 'ecdh_es/ecdh_es_for_secp_and_p.dart';
