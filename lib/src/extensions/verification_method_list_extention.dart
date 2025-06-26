@@ -21,14 +21,14 @@ extension VerificationMethodListExtention on List<VerificationMethod> {
   /// Returns the first [VerificationMethod] in the list with the given [curve].
   ///
   /// [curve]: The [CurveType] to match.
-  /// Throws [NotFoundVerificationByCurveError] if no matching verification method is found.
+  /// Throws [NotFoundVerificationMethodByCurveError] if no matching verification method is found.
   VerificationMethod firstWithCurve(CurveType curve) {
     final match = firstWhereOrNull(
       (verificationMethod) => verificationMethod.toJwk().curve == curve,
     );
 
     if (match == null) {
-      throw NotFoundVerificationByCurveError(curve);
+      throw NotFoundVerificationMethodByCurveError(curve);
     }
 
     return match;
