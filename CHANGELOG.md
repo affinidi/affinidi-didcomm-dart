@@ -3,6 +3,43 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2025-06-27
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
+ - [`didcomm` - `v0.0.7`](#didcomm---v007)
+
+---
+
+#### `didcomm` - `v0.0.7`
+
+ - **FIX**: analyzer issues.
+ - **FIX**: dart analyze issues.
+ - **FIX**: dart analyze issues.
+ - **FIX**: did document extension naming.
+ - **FIX**: mediator in user did document.
+ - **FEAT**: validate signers.
+ - **FEAT**: check message envelop chain if it is as expected.
+
+## 0.0.7
+
+ - **FIX**: analyzer issues.
+ - **FIX**: dart analyze issues.
+ - **FIX**: dart analyze issues.
+ - **FIX**: did document extension naming.
+ - **FIX**: mediator in user did document.
+ - **FEAT**: validate signers.
+ - **FEAT**: check message envelop chain if it is as expected.
+
+
 ## 2025-06-24
 
 ### Changes
