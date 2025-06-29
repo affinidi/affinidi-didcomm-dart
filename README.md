@@ -245,11 +245,70 @@ In this case, Bob can decrypt and read the message, but cannot determine who sen
 
 #### High-level Packing Helpers
 
-The `DidcommMessage` class also provides high-level helper methods for common packing workflows:
+The `DidcommMessage` class provides high-level helper methods for common packing workflows. These helpers simplify the process of signing and encrypting messages according to your security and privacy requirements.
 
-- **packIntoEncryptedMessage**: Packs a plain text message into an encrypted message using the provided cryptographic parameters. Use this when you want to send a confidential message and do not require non-repudiation. Accepts options for sender key pair, key ID, key type, recipient DID Documents, key wrapping algorithm, and encryption algorithm.
+- **packIntoEncryptedMessage**
 
-- **packIntoSignedMessage**: Packs a plain text message into a signed message. Use this when you want to provide non-repudiation and message integrity, but do not require confidentiality (encryption).
+  Packs a plain text message into an encrypted message. Use this for confidential messages (authcrypt or anoncrypt, depending on parameters).
+
+  ```dart
+  // Authenticated encryption (authcrypt)
+  final encrypted = await DidcommMessage.packIntoEncryptedMessage(
+    plainTextMessage,
+    keyPair: aliceKeyPair,
+    didKeyId: aliceDidDocument.keyAgreement[0].id,
+    recipientDidDocuments: [bobDidDocument],
+    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+    encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+  );
+
+  // Anonymous encryption (anoncrypt)
+  final anonEncrypted = await DidcommMessage.packIntoEncryptedMessage(
+    plainTextMessage,
+    keyType: KeyType.p256,
+    recipientDidDocuments: [bobDidDocument],
+    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Es,
+    encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+  );
+  ```
+
+- **packIntoSignedMessage**
+
+  Packs a plain text message into a signed message. Use this for non-repudiation and message integrity.
+
+  ```dart
+  final signed = await DidcommMessage.packIntoSignedMessage(
+    plainTextMessage,
+    signer: aliceSigner,
+  );
+  ```
+
+- **packIntoSignedAndEncryptedMessages**
+
+  Packs a plain text message into a signed message and then encrypts it. Use this for both non-repudiation and confidentiality in a single step. Encryption can be authenticated (authcrypt) or anonymous (anoncrypt) depending on the provided parameters.
+
+  ```dart
+  // Authenticated encryption (authcrypt)
+  final signedAndEncrypted = await DidcommMessage.packIntoSignedAndEncryptedMessages(
+    plainTextMessage,
+    keyPair: aliceKeyPair,
+    didKeyId: aliceDidDocument.keyAgreement[0].id,
+    recipientDidDocuments: [bobDidDocument],
+    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+    encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+    signer: aliceSigner,
+  );
+
+  // Anonymous encryption (anoncrypt)
+  final signedAndAnonEncrypted = await DidcommMessage.packIntoSignedAndEncryptedMessages(
+    plainTextMessage,
+    keyType: KeyType.p256,
+    recipientDidDocuments: [bobDidDocument],
+    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Es,
+    encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+    signer: aliceSigner,
+  );
+  ```
 
 #### Unpacking
 Bob receives the encrypted message and unpacks it:
@@ -258,13 +317,13 @@ Bob receives the encrypted message and unpacks it:
 final unpackedMessage = await DidcommMessage.unpackToPlainTextMessage(
   message: jsonDecode(sentMessageByAlice) as Map<String, dynamic>, // The received message
   recipientWallet: bobWallet, // Bob's wallet for decryption
-  expectedMessageWrappingTypes: [MessageWrappingType.authcryptPlaintext], // Expected wrapping
+  expectedMessageWrappingTypes: [MessageWrappingType.authcryptSignPlaintext], // Expected wrapping
   expectedSigners: [aliceSigner.didKeyId], // List of expected signers' key IDs
 );
 ```
 - `message`: The received message as a decoded JSON map.
 - `recipientWallet`: The wallet instance used to decrypt the message.
-- `expectedMessageWrappingTypes`: List of expected message wrapping types. This argument ensures that the unpacked message matches the expected security and privacy guarantees (e.g., plaintext, signed, or encrypted). The values are from the `MessageWrappingType` enum, which maps to the [DIDComm IANA media types](https://identity.foundation/didcomm-messaging/spec/#iana-media-types), such as `authcryptPlaintext` for authenticated encryption, `signedPlaintext` for signed messages, and `plaintext` for unprotected messages. This helps prevent downgrade attacks and ensures the message is processed as intended.
+- `expectedMessageWrappingTypes`: List of expected message wrapping types. This argument ensures that the unpacked message matches the expected security and privacy guarantees. The values are from the `MessageWrappingType` enum, which maps to the [DIDComm IANA media types](https://identity.foundation/didcomm-messaging/spec/#iana-media-types), such as `authcryptPlaintext` for authenticated encryption, `signedPlaintext` for signed messages, and `plaintext` for unprotected messages. This helps prevent downgrade attacks and ensures the message is processed as intended.
 - `expectedSigners`: List of key IDs whose signatures are expected and will be verified.
 
 ### 6. Full Example
