@@ -359,25 +359,54 @@ When you generate a DID Document with the Dart SSI package using an Ed25519 key,
 
 This conversion and DID Document construction are handled automatically by the Dart SSI and DIDComm libraries. You do not need to manually convert keys or add verification methods, but be aware that the same key material is used in different forms for signing and encryption operations.
 
-### Note on Key Agreement and Key Type Selection for Authcrypt
+### Note on Key Type Selection for Authcrypt and Anoncrypt
 
-When using authenticated encryption (authcrypt, ECDH-1PU), both the sender and all recipients must use compatible key types for key agreement (e.g., both must have P-256 keys in their DID Documents). To select a common key type and obtain compatible key agreement key IDs, use the `matchKeysInKeyAgreement` extension method. This method returns a list of key IDs from sender wallet that are compatible with all recipients.
+When encrypting messages, you must select a key type for key agreement that is supported by all parties:
 
-Example:
+- **Authcrypt (authenticated encryption, ECDH-1PU):**
+  - Both the sender and all recipients must use compatible key types for key agreement (e.g., both must have P-256 or X25519 keys in their DID Documents).
+  - You typically use the sender's wallet to find a compatible key pair and key agreement method with each recipient.
+  - Use the `matchKeysInKeyAgreement` extension method to find compatible key IDs from the sender's wallet for all recipients.
 
+- **Anoncrypt (anonymous encryption, ECDH-ES):**
+  - Only the recipients' key agreement keys are used; the sender's key pair is not involved.
+  - You must select a key type that is supported by all recipients for key agreement.
+  - Use the `getCommonKeyTypesInKeyAgreements` extension method on the list of recipient DID Documents to determine the set of key types that are common to all recipients.
+
+Examples:
+
+**Authcrypt:**
 ```dart
 final compatibleKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
   wallet: aliceWallet,
-  otherDidDocuments: [bobDidDocument],
+  otherDidDocuments: [
+    bobDidDocument
+    // and other recipients
+  ],
 );
+
 if (compatibleKeyIds.isEmpty) {
   throw Exception('No compatible key agreement method found between Alice and Bob');
 }
+
 final aliceDidKeyId = compatibleKeyIds.first; // Use this key ID for Alice
-// For Bob, select a compatible keyAgreement ID from bobDidDocument.keyAgreement with the same curve as aliceKeyAgreementId
 ```
 
-Use the resulting key IDs when calling the packing/encryption methods. This ensures that the correct and compatible keys are used for ECDH-1PU (authcrypt) operations.
+**Anoncrypt:**
+```dart
+final commonKeyTypes = [
+  bobDidDocument,
+  // and other recipients
+].getCommonKeyTypesInKeyAgreements();
+
+if (commonKeyTypes.isEmpty) {
+  throw Exception('No common key type found for anoncrypt between recipients');
+}
+
+final keyType = commonKeyTypes.first; // Use this key type for anoncrypt
+```
+
+This ensures that the correct and compatible keys are used for ECDH-1PU (authcrypt) and ECDH-ES (anoncrypt) operations, and that all recipients can decrypt the message using a supported key agreement method.
 
 ## Contributing
 

@@ -1,6 +1,7 @@
 // TODO: move this file directory up
 
 export 'big_int_extension.dart';
+export 'curve_type_extension.dart';
 export 'did_document_extension.dart';
 export 'jwk_extension.dart';
 export 'key_type_extension.dart';

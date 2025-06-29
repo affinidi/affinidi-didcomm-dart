@@ -110,7 +110,12 @@ void main() {
                             aliceMatchedKeyIds.first,
                           )!
                         : null,
-                    keyType: isAuthenticated ? null : KeyType.ed25519,
+                    keyType: isAuthenticated
+                        ? null
+                        : [
+                            bobDidDocument
+                            // other recipients here
+                          ].getCommonKeyTypesInKeyAgreements().first,
                     recipientDidDocuments: [bobDidDocument],
                     encryptionAlgorithm: encryptionAlgorithm,
                     keyWrappingAlgorithm: isAuthenticated

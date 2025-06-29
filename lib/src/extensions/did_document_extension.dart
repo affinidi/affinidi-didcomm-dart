@@ -7,7 +7,7 @@ import '../common/did.dart';
 import '../common/did_document_service_type.dart';
 import '../curves/curve_type.dart';
 import '../jwks/jwk.dart';
-import 'wallet_extension.dart';
+import 'extensions.dart';
 
 /// Extension methods for [DidDocument] to support DIDComm-specific operations,
 /// such as extracting endpoints, creating transport clients, and key matching.
@@ -142,7 +142,7 @@ extension DidDocumentExtension on DidDocument {
     required List<DidDocument> otherDidDocuments,
   }) {
     final ownCurves = Set<CurveType>.from(
-      keyAgreement.map(getCurve).where(
+      keyAgreement.map(_getCurve).where(
             (type) => type != null,
           ),
     );
@@ -150,7 +150,7 @@ extension DidDocumentExtension on DidDocument {
     final matchedCurves = ownCurves.where(
       (ownCurve) => otherDidDocuments.every(
         (doc) => doc.keyAgreement.any(
-          (keyAgreement) => getCurve(keyAgreement) == ownCurve,
+          (keyAgreement) => _getCurve(keyAgreement) == ownCurve,
         ),
       ),
     );
@@ -158,7 +158,7 @@ extension DidDocumentExtension on DidDocument {
     return matchedCurves.map((curve) {
       final didKeyId = keyAgreement
           .firstWhere(
-            (keyAgreement) => getCurve(keyAgreement) == curve,
+            (keyAgreement) => _getCurve(keyAgreement) == curve,
           )
           .id;
 
@@ -173,12 +173,30 @@ extension DidDocumentExtension on DidDocument {
       return keyId;
     }).toList();
   }
+}
 
-  /// Extracts the [CurveType] from a [VerificationMethod]'s JWK in the key agreement section.
+/// Extension methods for a list of [DidDocument]s to support finding common key types for key agreement.
+extension DidDocumentsExtension on List<DidDocument> {
+  /// Returns a list of [KeyType]s that are supported by all DID Documents in this list for key agreement.
   ///
-  /// [keyAgreement]: The verification method to extract the curve from.
-  CurveType? getCurve(VerificationMethod keyAgreement) {
-    final jwk = Jwk.fromJson(keyAgreement.asJwk().toJson());
-    return jwk.curve;
+  /// The method works by:
+  /// - Extracting the set of curves from each DID Document's key agreement section.
+  /// - Finding the intersection of all these sets (i.e., curves supported by all documents).
+  /// - Mapping each common curve to its corresponding [KeyType].
+  ///
+  /// Returns an empty list if there are no common key types or if the list is empty.
+  List<KeyType> getCommonKeyTypesInKeyAgreements() {
+    if (isEmpty) return [];
+
+    final commonCurves = map(
+      (doc) => doc.keyAgreement.map(_getCurve).whereType<CurveType>().toSet(),
+    ).reduce((a, b) => a.intersection(b));
+
+    return commonCurves.map((curve) => curve.asKeyType()).toList();
   }
+}
+
+CurveType? _getCurve(VerificationMethod keyAgreement) {
+  final jwk = Jwk.fromJson(keyAgreement.asJwk().toJson());
+  return jwk.curve;
 }
