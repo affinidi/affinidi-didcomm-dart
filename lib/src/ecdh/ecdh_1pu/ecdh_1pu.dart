@@ -28,30 +28,37 @@ abstract class Ecdh1Pu implements Ecdh {
 
   /// Computes the encryption secrets (ze, zs) for ECDH-1PU.
   ///
-  /// [senderKeyPair]: The sender's key pair.
-  /// Returns a tuple containing ze and zs as [Uint8List].
+  /// [senderKeyPair]: The sender's key pair used for ECDH-1PU key agreement.
+  /// Returns a record containing ze and zs as [Uint8List].
   Future<({Uint8List ze, Uint8List zs})> getEncryptionSecrets({
     required KeyPair senderKeyPair,
   });
 
   /// Computes the decryption secrets (ze, zs) for ECDH-1PU.
   ///
-  /// [recipientKeyPair]: The recipient's key pair.
-  /// Returns a tuple containing ze and zs as [Uint8List].
+  /// [recipientKeyPair]: The recipient's key pair used for ECDH-1PU key agreement.
+  /// Returns a record containing ze and zs as [Uint8List].
   Future<({Uint8List ze, Uint8List zs})> getDecryptionSecrets({
     required KeyPair recipientKeyPair,
   });
 
   /// Encrypts [data] using the sender's key pair and ECDH-1PU shared secrets.
   ///
-  /// [senderKeyPair]: The sender's key pair.
+  /// [senderKeyPair]: The sender's key pair (required for ECDH-1PU key agreement).
   /// [data]: The plaintext data to encrypt.
   /// Returns the encrypted data as [Uint8List].
   @override
   Future<Uint8List> encryptData({
-    required KeyPair senderKeyPair,
+    KeyPair? senderKeyPair,
     required Uint8List data,
   }) async {
+    if (senderKeyPair == null) {
+      throw ArgumentError(
+        'Sender key pair is required for ${KeyWrappingAlgorithm.ecdh1Pu.value} encryption',
+        'senderKeyPair',
+      );
+    }
+
     final secrets = await getEncryptionSecrets(
       senderKeyPair: senderKeyPair,
     );
@@ -64,7 +71,7 @@ abstract class Ecdh1Pu implements Ecdh {
 
   /// Decrypts [data] using the recipient's key pair and ECDH-1PU shared secrets.
   ///
-  /// [recipientKeyPair]: The recipient's key pair.
+  /// [recipientKeyPair]: The recipient's key pair used for ECDH-1PU key agreement.
   /// [data]: The encrypted data to decrypt.
   /// Returns the decrypted data as [Uint8List].
   @override

@@ -72,21 +72,18 @@ class EncryptedMessage extends DidcommMessage {
 
   /// Packs a [DidcommMessage] into an [EncryptedMessage] using anonymous encryption (ECDH-ES).
   ///
-  /// [message]: The message to encrypt.
-  /// [keyPair]: The sender's key pair.
+  /// [message]: The message to encrypt (plain or signed).
   /// [recipientDidDocuments]: List of recipient's DID documents.
   /// [encryptionAlgorithm]: Algorithm for content encryption.
   ///
   /// Returns an [EncryptedMessage].
   static Future<EncryptedMessage> packAnonymously(
     DidcommMessage message, {
-    required KeyPair keyPair,
     required List<DidDocument> recipientDidDocuments,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
     return await EncryptedMessage.pack(
       message,
-      keyPair: keyPair,
       recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -95,8 +92,8 @@ class EncryptedMessage extends DidcommMessage {
 
   /// Packs a [DidcommMessage] into an [EncryptedMessage] using authenticated encryption (ECDH-1PU).
   ///
-  /// [message]: The message to encrypt.
-  /// [keyPair]: The sender's key pair.
+  /// [message]: The message to encrypt (plain or signed).
+  /// [keyPair]: The sender's key pair for encryption.
   /// [didKeyId]: The sender's key ID.
   /// [recipientDidDocuments]: List of recipient's DID documents.
   /// [encryptionAlgorithm]: Algorithm for content encryption.
@@ -121,9 +118,10 @@ class EncryptedMessage extends DidcommMessage {
 
   /// Packs a [DidcommMessage] into an [EncryptedMessage] using the provided cryptographic parameters.
   ///
-  /// [message]: The message to encrypt.
-  /// [keyPair]: The sender's key pair.
-  /// [didKeyId]: The sender's key ID (optional).
+  /// [message]: The message to encrypt (plain or signed).
+  /// [keyPair]: The sender's key pair for encryption (required for ECDH-1PU, not used for ECDH-ES).
+  /// [didKeyId]: The sender's key ID (required for ECDH-1PU, not used for ECDH-ES).
+  /// [keyType]: The sender's key type (required for ECDH-ES, not used for ECDH-1PU).
   /// [recipientDidDocuments]: List of recipient's DID Documents.
   /// [keyWrappingAlgorithm]: Algorithm for key wrapping.
   /// [encryptionAlgorithm]: Algorithm for content encryption.
@@ -131,17 +129,32 @@ class EncryptedMessage extends DidcommMessage {
   /// Returns an [EncryptedMessage].
   static Future<EncryptedMessage> pack(
     DidcommMessage message, {
-    required KeyPair keyPair,
+    KeyPair? keyPair,
     String? didKeyId,
+    KeyType? keyType,
     required List<DidDocument> recipientDidDocuments,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
-    final publicKey = keyPair.publicKey;
-    final ephemeralKeyPair = generateEphemeralKeyPair(publicKey.type);
+    if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu &&
+        (keyPair == null || didKeyId == null)) {
+      throw ArgumentError(
+        'keyPair and didKeyId are required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
+      );
+    }
 
-    final jweHeader = await JweHeader.fromKeyPair(
-      keyPair,
+    if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdhEs &&
+        keyType == null) {
+      throw ArgumentError(
+        'keyType is required for ${KeyWrappingAlgorithm.ecdhEs.value}',
+      );
+    }
+
+    final calculatedKeyType = keyPair?.publicKey.type ?? keyType!;
+    final ephemeralKeyPair = generateEphemeralKeyPair(calculatedKeyType);
+
+    final jweHeader = await JweHeader.fromKeyType(
+      calculatedKeyType,
       subjectKeyId: didKeyId,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -175,6 +188,7 @@ class EncryptedMessage extends DidcommMessage {
 
     final recipients = await _createRecipients(
       keyPair: keyPair,
+      keyType: keyType,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       recipientDidDocuments: recipientDidDocuments,
       authenticationTag: encryptedInnerMessage.authenticationTag!,
@@ -323,7 +337,8 @@ class EncryptedMessage extends DidcommMessage {
   }
 
   static Future<List<Recipient>> _createRecipients({
-    required KeyPair keyPair,
+    KeyPair? keyPair,
+    KeyType? keyType,
     required List<DidDocument> recipientDidDocuments,
     required JweHeader jweHeader,
     required ck.SymmetricKey contentEncryptionKey,
@@ -331,10 +346,26 @@ class EncryptedMessage extends DidcommMessage {
     required Uint8List authenticationTag,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
   }) async {
-    final publicKey = keyPair.publicKey;
+    if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu &&
+        keyPair == null) {
+      throw ArgumentError(
+        'keyPair are required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
+        'keyPair',
+      );
+    }
+
+    if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdhEs &&
+        keyType == null) {
+      throw ArgumentError(
+        'keyType is required for ${KeyWrappingAlgorithm.ecdhEs.value}',
+        'keyType',
+      );
+    }
+
+    final calculatedKeyType = keyPair?.publicKey.type ?? keyType!;
 
     final futures = recipientDidDocuments.map((didDocument) async {
-      final curve = publicKey.type.asEncryptionCapableCurve();
+      final curve = calculatedKeyType.asEncryptionCapableCurve();
       final keyAgreement = didDocument.keyAgreement.firstWithCurve(curve);
 
       final encryptedKey = await Ecdh.encrypt(

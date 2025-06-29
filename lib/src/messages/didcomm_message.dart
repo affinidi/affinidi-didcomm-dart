@@ -24,6 +24,8 @@ abstract class DidcommMessage {
 
   /// Packs a [PlainTextMessage] into a [SignedMessage] using the provided [signer].
   ///
+  /// Use this when you want to provide non-repudiation and message integrity, but do not require confidentiality (encryption).
+  ///
   /// Returns a [SignedMessage] containing the signed payload.
   static Future<SignedMessage> packIntoSignedMessage(
     PlainTextMessage message, {
@@ -35,19 +37,23 @@ abstract class DidcommMessage {
     );
   }
 
-  /// Packs a [DidcommMessage] into an [EncryptedMessage] using the provided cryptographic parameters.
+  /// Packs a [DidcommMessage] (plain text or signed) into an [EncryptedMessage] using the provided cryptographic parameters.
   ///
-  /// [keyPair]: The sender's key pair for encryption.
-  /// [didKeyId]: The sender's key ID.
+  /// Use this when you want to send a confidential message and do not require non-repudiation. The message can be either a plain text or a signed message.
+  ///
+  /// [keyPair]: The sender's key pair for encryption (required for ECDH-1PU, not used for ECDH-ES).
+  /// [didKeyId]: The sender's key ID (required for ECDH-1PU, not used for ECDH-ES).
+  /// [keyType]: The sender's key type required for ECDH-ES, not used for ECDH-1PU).
   /// [recipientDidDocuments]: List of recipient DID Documents.
   /// [keyWrappingAlgorithm]: Algorithm for key wrapping.
   /// [encryptionAlgorithm]: Algorithm for content encryption.
   ///
   /// Returns an [EncryptedMessage].
   static Future<EncryptedMessage> packIntoEncryptedMessage(
-    DidcommMessage message, {
-    required KeyPair keyPair,
-    required String didKeyId,
+    PlainTextMessage message, {
+    KeyPair? keyPair,
+    String? didKeyId,
+    KeyType? keyType,
     required List<DidDocument> recipientDidDocuments,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
@@ -56,6 +62,7 @@ abstract class DidcommMessage {
       message,
       keyPair: keyPair,
       didKeyId: didKeyId,
+      keyType: keyType,
       recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
@@ -63,6 +70,9 @@ abstract class DidcommMessage {
   }
 
   /// Packs a [PlainTextMessage] into a [SignedMessage] and then into an [EncryptedMessage].
+  ///
+  /// Use this when you want to provide both non-repudiation (via signature) and confidentiality (via encryption) in a single step.
+  /// The message is first signed, then encrypted.
   ///
   /// [keyPair]: The sender's key pair for encryption.
   /// [didKeyId]: The sender's key ID.

@@ -27,7 +27,7 @@ abstract class Ecdh {
   /// Throws [UnsupportedCurveError] if the curve is not supported.
   static Future<Uint8List> encrypt(
     Uint8List data, {
-    required KeyPair senderKeyPair,
+    KeyPair? senderKeyPair,
     required Jwk recipientJwk,
     required Uint8List ephemeralPrivateKeyBytes,
     required JweHeader jweHeader,
@@ -118,7 +118,7 @@ abstract class Ecdh {
   /// [data]: The plaintext data to encrypt.
   /// Returns the encrypted data as [Uint8List].
   Future<Uint8List> encryptData({
-    required KeyPair senderKeyPair,
+    KeyPair? senderKeyPair,
     required Uint8List data,
   });
 

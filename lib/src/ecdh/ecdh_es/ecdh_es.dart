@@ -24,25 +24,25 @@ abstract class EcdhEs implements Ecdh {
 
   /// Computes the encryption secret for ECDH-ES.
   ///
-  /// Returns the shared secret as [Uint8List].
+  /// Returns the shared secret as [Uint8List] for use in key wrapping.
   Future<Uint8List> getEncryptionSecret();
 
   /// Computes the decryption secret for ECDH-ES.
   ///
-  /// [recipientKeyPair]: The recipient's key pair.
-  /// Returns the shared secret as [Uint8List].
+  /// [recipientKeyPair]: The recipient's key pair used for ECDH key agreement.
+  /// Returns the shared secret as [Uint8List] for use in key unwrapping.
   Future<Uint8List> getDecryptionSecret({
     required KeyPair recipientKeyPair,
   });
 
-  /// Encrypts [data] using the sender's key pair and ECDH-ES shared secret.
+  /// Encrypts [data] using the ECDH-ES shared secret.
   ///
-  /// [senderKeyPair]: The sender's key pair.
+  /// [senderKeyPair]: The sender's key pair (not used in ECDH-ES, but required by the interface).
   /// [data]: The plaintext data to encrypt.
   /// Returns the encrypted data as [Uint8List].
   @override
   Future<Uint8List> encryptData({
-    required KeyPair senderKeyPair,
+    KeyPair? senderKeyPair,
     required Uint8List data,
   }) async {
     final secret = await getEncryptionSecret();
@@ -54,7 +54,7 @@ abstract class EcdhEs implements Ecdh {
 
   /// Decrypts [data] using the recipient's key pair and ECDH-ES shared secret.
   ///
-  /// [recipientKeyPair]: The recipient's key pair.
+  /// [recipientKeyPair]: The recipient's key pair used for ECDH key agreement.
   /// [data]: The encrypted data to decrypt.
   /// Returns the decrypted data as [Uint8List].
   @override
