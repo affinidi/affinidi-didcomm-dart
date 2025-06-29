@@ -65,13 +65,13 @@ class JweHeader {
 
   /// Constructs a [JweHeader] with the given parameters.
   ///
-  /// [type] - The type of the JWE message. Defaults to 'application/didcomm-encrypted+json'.
-  /// [subjectKeyId] - The subject key identifier (skid), used for ECDH-1PU key agreement.
-  /// [keyWrappingAlgorithm] - The key wrapping algorithm (alg) used for encrypting the content encryption key.
-  /// [encryptionAlgorithm] - The content encryption algorithm (enc) used for encrypting the payload.
-  /// [ephemeralKey] - The ephemeral public key (epk) used in key agreement.
-  /// [agreementPartyUInfo] - Agreement PartyUInfo (apu), base64url-encoded sender key ID for ECDH-1PU.
-  /// [agreementPartyVInfo] - Agreement PartyVInfo (apv), base64url-encoded hash of recipient key IDs.
+  /// [type]: The type of the JWE message. Defaults to 'application/didcomm-encrypted+json'.
+  /// [subjectKeyId]: The subject key identifier (skid), used for ECDH-1PU key agreement.
+  /// [keyWrappingAlgorithm]: The key wrapping algorithm (alg) used for encrypting the content encryption key.
+  /// [encryptionAlgorithm]: The content encryption algorithm (enc) used for encrypting the payload.
+  /// [ephemeralKey]: The ephemeral public key (epk) used in key agreement.
+  /// [agreementPartyUInfo]: Agreement PartyUInfo (apu), base64url-encoded sender key ID for ECDH-1PU.
+  /// [agreementPartyVInfo]: Agreement PartyVInfo (apv), base64url-encoded hash of recipient key IDs.
   JweHeader({
     this.type = 'application/didcomm-encrypted+json',
     this.subjectKeyId,
@@ -82,19 +82,19 @@ class JweHeader {
     required this.agreementPartyVInfo,
   });
 
-  /// Creates a [JweHeader] from a key pair and encryption parameters.
+  /// Creates a [JweHeader] from a key type and encryption parameters.
   ///
-  /// [keyPair] The sender's key pair.
-  /// [subjectKeyId] The subject key identifier (skid), required for ECDH-1PU.
-  /// [recipientDidDocuments] The list of recipient DID Documents.
-  /// [ephemeralPrivateKeyBytes] The ephemeral private key bytes.
-  /// [ephemeralPublicKeyBytes] The ephemeral public key bytes.
-  /// [keyWrappingAlgorithm] The key wrapping algorithm (alg) used for encrypting the content encryption key.
-  /// [encryptionAlgorithm] The content encryption algorithm (enc) used for encrypting the payload.
+  /// [keyType]: The key type to use to filter keys in the DID documents.
+  /// [subjectKeyId]: The subject key identifier (skid), required for ECDH-1PU.
+  /// [recipientDidDocuments]: The list of recipient DID Documents.
+  /// [ephemeralPrivateKeyBytes]: The ephemeral private key bytes.
+  /// [ephemeralPublicKeyBytes]: The ephemeral public key bytes.
+  /// [keyWrappingAlgorithm]: The key wrapping algorithm (alg) used for encrypting the content encryption key.
+  /// [encryptionAlgorithm]: The content encryption algorithm (enc) used for encrypting the payload.
   ///
   /// Throws [ArgumentError] if required parameters are missing.
-  static Future<JweHeader> fromKeyPair(
-    KeyPair keyPair, {
+  static Future<JweHeader> fromKeyType(
+    KeyType keyType, {
     String? subjectKeyId,
     required List<DidDocument> recipientDidDocuments,
     required Uint8List ephemeralPrivateKeyBytes,
@@ -102,7 +102,7 @@ class JweHeader {
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
-    final curve = keyPair.publicKey.type.asEncryptionCapableCurve();
+    final curve = keyType.asEncryptionCapableCurve();
 
     if (subjectKeyId == null &&
         keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
@@ -120,7 +120,7 @@ class JweHeader {
       ephemeralKey: _buildEphemeralKey(
         ephemeralPrivateKeyBytes: ephemeralPrivateKeyBytes,
         ephemeralPublicKeyBytes: ephemeralPublicKeyBytes,
-        keyType: keyPair.publicKey.type,
+        keyType: keyType,
         curve: curve,
       ),
       agreementPartyVInfo:

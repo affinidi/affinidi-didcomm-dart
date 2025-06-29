@@ -103,12 +103,17 @@ void main() {
 
                   final sut = await EncryptedMessage.pack(
                     signedMessage,
-                    keyPair: await aliceWallet.generateKey(
-                      keyId: aliceMatchedKeyIds.first,
-                    ),
-                    didKeyId: aliceWallet.getDidIdByKeyId(
-                      aliceMatchedKeyIds.first,
-                    )!,
+                    keyPair: isAuthenticated
+                        ? await aliceWallet.generateKey(
+                            keyId: aliceMatchedKeyIds.first,
+                          )
+                        : null,
+                    didKeyId: isAuthenticated
+                        ? aliceWallet.getDidIdByKeyId(
+                            aliceMatchedKeyIds.first,
+                          )!
+                        : null,
+                    keyType: isAuthenticated ? null : KeyType.secp256k1,
                     recipientDidDocuments: [bobDidDocument],
                     encryptionAlgorithm: encryptionAlgorithm,
                     keyWrappingAlgorithm: isAuthenticated
