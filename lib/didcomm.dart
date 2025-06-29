@@ -1,3 +1,9 @@
+/// Affinidi DIDComm for Dart
+///
+/// A Dart library for secure, private, and verifiable communication using the DIDComm v2 Messaging protocol.
+///
+/// This package provides tools for constructing, signing, encrypting, and unpacking DIDComm messages, supporting multiple DID methods and cryptographic algorithms. It enables confidential, authenticated, and non-repudiable messaging between decentralized identities.
+
 library;
 
 export 'src/errors/errors.dart';

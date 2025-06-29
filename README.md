@@ -348,6 +348,17 @@ If you have a technical issue with the Affinidi SSI's codebase, you can also cre
    Be sure to include a **title and clear description**, as much relevant information as possible,
    and a **code sample** or an **executable test case** demonstrating the expected behaviour that is not occurring.
 
+### Note on Ed25519/X25519 Curve Conversion
+
+If you use an Ed25519 key (Edwards curve) for your DID or wallet, the Dart SSI package will use this curve for digital signatures. However, for encryption and ECDH key agreement, the Ed25519 key is automatically converted to the corresponding X25519 key. This is required because the DIDComm v2 encryption and ECDH protocols use X25519 for key agreement, not Ed25519.
+
+When you generate a DID Document with the Dart SSI package using an Ed25519 key, the resulting DID Document will include both Ed25519 (for signing) and X25519 (for encryption/ECDH) verification methods.
+
+- **Signing:** Uses Ed25519 (Edwards curve).
+- **Encryption/ECDH:** Uses X25519, converted from Ed25519 as needed.
+
+This conversion and DID Document construction are handled automatically by the Dart SSI and DIDComm libraries. You do not need to manually convert keys or add verification methods, but be aware that the same key material is used in different forms for signing and encryption operations.
+
 ## Contributing
 
 Want to contribute?
