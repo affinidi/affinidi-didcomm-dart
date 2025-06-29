@@ -37,13 +37,17 @@ abstract class DidcommMessage {
     );
   }
 
-  /// Packs a [DidcommMessage] (plain text or signed) into an [EncryptedMessage] using the provided cryptographic parameters.
+  /// Packs a [PlainTextMessage] into an [EncryptedMessage] using the provided cryptographic parameters.
   ///
   /// Use this when you want to send a confidential message and do not require non-repudiation. The message can be either a plain text or a signed message.
   ///
-  /// [keyPair]: The sender's key pair for encryption (required for ECDH-1PU, not used for ECDH-ES).
-  /// [didKeyId]: The sender's key ID (required for ECDH-1PU, not used for ECDH-ES).
-  /// [keyType]: The sender's key type required for ECDH-ES, not used for ECDH-1PU).
+  /// Encryption type is determined by the provided arguments:
+  /// - **Authenticated Encryption (authcrypt, ECDH-1PU):** Provide [keyPair] and [didKeyId] (sender's key and key ID). Used when sender authenticity is required.
+  /// - **Anonymous Encryption (anoncrypt, ECDH-ES):** Provide [keyType] (recipient's key type) and omit [keyPair] and [didKeyId]. Used when sender anonymity is required.
+  ///
+  /// [keyPair]: The sender's key pair for authenticated encryption (authcrypt, ECDH-1PU). Required for authcrypt, not used for anoncrypt.
+  /// [didKeyId]: The sender's key ID for authenticated encryption (authcrypt, ECDH-1PU). Required for authcrypt, not used for anoncrypt.
+  /// [keyType]: The recipient's key type for anonymous encryption (anoncrypt, ECDH-ES). Required for anoncrypt, not used for authcrypt.
   /// [recipientDidDocuments]: List of recipient DID Documents.
   /// [keyWrappingAlgorithm]: Algorithm for key wrapping.
   /// [encryptionAlgorithm]: Algorithm for content encryption.
@@ -74,8 +78,13 @@ abstract class DidcommMessage {
   /// Use this when you want to provide both non-repudiation (via signature) and confidentiality (via encryption) in a single step.
   /// The message is first signed, then encrypted.
   ///
-  /// [keyPair]: The sender's key pair for encryption.
-  /// [didKeyId]: The sender's key ID.
+  /// Encryption type is determined by the provided arguments:
+  /// - **Authenticated Encryption (authcrypt, ECDH-1PU):** Provide [keyPair] and [didKeyId] (sender's key and key ID). Used when sender authenticity is required.
+  /// - **Anonymous Encryption (anoncrypt, ECDH-ES):** Provide [keyType] (recipient's key type) and omit [keyPair] and [didKeyId]. Used when sender anonymity is required.
+  ///
+  /// [keyPair]: The sender's key pair for authenticated encryption (authcrypt, ECDH-1PU). Required for authcrypt, not used for anoncrypt.
+  /// [didKeyId]: The sender's key ID for authenticated encryption (authcrypt, ECDH-1PU). Required for authcrypt, not used for anoncrypt.
+  /// [keyType]: The recipient's key type for anonymous encryption (anoncrypt, ECDH-ES). Required for anoncrypt, not used for authcrypt.
   /// [recipientDidDocuments]: List of recipient DID Documents.
   /// [keyWrappingAlgorithm]: Algorithm for key wrapping.
   /// [encryptionAlgorithm]: Algorithm for content encryption.
@@ -84,8 +93,9 @@ abstract class DidcommMessage {
   /// Returns an [EncryptedMessage] containing the signed payload.
   static Future<EncryptedMessage> packIntoSignedAndEncryptedMessages(
     PlainTextMessage message, {
-    required KeyPair keyPair,
-    required String didKeyId,
+    KeyPair? keyPair,
+    String? didKeyId,
+    KeyType? keyType,
     required List<DidDocument> recipientDidDocuments,
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
@@ -100,6 +110,7 @@ abstract class DidcommMessage {
       signedMessage,
       keyPair: keyPair,
       didKeyId: didKeyId,
+      keyType: keyType,
       recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: keyWrappingAlgorithm,
       encryptionAlgorithm: encryptionAlgorithm,
