@@ -32,7 +32,7 @@ The DIDComm for Dart package utilizes existing open standards and cryptographic 
 
 ### DIDComm Message Envelopes
 
-DIDComm v2 messages can be sent in three main forms: plaintext, signed, and encrypted. Each form provides different security and privacy guarantees, and can be combined in various ways (called "envelopes").
+DIDComm v2 messages can be sent in three main forms: plaintext, signed, and encrypted. Each form (called "envelope") provides different security and privacy guarantees, and can be combined in various ways.
 
 - **Plaintext message**: A message that is neither signed nor encrypted. It is readable by anyone and provides no integrity or authenticity guarantees. Used for non-sensitive data, debugging, or as the inner content of other envelopes.
 - **Signed message**: A message that is digitally signed but not encrypted. Anyone can read it, but the recipient can prove who signed it (non-repudiation). Used when the origin of the message must be provable to third parties.
@@ -42,9 +42,9 @@ DIDComm v2 messages can be sent in three main forms: plaintext, signed, and encr
 
 **ECDH-1PU** is used for authenticated encryption (authcrypt), where the sender's key is involved in the encryption process, allowing the recipient to verify the sender's identity. **ECDH-ES** is used for anonymous encryption (anoncrypt), where only the recipient's key is used, and the sender remains anonymous.
 
-Those tree forms above can be combined in the following ways:
+Those tree envelops above can be combined in the following ways:
 
-- **plaintext (no envelope)**:  
+- **plaintext**:  
   - **Purpose**: Used as the building block of higher-level protocols, but rarely transmitted directly, since it lacks security guarantees.
   - **Use case**: Public announcements, non-confidential data, debugging, or as the inner content of other envelopes.
 
@@ -71,6 +71,8 @@ Those tree forms above can be combined in the following ways:
 - **anoncrypt(authcrypt(plaintext))**:  
   - **Purpose**: A specialized combination that hides the sender key ID (skid) header in the authcrypt envelope, so the hop immediately sourceward of a mediator cannot discover an identifier for the sender.
   - **Use case**: Advanced scenarios requiring layered security and sender anonymity from intermediaries.
+
+Here is a comparison:
 
 | Envelope Type                      | Confidentiality | Sender Authenticity | Non-repudiation | Sender Anonymity |
 |------------------------------------|-----------------|---------------------|-----------------|------------------|
