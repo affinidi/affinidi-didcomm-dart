@@ -330,7 +330,7 @@ final unpackedMessage = await DidcommMessage.unpackToPlainTextMessage(
 
 See [`example/didcomm_example.dart`](https://github.com/affinidi/didcomm-dart/blob/main/example/didcomm_example.dart) for a complete runnable example.
 
-For more sample usage, go to the [example folder](https://github.com/affinidi/didcomm-dart/tree/main/example).
+For more sample usage, including a mediator workflow, see the [example folder](https://github.com/affinidi/didcomm-dart/tree/main/example).
 
 ## Support & feedback
 
