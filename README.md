@@ -190,20 +190,25 @@ final signedMessage = await SignedMessage.pack(
   signer: aliceSigner, // The signer instance
 );
 ```
-- `signer`: The `DidSigner` instance containing Alice's DID, key pair, and signature scheme.
 
 ### 4. Encrypt the Message (Optional but Recommended)
 
-Encryption is optional in DIDComm, but highly recommended to protect the confidentiality of your messages. Encryption is needed when:
-- You want to ensure that only the intended recipient(s) can read the message content.
-- You need to protect sensitive data from being exposed to intermediaries or eavesdroppers.
-- You want to provide authenticity (via authenticated encryption) so the recipient knows the message came from someone with the sender's key.
+Encryption is optional in DIDComm, but highly recommended to protect the confidentiality of your messages. DIDComm supports two main types of encryption:
 
-To ensure confidentiality and authenticity, Alice encrypts the signed or plain text message for Bob using authenticated encryption:
+- **Authenticated Encryption (authcrypt, ECDH-1PU):**
+  - Proves the sender's identity to the recipient (but not to intermediaries).
+  - Used when both confidentiality and sender authenticity are required.
+  - Only the intended recipient can read the message, and can verify it was encrypted by someone with the sender's key.
+  - The sender's identity is protected from intermediaries and eavesdroppers.
 
-- **Confidentiality** means only Bob can read the message content.
-- **Authenticity (via authenticated encryption)** means Bob can verify the message was encrypted by someone with Alice's key, but this does not provide non-repudiation (Alice could deny sending it).
-- **Sender identity privacy:** With authcrypt, only the intended recipient (Bob) can see the sender's identity. Any intermediaries or eavesdroppers cannot determine who sent the message, as the sender's identity is encrypted and protected during transport.
+- **Anonymous Encryption (anoncrypt, ECDH-ES):**
+  - Hides the sender's identity from both the recipient and intermediaries.
+  - Used when sender anonymity is required.
+  - Only the intended recipient can read the message, but cannot determine who sent it.
+
+Choose **authcrypt** when you want the recipient to know who sent the message (authenticated, private communication). Choose **anoncrypt** when you want to keep the sender's identity hidden (anonymous tips, whistleblowing, or privacy-preserving scenarios).
+
+#### Example: Authenticated Encryption (authcrypt)
 
 ```dart
 final encryptedMessage = await EncryptedMessage.packWithAuthentication(
@@ -219,20 +224,22 @@ final encryptedMessage = await EncryptedMessage.packWithAuthentication(
 - `recipientDidDocuments`: The recipient's DID Document(s).
 - `encryptionAlgorithm`: The encryption algorithm to use (e.g., `a256cbc`).
 
-#### Example: Anonymous Encryption (packAnonymously)
+#### Example: Anonymous Encryption (anoncrypt)
 
-If you want to encrypt a message without revealing the sender's identity (anoncrypt), use `packAnonymously`:
+If you want to encrypt a message without revealing the sender's identity, use `packAnonymously`:
 
 ```dart
 final anonymousEncryptedMessage = await EncryptedMessage.packAnonymously(
   message, // The signed or plain text message to encrypt
   recipientDidDocuments: [bobDidDocument], // List of recipient DID Documents
   encryptionAlgorithm: EncryptionAlgorithm.a256cbc, // Encryption algorithm
+  keyType: KeyType.p256, // Key type for recipient's key agreement (required)
 );
 ```
 - `message`: The message to encrypt (can be plain or signed).
 - `recipientDidDocuments`: The recipient's DID Document(s).
 - `encryptionAlgorithm`: The encryption algorithm to use.
+- `keyType`: The key type for the recipient's key agreement key (e.g., `KeyType.p256`, `KeyType.ed25519`).
 
 In this case, Bob can decrypt and read the message, but cannot determine who sent it. This is useful for scenarios where sender anonymity is required.
 
