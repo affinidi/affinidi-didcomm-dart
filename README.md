@@ -359,6 +359,26 @@ When you generate a DID Document with the Dart SSI package using an Ed25519 key,
 
 This conversion and DID Document construction are handled automatically by the Dart SSI and DIDComm libraries. You do not need to manually convert keys or add verification methods, but be aware that the same key material is used in different forms for signing and encryption operations.
 
+### Note on Key Agreement and Key Type Selection for Authcrypt
+
+When using authenticated encryption (authcrypt, ECDH-1PU), both the sender and all recipients must use compatible key types for key agreement (e.g., both must have P-256 keys in their DID Documents). To select a common key type and obtain compatible key agreement key IDs, use the `matchKeysInKeyAgreement` extension method. This method returns a list of key IDs from sender wallet that are compatible with all recipients.
+
+Example:
+
+```dart
+final compatibleKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
+  wallet: aliceWallet,
+  otherDidDocuments: [bobDidDocument],
+);
+if (compatibleKeyIds.isEmpty) {
+  throw Exception('No compatible key agreement method found between Alice and Bob');
+}
+final aliceDidKeyId = compatibleKeyIds.first; // Use this key ID for Alice
+// For Bob, select a compatible keyAgreement ID from bobDidDocument.keyAgreement with the same curve as aliceKeyAgreementId
+```
+
+Use the resulting key IDs when calling the packing/encryption methods. This ensures that the correct and compatible keys are used for ECDH-1PU (authcrypt) operations.
+
 ## Contributing
 
 Want to contribute?
