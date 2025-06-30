@@ -1,6 +1,6 @@
 # Affinidi DIDComm for Dart
 
-A Dart package for implementing secure and private communication on your app using DIDComm v2 Messaging protocol. DIDComm v2 Messaging is a decentralized communication protocol that uses a Decentralized Identifier (DID) to establish a secure communication channel and send a private and verifiable message.
+A Dart package for implementing secure and private communication on your app using DIDComm v2 Messaging protocol. DIDComm v2 Messaging is a decentralised communication protocol that uses a Decentralised Identifier (DID) to establish a secure communication channel and send a private and verifiable message.
 
 The DIDComm for Dart package provides the tools and libraries to enable your app to send DIDComm messages. It supports various encryption algorithms and DID methods, such as `did:peer`, `did:key`, and `did:web` for signing and encrypting to ensure the secure and private transport of messages to the intended recipient, establishing verifiable and trusted communication.
 
@@ -20,7 +20,7 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
 
 The DIDComm for Dart package utilizes existing open standards and cryptographic techniques to provide secure, private, and verifiable communication.
 
-- **Decentralized Identifier (DID)** - A globally unique identifier that enables secure interactions. The DID is the cornerstone of Self-Sovereign Identity (SSI), a concept that aims to put individuals or entities in control of their digital identities.
+- **Decentralised Identifier (DID)** - A globally unique identifier that enables secure interactions. The DID is the cornerstone of Self-Sovereign Identity (SSI), a concept that aims to put individuals or entities in control of their digital identities.
 
 - **DID Document** - A DID is a URI (Uniform Resource Identifier) that resolves into a DID Document that contains information such as cryptographic public keys, authentication methods, and service endpoints. It allows others to verify signatures, authenticate interactions, and validate messages cryptographically.
 
