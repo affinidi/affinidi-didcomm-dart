@@ -18,15 +18,15 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
 
 ## Core Concepts
 
-The DIDComm for Dart package utilizes existing open standards and cryptographic techniques to provide secure, private, and verifiable communication.
+The DIDComm for Dart package utilises existing open standards and cryptographic techniques to provide secure, private, and verifiable communication.
 
 - **Decentralised Identifier (DID)** - A globally unique identifier that enables secure interactions. The DID is the cornerstone of Self-Sovereign Identity (SSI), a concept that aims to put individuals or entities in control of their digital identities.
 
 - **DID Document** - A DID is a URI (Uniform Resource Identifier) that resolves into a DID Document that contains information such as cryptographic public keys, authentication methods, and service endpoints. It allows others to verify signatures, authenticate interactions, and validate messages cryptographically.
 
-- **DIDComm Message** - is a JSON Web Message (JWM), a lightweight, secure, and standardized format for structured communication using JSON. It represents headers, message types, routing metadata, and payloads designed to enable secure and interoperable communication across different systems.
+- **DIDComm Message** - is a JSON Web Message (JWM), a lightweight, secure, and standardised format for structured communication using JSON. It represents headers, message types, routing metadata, and payloads designed to enable secure and interoperable communication across different systems.
 
-- **Mediator** - A service that handles and routes messages sent between participants (e.g., users, organizations, another mediator, or even AI agents).
+- **Mediator** - A service that handles and routes messages sent between participants (e.g., users, organisations, another mediator, or even AI agents).
 
 - **Wallet** - A digital wallet to manage cryptographic keys supporting different algorithms for signing and verifying messages.
 
