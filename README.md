@@ -56,7 +56,7 @@ The DIDComm for Dart package utilises existing open standards and cryptographic 
 
 - Support key types like `P256`, `ED25519` and `SECP256K1` to encrypt and sign messages.
 
-- Support for various DIDComm Messaging Envelope types.
+- Support for DIDComm Messaging Envelope types.
 
 - Connect and authenticate with different mediator services that follow the DIDComm Message v2.0 protocol.
 
@@ -70,7 +70,7 @@ DIDComm v2 messages can be sent in the following formats: plaintext, signed, and
 
   - **Authenticated encryption (authcrypt, ECDH-1PU)**: Proves the sender's identity to the recipient (but not to intermediaries). Used when both confidentiality and sender authenticity are required.
 
-    It uses the **ECDH-1PU** for authenticated encryption (auth crypt), where the sender's key is involved in the encryption process, allowing the recipient to verify the sender's identity.
+    It uses the **ECDH-1PU** for authenticated encryption (authcrypt), where the sender's key is involved in the encryption process, allowing the recipient to verify the sender's identity.
 
   - **Anonymous encryption (anoncrypt, ECDH-ES)**: Hides the sender's identity from the recipient and intermediaries. It is used when the sender's anonymity is required.
 
@@ -78,7 +78,7 @@ DIDComm v2 messages can be sent in the following formats: plaintext, signed, and
 
 ### Combining Different Envelope Types
 
-The three types of DIDComm Message Envelopes are used for different purposes and provide benefits when combined in the following ways:
+You can combine the DIDComm Message Envelope types in the following ways:
 
 - **plaintext**:  
   - **Purpose**: Used as the building block of higher-level protocols, but rarely transmitted directly, since it lacks security guarantees.
@@ -90,7 +90,7 @@ The three types of DIDComm Message Envelopes are used for different purposes and
 
 - **anoncrypt(plaintext)**:  
   - **Purpose**: Guarantees confidentiality and integrity without revealing the identity of the sender.
-  - **Use case**: Anonymous tips, whistleblowing, or when the sender must hide their identity.
+  - **Use case**: Anonymous tips, whistleblowing, or when sender's identity must be hidden.
 
 - **authcrypt(plaintext)**:  
   - **Purpose**: It guarantees confidentiality and integrity. It also proves the sender's identity—but in a way that only the recipient can verify. This is the default wrapping choice that should be used unless a different goal is clearly identified.
@@ -111,7 +111,7 @@ The three types of DIDComm Message Envelopes are used for different purposes and
 
 ### Benefits of Combining Envelope Types
 
-Refer to the table below for the benefits provided by each envelope type.
+Refer to the table below for the benefits provided by combining each envelope type.
 
 | Envelope Type                      | Confidentiality | Sender Authenticity | Non-repudiation | Sender Anonymity |
 |------------------------------------|-----------------|---------------------|-----------------|------------------|
@@ -123,7 +123,7 @@ Refer to the table below for the benefits provided by each envelope type.
 | authcrypt(sign(plaintext))         | ✅              | ✅                  | ✅              | ❌               |
 | anoncrypt(authcrypt(plaintext))    | ✅              | ✅                  | ❌              | ✅               |
 
-### Envelope Types Summary
+**In Summary**
 
 - Use **plaintext** for non-sensitive data.
 - Use **signed(plaintext)** for integrity and non-repudiation.
