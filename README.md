@@ -11,8 +11,7 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
   - [Key Features](#key-features)
   - [DIDComm Message Envelopes](#didcomm-message-envelopes)
     - [Combining Different Envelope Types](#combining-different-envelope-types)
-    - [Benefits of Combining Envelope Types](#benefits-of-combining-envelope-types)
-    - [Envelope Types Summary](#envelope-types-summary)
+    - [Security Features of Envelope Type Combinations](#security-features-of-envelope-type-combinations)
   - [Ed25519/X25519 Curve Conversion](#ed25519x25519-curve-conversion)
   - [Key Type Selection for Authcrypt and Anoncrypt](#key-type-selection-for-authcrypt-and-anoncrypt)
   - [Requirements](#requirements)
@@ -109,9 +108,9 @@ You can combine the DIDComm Message Envelope types in the following ways:
   - **Use case**: Advanced scenarios requiring layered security and sender anonymity from intermediaries.
 
 
-### Benefits of Combining Envelope Types
+### Security Features of Envelope Type Combinations
 
-Refer to the table below for the benefits provided by combining each envelope type.
+Refer to the table below how security features are affected by combining each envelope type.
 
 | Envelope Type                      | Confidentiality | Sender Authenticity | Non-repudiation | Sender Anonymity |
 |------------------------------------|-----------------|---------------------|-----------------|------------------|
