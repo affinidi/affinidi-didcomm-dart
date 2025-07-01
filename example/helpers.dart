@@ -41,9 +41,7 @@ void prettyPrint(
 }) {
   if (object == null) {
     print(name);
-  }
-
-  if (object is String) {
+  } else if (object is String) {
     print('$name: $object\n');
   } else {
     final prettyString = const JsonEncoder.withIndent('  ').convert(object);

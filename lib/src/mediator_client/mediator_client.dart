@@ -10,7 +10,6 @@ import 'package:web_socket_channel/status.dart' as status;
 
 import '../../didcomm.dart';
 import '../common/did_document_service_type.dart';
-import '../extensions/extensions.dart';
 
 /// Client for interacting with a DIDComm mediator, supporting message sending, inbox management,
 /// and real-time message delivery via WebSockets.
@@ -262,6 +261,7 @@ class MediatorClient {
         messageToSend,
         keyPair: keyPair,
         didKeyId: didKeyId,
+        keyType: keyPair.publicKey.type,
         recipientDidDocuments: [mediatorDidDocument],
         keyWrappingAlgorithm: messageOptions.keyWrappingAlgorithm,
         encryptionAlgorithm: messageOptions.encryptionAlgorithm,
