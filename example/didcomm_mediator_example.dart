@@ -215,7 +215,7 @@ void main() async {
       message: message,
       recipientWallet: bobWallet,
       expectedMessageWrappingTypes: [
-        MessageWrappingType.authcryptPlaintext,
+        MessageWrappingType.authcryptSignPlaintext,
       ],
       expectedSigners: [
         aliceSigner.didKeyId,

@@ -205,7 +205,7 @@ void main() async {
         message: message,
         recipientWallet: bobWallet,
         expectedMessageWrappingTypes: [
-          MessageWrappingType.authcryptPlaintext,
+          MessageWrappingType.authcryptSignPlaintext,
         ],
         expectedSigners: [
           aliceSigner.didKeyId,
@@ -219,7 +219,7 @@ void main() async {
 
       await bobMediatorClient.disconnect();
     },
-    onError: prettyPrint,
+    onError: (dynamic error) => prettyPrint('error', object: error),
     onDone: () => prettyPrint('done'),
     accessToken: bobTokens.accessToken,
     cancelOnError: false,

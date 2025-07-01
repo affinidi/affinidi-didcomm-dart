@@ -79,7 +79,7 @@ void main() async {
       message: message,
       recipientWallet: receiverWallet,
       expectedMessageWrappingTypes: [
-        MessageWrappingType.authcryptPlaintext,
+        MessageWrappingType.anoncryptSignPlaintext,
       ],
     );
 
