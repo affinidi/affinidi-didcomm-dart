@@ -6,6 +6,7 @@ import 'package:web_socket_channel/io.dart';
 import '../common/did.dart';
 import '../common/did_document_service_type.dart';
 import '../curves/curve_type.dart';
+import '../did_resolver_manager.dart';
 import '../jwks/jwk.dart';
 import 'extensions.dart';
 
@@ -128,7 +129,7 @@ extension DidDocumentExtension on DidDocument {
   Future<void> addMediatorsFromResolvedDid(
     String did,
   ) async {
-    final didDocument = await UniversalDIDResolver.resolve(did);
+    final didDocument = await DidResolverManager.resolve(did);
     addMediatorsFromDidDocument(didDocument);
   }
 

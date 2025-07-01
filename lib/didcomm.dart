@@ -6,6 +6,7 @@
 
 library;
 
+export 'src/did_resolver_manager.dart';
 export 'src/errors/errors.dart';
 export 'src/extensions/affinidi_authenticator_extension.dart';
 export 'src/extensions/did_document_extension.dart';
