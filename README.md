@@ -12,8 +12,6 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
   - [DIDComm Message Envelopes](#didcomm-message-envelopes)
     - [Combining Different Envelope Types](#combining-different-envelope-types)
     - [Security Features of Envelope Type Combinations](#security-features-of-envelope-type-combinations)
-  - [Ed25519/X25519 Curve Conversion](#ed25519x25519-curve-conversion)
-  - [Key Type Selection for Authcrypt and Anoncrypt](#key-type-selection-for-authcrypt-and-anoncrypt)
   - [Requirements](#requirements)
   - [Installation](#installation)
   - [Usage](#usage)
@@ -21,12 +19,14 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
     - [2. Compose a Plain Text Message](#2-compose-a-plain-text-message)
     - [3. Sign the Message](#3-sign-the-message)
     - [4. Encrypt the Message](#4-encrypt-the-message)
-    - [More Examples](#more-examples)
   - [Pack and Unpack DIDComm Message Helpers](#pack-and-unpack-didcomm-message-helpers)
     - [packIntoEncryptedMessage](#packintoencryptedmessage)
     - [packIntoSignedMessage](#packintosignedmessage)
     - [packIntoSignedAndEncryptedMessages](#packintosignedandencryptedmessages)
     - [unpackToPlainTextMessage](#unpacktoplaintextmessage)
+  - [More Usage Examples](#more-usage-examples)
+  - [Key Type Selection for Authcrypt and Anoncrypt](#key-type-selection-for-authcrypt-and-anoncrypt)
+  - [Ed25519/X25519 Curve Conversion](#ed25519x25519-curve-conversion)
   - [Support & feedback](#support--feedback)
   - [Contributing](#contributing)
 
@@ -133,66 +133,6 @@ Refer to the table below how security features are affected by combining each en
 - Use **anoncrypt(authcrypt(plaintext))** for advanced layered security and sender anonymity from intermediaries.
 
 For more details, see the [DIDComm Messaging specification](https://identity.foundation/didcomm-messaging/spec/#iana-media-types).
-
-## Ed25519/X25519 Curve Conversion
-
-If you use an Ed25519 key (Edwards curve) for your DID or wallet, the Dart SSI package will use this curve for digital signatures. However, for encryption and ECDH key agreement, the Ed25519 key is automatically converted to the corresponding X25519 key. This is required because the DIDComm v2 encryption and ECDH protocols use X25519 for key agreement, not Ed25519.
-
-When you generate a DID Document with the Dart SSI package using an Ed25519 key, the resulting DID Document will include both Ed25519 (for signing) and X25519 (for encryption/ECDH) verification methods.
-
-- **Signing:** Uses Ed25519 (Edwards curve).
-- **Encryption/ECDH:** Uses X25519, converted from Ed25519 as needed.
-
-This conversion and DID Document construction are handled automatically by the Dart SSI and DIDComm libraries. You do not need to manually convert keys or add verification methods, but be aware that it uses the same key material in different forms for signing and encryption operations.
-
-## Key Type Selection for Authcrypt and Anoncrypt
-
-When encrypting messages, you must select a key type for a key agreement that all parties support.
-
-- **Authcrypt (authenticated encryption, ECDH-1PU):**
-  - For key agreement, both the sender and all recipients must use compatible key types (e.g., both must have P-256 or X25519 keys in their DID Documents).
-  - You typically use the sender's wallet to find a compatible key pair and key agreement method with each recipient.
-  - Use the `matchKeysInKeyAgreement` extension method to find compatible key IDs from the sender's wallet for all recipients.
-
-- **Anoncrypt (anonymous encryption, ECDH-ES):**
-  - Only uses the recipients' key agreement keys; does not involve the sender's key pair.
-  - You must select a key type that all recipients for key agreement support.
-  - Use the `getCommonKeyTypesInKeyAgreements` extension method on the list of recipient DID Documents to determine the set of key types common to all recipients.
-
-Examples:
-
-**Authcrypt:**
-```dart
-final compatibleKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-  wallet: aliceWallet,
-  otherDidDocuments: [
-    bobDidDocument
-    // and other recipients
-  ],
-);
-
-if (compatibleKeyIds.isEmpty) {
-  throw Exception('No compatible key agreement method found between Alice and Bob');
-}
-
-final aliceDidKeyId = compatibleKeyIds.first; // Use this key ID for Alice
-```
-
-**Anoncrypt:**
-```dart
-final commonKeyTypes = [
-  bobDidDocument,
-  // and other recipients
-].getCommonKeyTypesInKeyAgreements();
-
-if (commonKeyTypes.isEmpty) {
-  throw Exception('No common key type found for anoncrypt between recipients');
-}
-
-final keyType = commonKeyTypes.first; // Use this key type for anoncrypt
-```
-
-This ensures that the correct and compatible keys are used for ECDH-1PU (authcrypt) and ECDH-ES (anoncrypt) operations, and that all recipients can decrypt the message using a supported key agreement method.
 
 ## Requirements
 
@@ -333,11 +273,7 @@ final anonymousEncryptedMessage = await EncryptedMessage.packAnonymously(
 
 In this case, Bob can decrypt and read the message but cannot determine who sent it. This approach is helpful for scenarios where sender anonymity is required.
 
-### More Examples
-
-See [`example/didcomm_example.dart`](https://github.com/affinidi/didcomm-dart/blob/main/example/didcomm_example.dart) for a complete runnable example.
-
-For more sample usage, including a mediator workflow, see the [example folder](https://github.com/affinidi/didcomm-dart/tree/main/example).
+More details about the [key type selection for authcrypt and anoncrypt](#key-type-selection-for-authcrypt-and-anoncrypt).
 
 
 ## Pack and Unpack DIDComm Message Helpers
@@ -426,6 +362,72 @@ final unpackedMessage = await DidcommMessage.unpackToPlainTextMessage(
   The values are from the `MessageWrappingType` enum, which maps to the [DIDComm IANA media types](https://identity.foundation/didcomm-messaging/spec/#iana-media-types), such as `authcryptPlaintext` for authenticated encryption, `signedPlaintext` for signed messages, and `plaintext` for unprotected messages. It helps prevent downgrade attacks and ensures the message is processed as intended.
 
 - `expectedSigners`: List of key IDs whose signatures are expected and will be verified.
+
+## More Usage Examples
+
+See [`example/didcomm_example.dart`](https://github.com/affinidi/didcomm-dart/blob/main/example/didcomm_example.dart) for a complete runnable example.
+
+For more sample usage, including a mediator workflow, see the [example folder](https://github.com/affinidi/didcomm-dart/tree/main/example).
+
+## Key Type Selection for Authcrypt and Anoncrypt
+
+When encrypting messages, you must select a key type for a key agreement that all parties support.
+
+- **Authcrypt (authenticated encryption, ECDH-1PU):**
+  - For key agreement, both the sender and all recipients must use compatible key types (e.g., both must have P-256 or X25519 keys in their DID Documents).
+  - You typically use the sender's wallet to find a compatible key pair and key agreement method with each recipient.
+  - Use the `matchKeysInKeyAgreement` extension method to find compatible key IDs from the sender's wallet for all recipients.
+
+- **Anoncrypt (anonymous encryption, ECDH-ES):**
+  - Only uses the recipients' key agreement keys; does not involve the sender's key pair.
+  - You must select a key type that all recipients for key agreement support.
+  - Use the `getCommonKeyTypesInKeyAgreements` extension method on the list of recipient DID Documents to determine the set of key types common to all recipients.
+
+Examples:
+
+**Authcrypt:**
+```dart
+final compatibleKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
+  wallet: aliceWallet,
+  otherDidDocuments: [
+    bobDidDocument
+    // and other recipients
+  ],
+);
+
+if (compatibleKeyIds.isEmpty) {
+  throw Exception('No compatible key agreement method found between Alice and Bob');
+}
+
+final aliceDidKeyId = compatibleKeyIds.first; // Use this key ID for Alice
+```
+
+**Anoncrypt:**
+```dart
+final commonKeyTypes = [
+  bobDidDocument,
+  // and other recipients
+].getCommonKeyTypesInKeyAgreements();
+
+if (commonKeyTypes.isEmpty) {
+  throw Exception('No common key type found for anoncrypt between recipients');
+}
+
+final keyType = commonKeyTypes.first; // Use this key type for anoncrypt
+```
+
+This ensures that the correct and compatible keys are used for ECDH-1PU (authcrypt) and ECDH-ES (anoncrypt) operations, and that all recipients can decrypt the message using a supported key agreement method.
+
+## Ed25519/X25519 Curve Conversion
+
+If you selected the Ed25519 key (Edwards curve) for your DID or wallet, the Dart SSI package will use this curve for digital signatures. However, for encryption and ECDH key agreement, the Ed25519 key is automatically converted to the corresponding X25519 key.
+
+When you generate a DID Document with the Dart SSI package using an Ed25519 key, the resulting DID Document will include both Ed25519 (for signing) and X25519 (for encryption/ECDH) verification methods.
+
+- **Signing:** Uses Ed25519 (Edwards curve).
+- **Encryption/ECDH:** Uses X25519, converted from Ed25519 as needed.
+
+This conversion and DID Document construction are handled automatically by the Dart SSI and DIDComm libraries. You do not need to manually convert keys or add verification methods, but be aware that it uses the same key material in different forms for signing and encryption operations.
 
 ## Support & feedback
 
