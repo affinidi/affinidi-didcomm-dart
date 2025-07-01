@@ -8,6 +8,7 @@ import '../common/did_document_service_type.dart';
 import '../curves/curve_type.dart';
 import '../jwks/jwk.dart';
 import 'extensions.dart';
+import 'service_endpoint_extension.dart';
 
 /// Extension methods for [DidDocument] to support DIDComm-specific operations,
 /// such as extracting endpoints, creating transport clients, and key matching.
@@ -27,13 +28,13 @@ extension DidDocumentExtension on DidDocument {
           ),
         );
 
-    final serviceEndpoint = service.serviceEndpoint.firstWhere(
-      (endpoint) => endpoint.uri.startsWith('https://'),
-      orElse: () => throw ArgumentError(
-        'Can not find https endpoint in $serviceType service',
-        'didDocument',
-      ),
-    );
+    final serviceEndpoint = service.getDidcommServiceEndpoints().firstWhere(
+          (endpoint) => endpoint.uri.startsWith('https://'),
+          orElse: () => throw ArgumentError(
+            'Can not find https endpoint in $serviceType service',
+            'didDocument',
+          ),
+        );
 
     return Dio(BaseOptions(
       baseUrl: serviceEndpoint.uri,
@@ -56,13 +57,13 @@ extension DidDocumentExtension on DidDocument {
           ),
         );
 
-    final serviceEndpoint = service.serviceEndpoint.firstWhere(
-      (endpoint) => endpoint.uri.startsWith('wss://'),
-      orElse: () => throw ArgumentError(
-        'Can not find wss endpoint in $serviceType service',
-        'didDocument',
-      ),
-    );
+    final serviceEndpoint = service.getDidcommServiceEndpoints().firstWhere(
+          (endpoint) => endpoint.uri.startsWith('wss://'),
+          orElse: () => throw ArgumentError(
+            'Can not find wss endpoint in $serviceType service',
+            'didDocument',
+          ),
+        );
 
     return IOWebSocketChannel.connect(
       Uri.parse(serviceEndpoint.uri),
@@ -90,13 +91,14 @@ extension DidDocumentExtension on DidDocument {
     );
 
     return service != null
-        ? getDidFromId(service.serviceEndpoint.first.uri)
+        ? getDidFromId(service.getDidcommServiceEndpoints().first.uri)
         : null;
   }
 
   /// Adds all mediators from another [didDocument] to this DID Document's services.
   ///
   /// [didDocument]: The DID Document from which to add mediators.
+  @deprecated
   void addMediatorsFromDidDocument(
     DidDocument didDocument,
   ) {
@@ -108,14 +110,7 @@ extension DidDocumentExtension on DidDocument {
       (service) => ServiceEndpoint(
         id: service.id.replaceFirst(getDidFromId(service.id), id),
         type: service.type,
-        serviceEndpoint: [
-          // TODO: revisit after ServiceEndpoint update in Dart SSI. only uri is needed
-          DIDCommServiceEndpoint(
-            accept: [],
-            routingKeys: [],
-            uri: getDidFromId(service.id),
-          )
-        ],
+        serviceEndpoint: StringEndpoint(getDidFromId(service.id)),
       ),
     );
 
