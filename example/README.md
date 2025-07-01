@@ -6,26 +6,26 @@ Check the code snippets on the sample usage of this package with your project.
 
 ### 1. Pack and unpack the DIDComm message using the p256 key type
 
-The example shows Alice composing a DIDComm message, signing it, and encrypting it using the p256 key type - [view example](https://github.com/affinidi/didcomm-dart/blob/readme-updates/example/didcomm_example.dart).
+The example shows Alice composing a DIDComm message, signing it, and encrypting it using the p256 key type - [view example](https://github.com/affinidi/didcomm-dart/blob/main/example/didcomm_example.dart).
 
 ### 2. Pack and unpack the DIDComm message using the ed25519 key type
 
-The example shows Alice composing a DIDComm message, signing it, and encrypting it using the ed25519 key type - [view example](https://github.com/affinidi/didcomm-dart/blob/readme-updates/example/didcomm_ed25519_example.dart).
+The example shows Alice composing a DIDComm message, signing it, and encrypting it using the ed25519 key type - [view example](https://github.com/affinidi/didcomm-dart/blob/main/example/didcomm_ed25519_example.dart).
 
 ## DIDComm Message with Mediator Workflow Examples
 
 ### 1. Forward message to Mediator
 
-Forward DIDComm message from Alice to Bob using a Mediator service - [view example](https://github.com/affinidi/didcomm-dart/blob/readme-updates/example/didcomm_mediator_example.dart).
+Forward DIDComm message from Alice to Bob using a Mediator service - [view example](https://github.com/affinidi/didcomm-dart/blob/main/example/didcomm_mediator_example.dart).
 
 ### 2. Send DIDComm message using Mediator to another DID
 
-Compose a DIDComm message signed and encrypted by the sender and forward it to the Mediator service for routing - [view example](https://github.com/affinidi/didcomm-dart/blob/readme-updates/example/didcomm_mediator_sender_example.dart).
+Compose a DIDComm message signed and encrypted by the sender and forward it to the Mediator service for routing - [view example](https://github.com/affinidi/didcomm-dart/blob/main/example/didcomm_mediator_sender_example.dart).
 
 ### 3. Received DIDComm message using Mediator from another DID
 
-Fetch DIDComm messages from the Mediator addressed to the DID of the recipient - [view example](https://github.com/affinidi/didcomm-dart/blob/readme-updates/example/didcomm_mediator_receiver_example.dart).
+Fetch DIDComm messages from the Mediator addressed to the DID of the recipient - [view example](https://github.com/affinidi/didcomm-dart/blob/main/example/didcomm_mediator_receiver_example.dart).
 
 ### 4. Forward message to Mediator using WebSocket
 
-Forward DIDComm message from Alice to Bob using a Mediator service in WebSocket mode - [view example](https://github.com/affinidi/didcomm-dart/blob/readme-updates/example/didcomm_mediator_web_sockets_example.dart).
+Forward DIDComm message from Alice to Bob using a Mediator service in WebSocket mode - [view example](https://github.com/affinidi/didcomm-dart/blob/main/example/didcomm_mediator_web_sockets_example.dart).
