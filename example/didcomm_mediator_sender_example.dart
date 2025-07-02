@@ -156,7 +156,6 @@ void main() async {
 
   final senderMediatorClient = MediatorClient(
     mediatorDidDocument: receiverMediatorDidDocument,
-    // TODO: add mediator key negotiotion
     keyPair: await senderDidController.getKeyPairByDidKeyId(
       senderMatchedDidKeyIds.first,
     ),

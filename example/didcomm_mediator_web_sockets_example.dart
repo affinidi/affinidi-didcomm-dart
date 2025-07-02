@@ -153,7 +153,6 @@ void main() async {
 
   final aliceMediatorClient = MediatorClient(
       mediatorDidDocument: bobMediatorDocument,
-      // TODO: add mediator key negotiotion
       keyPair: await aliceDidController.getKeyPairByDidKeyId(
         aliceMatchedDidKeyIds.first,
       ),
@@ -172,13 +171,19 @@ void main() async {
   // this method is need for mediators, that require authentication like an Affinidi mediator
   final aliceTokens = await aliceMediatorClient.authenticate();
 
+  final bobMatchedDidKeyIds = bobDidDocument.matchKeysInKeyAgreement(
+    otherDidDocuments: [
+      bobMediatorDocument,
+      // bob only sends messages to the mediator, so we don't need to match keys with Alice's DID Document
+    ],
+  );
+
   final bobMediatorClient = MediatorClient(
     mediatorDidDocument: bobMediatorDocument,
-    // TODO: add mediator key negotiotion
     keyPair: await bobDidController.getKeyPairByDidKeyId(
-      bobDidDocument.keyAgreement.first.id,
+      bobMatchedDidKeyIds.first,
     ),
-    didKeyId: bobDidDocument.keyAgreement.first.id,
+    didKeyId: bobMatchedDidKeyIds.first,
     signer: bobSigner,
     webSocketOptions: const WebSocketOptions(
       statusRequestMessageOptions: StatusRequestMessageOptions(
