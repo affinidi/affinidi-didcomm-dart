@@ -65,7 +65,7 @@ abstract class Ecdh {
   /// [data]: The encrypted data to decrypt.
   /// [self]: The recipient.
   /// [jweHeader]: The JWE header.
-  /// [recipientWallet]: The recipient's wallet.
+  /// [recipientDidController]: The recipient's DID controller.
   /// [authenticationTag]: The authentication tag for the JWE.
   /// [senderJwk]: Optional sender's JWK.
   ///

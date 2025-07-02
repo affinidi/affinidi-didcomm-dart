@@ -129,7 +129,7 @@ extension DidDocumentExtension on DidDocument {
 
   /// Matches and returns key IDs in this DID Document's key agreement section that are compatible with all [otherDidDocuments].
   ///
-  /// [wallet]: The wallet to use for key ID lookups.
+  /// [didController]: The DID controller to use for key ID lookups.
   /// [otherDidDocuments]: The other DID Documents to match key agreement curves with.
   /// Throws if no compatible key is found in the wallet.
   List<String> matchKeysInKeyAgreement({
