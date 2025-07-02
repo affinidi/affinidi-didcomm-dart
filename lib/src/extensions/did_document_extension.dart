@@ -133,7 +133,6 @@ extension DidDocumentExtension on DidDocument {
   /// [otherDidDocuments]: The other DID Documents to match key agreement curves with.
   /// Throws if no compatible key is found in the wallet.
   List<String> matchKeysInKeyAgreement({
-    required Wallet wallet,
     required List<DidDocument> otherDidDocuments,
   }) {
     final ownCurves = Set<CurveType>.from(
@@ -151,21 +150,11 @@ extension DidDocumentExtension on DidDocument {
     );
 
     return matchedCurves.map((curve) {
-      final didKeyId = keyAgreement
+      return keyAgreement
           .firstWhere(
             (keyAgreement) => _getCurve(keyAgreement) == curve,
           )
           .id;
-
-      final keyId = wallet.getKeyIdByDidKeyId(didKeyId);
-
-      if (keyId == null) {
-        throw Exception(
-          'Can not find mapping between JWK kid and key ID in the wallet',
-        );
-      }
-
-      return keyId;
     }).toList();
   }
 }

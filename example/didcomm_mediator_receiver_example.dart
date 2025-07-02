@@ -13,23 +13,20 @@ void main() async {
   final receiverKeyStore = InMemoryKeyStore();
   final receiverWallet = PersistentWallet(receiverKeyStore);
 
+  final receiverDidController = DidKeyController(
+    wallet: receiverWallet,
+    store: InMemoryDidStore(),
+  );
+
   final receiverKeyId = 'receiver-key-1';
-  final receiverPrivateKeyBytes = await extractPrivateKeyBytes(
-    './example/keys/bob_private_key.pem',
+
+  await receiverWallet.generateKey(
+    keyId: receiverKeyId,
+    keyType: KeyType.p256,
   );
 
-  await receiverKeyStore.set(
-    receiverKeyId,
-    StoredKey(
-      keyType: KeyType.p256,
-      privateKeyBytes: receiverPrivateKeyBytes,
-    ),
-  );
-
-  final receiverKeyPair = await receiverWallet.getKeyPair(receiverKeyId);
-  final receiverDidDocument = DidKey.generateDocument(
-    receiverKeyPair.publicKey,
-  );
+  await receiverDidController.addVerificationMethod(receiverKeyId);
+  final receiverDidDocument = await receiverDidController.getDidDocument();
 
   // Serialized receiverMediatorDocument needs to shared with sender
   prettyPrint(
@@ -41,23 +38,18 @@ void main() async {
     await readDid('./example/mediator/mediator_did.txt'),
   );
 
-  final receiverSigner = DidSigner(
-    didDocument: receiverDidDocument,
-    keyPair: receiverKeyPair,
-    didKeyId: receiverDidDocument.verificationMethod[0].id,
+  final receiverSigner = await receiverDidController.getSigner(
+    receiverDidDocument.assertionMethod.first.id,
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
-  for (var keyAgreement in receiverDidDocument.keyAgreement) {
-    // Important! link JWK, so the wallet should be able to find the key pair by JWK
-    // It will be replaced with DID Manager
-    receiverWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, receiverKeyId);
-  }
-
   final receiverMediatorClient = MediatorClient(
     mediatorDidDocument: receiverMediatorDocument,
-    keyPair: receiverKeyPair,
-    didKeyId: receiverWallet.getDidIdByKeyId(receiverKeyId)!,
+    // TODO: add mediator key negotiotion
+    keyPair: await receiverDidController.getKeyPairByDidKeyId(
+      receiverDidDocument.keyAgreement.first.id,
+    ),
+    didKeyId: receiverDidDocument.keyAgreement.first.id,
     signer: receiverSigner,
   );
 
@@ -77,7 +69,7 @@ void main() async {
     final originalPlainTextMessageFromSender =
         await DidcommMessage.unpackToPlainTextMessage(
       message: message,
-      recipientWallet: receiverWallet,
+      recipientDidController: receiverDidController,
       expectedMessageWrappingTypes: [
         MessageWrappingType.anoncryptSignPlaintext,
       ],

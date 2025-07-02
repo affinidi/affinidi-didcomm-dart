@@ -216,9 +216,9 @@ class EncryptedMessage extends DidcommMessage {
   ///
   /// Returns the decrypted inner message as a JSON map.
   Future<Map<String, dynamic>> unpack({
-    required Wallet recipientWallet,
+    required DidController recipientDidController,
   }) async {
-    final self = await _findSelfAsRecipient(recipientWallet);
+    final self = await _findSelfAsRecipient(recipientDidController);
     final jweHeader = _jweHeaderConverter.fromJson(protected);
 
     final subjectKeyId = jweHeader.subjectKeyId;
@@ -232,7 +232,7 @@ class EncryptedMessage extends DidcommMessage {
 
     final contentEncryptionKey = await Ecdh.decrypt(
       self.encryptedKey,
-      recipientWallet: recipientWallet,
+      recipientDidController: recipientDidController,
       jweHeader: jweHeader,
       senderJwk: jweHeader.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu
           ? await _getSenderJwk(subjectKeyId!)
@@ -278,13 +278,16 @@ class EncryptedMessage extends DidcommMessage {
     return senderJwk;
   }
 
-  Future<Recipient> _findSelfAsRecipient(Wallet wallet) async {
-    final self = recipients.firstWhere(
-      (recipient) => wallet.getKeyIdByDidKeyId(recipient.header.keyId) != null,
-      orElse: () => throw Exception('Self recipient not found'),
-    );
+  Future<Recipient> _findSelfAsRecipient(DidController didController) async {
+    for (final recipient in recipients) {
+      final keyId = await didController.getWalletKeyId(recipient.header.keyId);
 
-    return self;
+      if (keyId != null) {
+        return recipient;
+      }
+    }
+
+    throw Exception('Self recipient not found');
   }
 
   /// Checks if the given [message] map is an encrypted message by verifying required properties.

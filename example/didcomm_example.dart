@@ -9,43 +9,41 @@ void main() async {
   final aliceKeyStore = InMemoryKeyStore();
   final aliceWallet = PersistentWallet(aliceKeyStore);
 
+  final aliceDidController = DidKeyController(
+    wallet: aliceWallet,
+    store: InMemoryDidStore(),
+  );
+
   final bobKeyStore = InMemoryKeyStore();
   final bobWallet = PersistentWallet(bobKeyStore);
 
+  final bobDidController = DidKeyController(
+    wallet: bobWallet,
+    store: InMemoryDidStore(),
+  );
+
   final aliceKeyId = 'alice-key-1';
-  final aliceKeyPair = await aliceWallet.generateKey(
+  await aliceWallet.generateKey(
     keyId: aliceKeyId,
     keyType: KeyType.p256,
   );
 
-  final aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
+  await aliceDidController.addVerificationMethod(aliceKeyId);
+  final aliceDidDocument = await aliceDidController.getDidDocument();
 
-  final aliceSigner = DidSigner(
-    didDocument: aliceDidDocument,
-    keyPair: aliceKeyPair,
-    didKeyId: aliceDidDocument.verificationMethod[0].id,
+  final aliceSigner = await aliceDidController.getSigner(
+    aliceDidDocument.assertionMethod.first.id,
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
-  for (var keyAgreement in aliceDidDocument.keyAgreement) {
-    // Important! link JWK, so the wallet should be able to find the key pair by JWK
-    // It will be replaced with DID Manager
-    aliceWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, aliceKeyId);
-  }
-
   final bobKeyId = 'bob-key-1';
-  final bobKeyPair = await bobWallet.generateKey(
+  await bobWallet.generateKey(
     keyId: bobKeyId,
     keyType: KeyType.p256,
   );
 
-  final bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
-
-  for (var keyAgreement in bobDidDocument.keyAgreement) {
-    // Important! link JWK, so the wallet should be able to find the key pair by JWK
-    // It will be replaced with DID Manager
-    bobWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, bobKeyId);
-  }
+  await bobDidController.addVerificationMethod(bobKeyId);
+  final bobDidDocument = await bobDidController.getDidDocument();
 
   final alicePlainTextMassage = PlainTextMessage(
     id: '041b47d4-9c8f-4a24-ae85-b60ec91b025c',
@@ -56,6 +54,7 @@ void main() async {
   );
 
   alicePlainTextMassage['custom-header'] = 'custom-value';
+
   prettyPrint(
     'Plain Text Message for Bob',
     object: alicePlainTextMassage,
@@ -73,18 +72,15 @@ void main() async {
 
   // find keys whose curve is common in other DID Documents
   final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-    wallet: aliceWallet,
-    otherDidDocuments: [
-      bobDidDocument,
-    ],
+    otherDidDocuments: [bobDidDocument],
   );
 
   final aliceEncryptedMessage = await EncryptedMessage.packWithAuthentication(
     aliceSignedMessage,
-    keyPair: await aliceWallet.generateKey(
-      keyId: aliceMatchedKeyIds.first,
+    keyPair: await aliceDidController.getKeyPairByDidKeyId(
+      aliceMatchedKeyIds.first,
     ),
-    didKeyId: aliceWallet.getDidIdByKeyId(aliceMatchedKeyIds.first)!,
+    didKeyId: aliceMatchedKeyIds.first,
     recipientDidDocuments: [bobDidDocument],
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
@@ -98,7 +94,7 @@ void main() async {
 
   final unpackedMessageByBob = await DidcommMessage.unpackToPlainTextMessage(
     message: jsonDecode(sentMessageByAlice) as Map<String, dynamic>,
-    recipientWallet: bobWallet,
+    recipientDidController: bobDidController,
     expectedMessageWrappingTypes: [
       MessageWrappingType.authcryptSignPlaintext,
     ],

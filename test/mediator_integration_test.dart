@@ -46,12 +46,14 @@ void main() async {
 
   group('Mediator Integration Test', () {
     late PersistentWallet aliceWallet;
+    late DidKeyController aliceDidController;
     late DidSigner aliceSigner;
     late DidDocument aliceDidDocument;
     late MediatorClient aliceMediatorClient;
     late AuthenticationTokens aliceTokens;
 
     late PersistentWallet bobWallet;
+    late DidKeyController bobDidController;
     late DidSigner bobSigner;
     late DidDocument bobDidDocument;
     late MediatorClient bobMediatorClient;
@@ -63,8 +65,18 @@ void main() async {
       final aliceKeyStore = InMemoryKeyStore();
       aliceWallet = PersistentWallet(aliceKeyStore);
 
+      aliceDidController = DidKeyController(
+        wallet: aliceWallet,
+        store: InMemoryDidStore(),
+      );
+
       final bobKeyStore = InMemoryKeyStore();
       bobWallet = PersistentWallet(bobKeyStore);
+
+      bobDidController = DidKeyController(
+        wallet: bobWallet,
+        store: InMemoryDidStore(),
+      );
 
       final aliceKeyId = 'alice-key-1';
       final alicePrivateKeyBytes = await extractPrivateKeyBytes(
@@ -79,21 +91,13 @@ void main() async {
         ),
       );
 
-      final aliceKeyPair = await aliceWallet.getKeyPair(aliceKeyId);
-      aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
+      await aliceDidController.addVerificationMethod(aliceKeyId);
+      aliceDidDocument = await aliceDidController.getDidDocument();
 
-      aliceSigner = DidSigner(
-        didDocument: aliceDidDocument,
-        keyPair: aliceKeyPair,
-        didKeyId: aliceDidDocument.verificationMethod[0].id,
+      aliceSigner = await aliceDidController.getSigner(
+        aliceDidDocument.assertionMethod.first.id,
         signatureScheme: SignatureScheme.ecdsa_p256_sha256,
       );
-
-      for (var keyAgreement in aliceDidDocument.keyAgreement) {
-        // Important! link JWK, so the wallet should be able to find the key pair by JWK
-        // It will be replaced with DID Manager
-        aliceWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, aliceKeyId);
-      }
 
       final bobKeyId = 'bob-key-1';
       final bobPrivateKeyBytes = await extractPrivateKeyBytes(
@@ -108,40 +112,29 @@ void main() async {
         ),
       );
 
-      final bobKeyPair = await bobWallet.getKeyPair(bobKeyId);
-      bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
+      await bobDidController.addVerificationMethod(bobKeyId);
 
-      bobSigner = DidSigner(
-        didDocument: bobDidDocument,
-        keyPair: bobKeyPair,
-        didKeyId: bobDidDocument.verificationMethod[0].id,
+      bobDidDocument = await bobDidController.getDidDocument();
+      bobSigner = await bobDidController.getSigner(
+        bobDidDocument.assertionMethod.first.id,
         signatureScheme: SignatureScheme.ecdsa_p256_sha256,
       );
-
-      for (var keyAgreement in bobDidDocument.keyAgreement) {
-        // Important! link JWK, so the wallet should be able to find the key pair by JWK
-        // It will be replaced with DID Manager
-        bobWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, bobKeyId);
-      }
 
       bobMediatorDocument = await UniversalDIDResolver.resolve(
         await readDid(mediatorDidPath),
       );
 
       final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-        wallet: aliceWallet,
-        otherDidDocuments: [
-          bobDidDocument,
-        ],
+        otherDidDocuments: [bobDidDocument],
       );
 
       aliceMediatorClient = MediatorClient(
         mediatorDidDocument: bobMediatorDocument,
-        keyPair: aliceKeyPair,
-        didKeyId: aliceWallet.getDidIdByKeyId(aliceMatchedKeyIds.first)!,
+        keyPair: await aliceDidController.getKeyPairByDidKeyId(
+          aliceMatchedKeyIds.first,
+        ),
+        didKeyId: aliceMatchedKeyIds.first,
         signer: aliceSigner,
-
-        // optional. if omitted defaults will be used
         forwardMessageOptions: const ForwardMessageOptions(
           shouldSign: true,
           shouldEncrypt: true,
@@ -152,11 +145,11 @@ void main() async {
 
       bobMediatorClient = MediatorClient(
         mediatorDidDocument: bobMediatorDocument,
-        keyPair: bobKeyPair,
-        didKeyId: bobWallet.getDidIdByKeyId(bobKeyId)!,
+        keyPair: await bobDidController.getKeyPairByDidKeyId(
+          bobDidDocument.keyAgreement.first.id,
+        ),
+        didKeyId: bobDidDocument.keyAgreement.first.id,
         signer: bobSigner,
-
-        // optional. if omitted defaults will be used
         webSocketOptions: const WebSocketOptions(
           liveDeliveryChangeMessageOptions: LiveDeliveryChangeMessageOptions(
             shouldSend: true,
@@ -194,7 +187,6 @@ void main() async {
 
       // find keys whose curve is common in other DID Documents
       final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-        wallet: aliceWallet,
         otherDidDocuments: [
           bobDidDocument,
         ],
@@ -203,8 +195,10 @@ void main() async {
       final aliceSignedAndEncryptedMessage =
           await DidcommMessage.packIntoSignedAndEncryptedMessages(
         alicePlainTextMassage,
-        keyPair: await aliceWallet.getKeyPair(aliceMatchedKeyIds.first),
-        didKeyId: aliceWallet.getDidIdByKeyId(aliceMatchedKeyIds.first)!,
+        keyPair: await aliceDidController.getKeyPairByDidKeyId(
+          aliceMatchedKeyIds.first,
+        ),
+        didKeyId: aliceMatchedKeyIds.first,
         recipientDidDocuments: [bobDidDocument],
         keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
         encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
@@ -252,7 +246,7 @@ void main() async {
         messages.map(
           (message) => DidcommMessage.unpackToPlainTextMessage(
             message: message,
-            recipientWallet: bobWallet,
+            recipientDidController: bobDidController,
             validateAddressingConsistency: true,
             expectedMessageWrappingTypes: [
               MessageWrappingType.authcryptSignPlaintext,
@@ -292,7 +286,6 @@ void main() async {
         alicePlainTextMassage['custom-header'] = 'custom-value';
 
         final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-          wallet: aliceWallet,
           otherDidDocuments: [
             bobDidDocument,
           ],
@@ -301,8 +294,10 @@ void main() async {
         final aliceSignedAndEncryptedMessage =
             await DidcommMessage.packIntoSignedAndEncryptedMessages(
           alicePlainTextMassage,
-          keyPair: await aliceWallet.getKeyPair(aliceMatchedKeyIds.first),
-          didKeyId: aliceWallet.getDidIdByKeyId(aliceMatchedKeyIds.first)!,
+          keyPair: await aliceDidController.getKeyPairByDidKeyId(
+            aliceMatchedKeyIds.first,
+          ),
+          didKeyId: aliceMatchedKeyIds.first,
           recipientDidDocuments: [bobDidDocument],
           keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
           encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
@@ -334,16 +329,26 @@ void main() async {
 
         await bobMediatorClient.listenForIncomingMessages(
           (message) async {
+            final encryptedMessage = EncryptedMessage.fromJson(message);
+            final senderDid = const JweHeaderConverter()
+                .fromJson(encryptedMessage.protected)
+                .subjectKeyId;
+
+            final isMediatorTelemetryMessage =
+                senderDid?.contains('.atlas.affinidi.io') == true;
+
             final unpackedMessage =
                 await DidcommMessage.unpackToPlainTextMessage(
               message: message,
-              recipientWallet: bobWallet,
+              recipientDidController: bobDidController,
               validateAddressingConsistency: true,
               expectedMessageWrappingTypes: [
                 MessageWrappingType.authcryptSignPlaintext,
               ],
               expectedSigners: [
-                aliceSigner.didKeyId,
+                isMediatorTelemetryMessage
+                    ? bobMediatorDocument.assertionMethod.first.id
+                    : aliceSigner.didKeyId,
               ],
             );
 
@@ -354,6 +359,8 @@ void main() async {
               await bobMediatorClient.disconnect();
             }
           },
+          onError: (Object error) => prettyPrint('error', object: error),
+          onDone: () => prettyPrint('done'),
           accessToken: bobTokens.accessToken,
           cancelOnError: false,
         );

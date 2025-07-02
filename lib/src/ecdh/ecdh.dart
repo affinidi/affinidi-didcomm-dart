@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:ssi/ssi.dart' show KeyPair, Wallet;
+import 'package:ssi/ssi.dart' show DidController, KeyPair;
 
 import '../../didcomm.dart';
 import '../extensions/extensions.dart';
@@ -74,7 +74,7 @@ abstract class Ecdh {
     Uint8List data, {
     required Recipient self,
     required JweHeader jweHeader,
-    required Wallet recipientWallet,
+    required DidController recipientDidController,
     required Uint8List authenticationTag,
     Jwk? senderJwk,
   }) async {
@@ -98,7 +98,7 @@ abstract class Ecdh {
     }
 
     final recipientKeyId =
-        recipientWallet.getKeyIdByDidKeyId(self.header.keyId);
+        await recipientDidController.getWalletKeyId(self.header.keyId);
 
     if (recipientKeyId == null) {
       Exception('JWK kid is not linked with any Key ID in the Wallet');
@@ -106,8 +106,8 @@ abstract class Ecdh {
 
     return await ecdh.decryptData(
       data: self.encryptedKey,
-      recipientKeyPair: await recipientWallet.generateKey(
-        keyId: recipientKeyId,
+      recipientKeyPair: await recipientDidController.getKeyPair(
+        recipientKeyId!,
       ),
     );
   }

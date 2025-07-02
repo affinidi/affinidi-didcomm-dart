@@ -9,9 +9,6 @@ void main() async {
     final aliceKeyStore = InMemoryKeyStore();
     final aliceWallet = PersistentWallet(aliceKeyStore);
 
-    final bobKeyStore = InMemoryKeyStore();
-    final bobWallet = PersistentWallet(bobKeyStore);
-
     group('Persisted wallet', () {
       for (final keyType in [
         KeyType.p256,
@@ -22,22 +19,26 @@ void main() async {
           group(keyType.name, () {
             final aliceKeyId = 'alice-key-1-${keyType.name}';
 
+            late DidController aliceDidController;
             late DidDocument aliceDidDocument;
             late DidSigner aliceSigner;
 
             setUp(() async {
-              final aliceKeyPair = await aliceWallet.generateKey(
+              aliceDidController = DidKeyController(
+                wallet: aliceWallet,
+                store: InMemoryDidStore(),
+              );
+
+              await aliceWallet.generateKey(
                 keyId: aliceKeyId,
                 keyType: keyType,
               );
 
-              aliceDidDocument =
-                  DidKey.generateDocument(aliceKeyPair.publicKey);
+              await aliceDidController.addVerificationMethod(aliceKeyId);
+              aliceDidDocument = await aliceDidController.getDidDocument();
 
-              aliceSigner = DidSigner(
-                didDocument: aliceDidDocument,
-                keyPair: aliceKeyPair,
-                didKeyId: aliceDidDocument.verificationMethod[0].id,
+              aliceSigner = await aliceDidController.getSigner(
+                aliceDidDocument.assertionMethod.first.id,
                 signatureScheme: signatureScheme,
               );
             });
@@ -66,7 +67,7 @@ void main() async {
               final unpackedPlainTextMessage =
                   await DidcommMessage.unpackToPlainTextMessage(
                 message: signedMessage.toJson(),
-                recipientWallet: bobWallet,
+                recipientDidController: aliceDidController,
                 validateAddressingConsistency: true,
                 expectedMessageWrappingTypes: [
                   MessageWrappingType.signedPlaintext,
