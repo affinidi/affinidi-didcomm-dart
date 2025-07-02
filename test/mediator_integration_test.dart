@@ -124,16 +124,26 @@ void main() async {
         await readDid(mediatorDidPath),
       );
 
-      final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-        otherDidDocuments: [bobDidDocument],
+      final aliceMatchedDidKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
+        otherDidDocuments: [
+          bobDidDocument,
+          bobMediatorDocument,
+        ],
+      );
+
+      final bobMatchedDidKeyIds = bobDidDocument.matchKeysInKeyAgreement(
+        otherDidDocuments: [
+          bobMediatorDocument,
+          // bob only sends messages to the mediator, so we don't need to match keys with Alice's DID Document
+        ],
       );
 
       aliceMediatorClient = MediatorClient(
         mediatorDidDocument: bobMediatorDocument,
         keyPair: await aliceDidController.getKeyPairByDidKeyId(
-          aliceMatchedKeyIds.first,
+          aliceMatchedDidKeyIds.first,
         ),
-        didKeyId: aliceMatchedKeyIds.first,
+        didKeyId: aliceMatchedDidKeyIds.first,
         signer: aliceSigner,
         forwardMessageOptions: const ForwardMessageOptions(
           shouldSign: true,
@@ -146,9 +156,9 @@ void main() async {
       bobMediatorClient = MediatorClient(
         mediatorDidDocument: bobMediatorDocument,
         keyPair: await bobDidController.getKeyPairByDidKeyId(
-          bobDidDocument.keyAgreement.first.id,
+          bobMatchedDidKeyIds.first,
         ),
-        didKeyId: bobDidDocument.keyAgreement.first.id,
+        didKeyId: bobMatchedDidKeyIds.first,
         signer: bobSigner,
         webSocketOptions: const WebSocketOptions(
           liveDeliveryChangeMessageOptions: LiveDeliveryChangeMessageOptions(
@@ -189,6 +199,7 @@ void main() async {
       final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
         otherDidDocuments: [
           bobDidDocument,
+          bobMediatorDocument,
         ],
       );
 
@@ -288,6 +299,7 @@ void main() async {
         final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
           otherDidDocuments: [
             bobDidDocument,
+            bobMediatorDocument,
           ],
         );
 

@@ -43,13 +43,19 @@ void main() async {
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
+  final receiverMatchedDidKeyIds = receiverDidDocument.matchKeysInKeyAgreement(
+    otherDidDocuments: [
+      receiverMediatorDocument,
+      // receiver only sends messages to the mediator, so we don't need to match keys with sender's DID Document
+    ],
+  );
+
   final receiverMediatorClient = MediatorClient(
     mediatorDidDocument: receiverMediatorDocument,
-    // TODO: add mediator key negotiotion
     keyPair: await receiverDidController.getKeyPairByDidKeyId(
-      receiverDidDocument.keyAgreement.first.id,
+      receiverMatchedDidKeyIds.first,
     ),
-    didKeyId: receiverDidDocument.keyAgreement.first.id,
+    didKeyId: receiverMatchedDidKeyIds.first,
     signer: receiverSigner,
   );
 
