@@ -125,11 +125,12 @@ abstract class DidcommMessage {
   /// Verified signers against the expected list if provided.
   ///
   /// [message]: The message as a JSON map.
-  /// [recipientWallet]: The wallet to use for decryption.
+  /// [recipientDidController]: The DID controller to use for decryption.
   /// [validateAddressingConsistency]: Whether to validate addressing consistency between wrappers (default is true).
   /// [expectedMessageWrappingTypes]: List of expected message wrapping types (optional).
   ///   For example: [MessageWrappingType.authcryptSignPlaintext, MessageWrappingType.authcryptPlaintext].
   /// [expectedSigners]: List of expected signer key IDs (optional).
+  /// [onUnpacked]: Optional callback invoked with the list of all unpacked [DidcommMessage]s (from outermost to innermost) after unpacking is complete.
   ///
   /// Returns the [PlainTextMessage].
   static Future<PlainTextMessage> unpackToPlainTextMessage({

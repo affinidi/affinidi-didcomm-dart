@@ -15,7 +15,7 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
   - [Requirements](#requirements)
   - [Installation](#installation)
   - [Usage](#usage)
-    - [1. Set up Wallets and DIDs](#1-set-up-wallets-and-dids)
+    - [1. Set up Controllers and DIDs](#1-set-up-controllers-and-dids)
     - [2. Compose a Plain Text Message](#2-compose-a-plain-text-message)
     - [3. Sign the Message](#3-sign-the-message)
     - [4. Encrypt the Message](#4-encrypt-the-message)
@@ -43,7 +43,7 @@ The DIDComm for Dart package utilises existing open standards and cryptographic 
 
 - **Mediator** - A service that handles and routes messages sent between participants (e.g., users, organisations, another mediator, or even AI agents).
 
-- **Wallet** - A digital wallet to manage cryptographic keys supporting different algorithms for signing and verifying messages.
+- **DidController** - A controller to manage cryptographic keys and DIDs, supporting different algorithms for signing and verifying messages.
 
 ## Key Features
 
@@ -165,21 +165,38 @@ Visit the pub.dev install page of the Dart package for more information.
 
 Below is a step-by-step example of secure communication between Alice and Bob using the DIDComm Dart package. The example demonstrates how to construct, sign, encrypt, and unpack messages according to the [DIDComm Messaging spec](https://identity.foundation/didcomm-messaging/spec).
 
-### 1. Set up Wallets and DIDs
+### 1. Set up Controllers and DIDs
 
 ```dart
 final aliceKeyStore = InMemoryKeyStore();
 final aliceWallet = PersistentWallet(aliceKeyStore);
+final aliceDidController = DidKeyController(
+  wallet: aliceWallet,
+  store: InMemoryDidStore(),
+);
+
 final bobKeyStore = InMemoryKeyStore();
 final bobWallet = PersistentWallet(bobKeyStore);
+final bobDidController = DidKeyController(
+  wallet: bobWallet,
+  store: InMemoryDidStore(),
+);
 
-// Generate key pairs for Alice and Bob
-final aliceKeyPair = await aliceWallet.generateKey(keyId: 'alice-key-1', keyType: KeyType.p256);
-final bobKeyPair = await bobWallet.generateKey(keyId: 'bob-key-1', keyType: KeyType.p256);
+final aliceKeyId = 'alice-key-1';
+await aliceWallet.generateKey(
+  keyId: aliceKeyId,
+  keyType: KeyType.p256,
+);
+await aliceDidController.addVerificationMethod(aliceKeyId);
+final aliceDidDocument = await aliceDidController.getDidDocument();
 
-// Create DID Documents
-final aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
-final bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
+final bobKeyId = 'bob-key-1';
+await bobWallet.generateKey(
+  keyId: bobKeyId,
+  keyType: KeyType.p256,
+);
+await bobDidController.addVerificationMethod(bobKeyId);
+final bobDidDocument = await bobDidController.getDidDocument();
 ```
 
 ### 2. Compose a Plain Text Message
@@ -206,10 +223,8 @@ Signing a message is optional in DIDComm. It is required when you need to provid
 - You want to ensure message integrity and origin even if the message is not encrypted.
 
 ```dart
-final aliceSigner = DidSigner(
-  didDocument: aliceDidDocument,
-  keyPair: aliceKeyPair,
-  didKeyId: aliceDidDocument.verificationMethod[0].id,
+final aliceSigner = await aliceDidController.getSigner(
+  aliceDidDocument.assertionMethod.first.id,
   signatureScheme: SignatureScheme.ecdsa_p256_sha256,
 );
 
@@ -241,12 +256,15 @@ Choose **anoncrypt** when you want to keep the sender's identity hidden (anonymo
 #### Example: Authenticated Encryption (authcrypt)
 
 ```dart
+final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
+  otherDidDocuments: [bobDidDocument],
+);
 final encryptedMessage = await EncryptedMessage.packWithAuthentication(
   message, // The signed or plain text message to encrypt
-  keyPair: aliceKeyPair, // Alice's key pair for encryption
-  didKeyId: aliceDidDocument.keyAgreement[0].id, // Alice's key agreement key ID
-  recipientDidDocuments: [bobDidDocument], // List of recipient DID Documents
-  encryptionAlgorithm: EncryptionAlgorithm.a256cbc, // Encryption algorithm
+  keyPair: await aliceDidController.getKeyPairByDidKeyId(aliceMatchedKeyIds.first),
+  didKeyId: aliceMatchedKeyIds.first,
+  recipientDidDocuments: [bobDidDocument],
+  encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
 );
 ```
 - `keyPair`: Alice's key pair used for authenticated encryption.
@@ -286,10 +304,13 @@ Packs a plain text message into an encrypted message. Use this for confidential 
 
 ```dart
 // Authenticated encryption (authcrypt)
+final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
+  otherDidDocuments: [bobDidDocument],
+);
 final encrypted = await DidcommMessage.packIntoEncryptedMessage(
   plainTextMessage,
-  keyPair: aliceKeyPair,
-  didKeyId: aliceDidDocument.keyAgreement[0].id,
+  keyPair: await aliceDidController.getKeyPairByDidKeyId(aliceMatchedKeyIds.first),
+  didKeyId: aliceMatchedKeyIds.first,
   recipientDidDocuments: [bobDidDocument],
   keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
   encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
@@ -349,14 +370,14 @@ Bob receives the encrypted message and unpacks it:
 ```dart
 final unpackedMessage = await DidcommMessage.unpackToPlainTextMessage(
   message: jsonDecode(sentMessageByAlice) as Map<String, dynamic>, // The received message
-  recipientWallet: bobWallet, // Bob's wallet for decryption
+  recipientDidController: bobDidController, // Bob's controller for decryption
   expectedMessageWrappingTypes: [MessageWrappingType.authcryptSignPlaintext], // Expected wrapping
   expectedSigners: [aliceSigner.didKeyId], // List of expected signers' key IDs
 );
 ```
 
 - `message`: The received message as a decoded JSON map.
-- `recipientWallet`: The wallet instance used to decrypt the message.
+- `recipientDidController`: The controller instance used to decrypt the message.
 - `expectedMessageWrappingTypes`: List of expected message wrapping types. This argument ensures the unpacked message matches the expected security and privacy guarantees. 
 
   The values are from the `MessageWrappingType` enum, which maps to the [DIDComm IANA media types](https://identity.foundation/didcomm-messaging/spec/#iana-media-types), such as `authcryptPlaintext` for authenticated encryption, `signedPlaintext` for signed messages, and `plaintext` for unprotected messages. It helps prevent downgrade attacks and ensures the message is processed as intended.
@@ -375,7 +396,7 @@ When encrypting messages, you must select a key type for a key agreement that al
 
 - **Authcrypt (authenticated encryption, ECDH-1PU):**
   - For key agreement, both the sender and all recipients must use compatible key types (e.g., both must have P-256 or X25519 keys in their DID Documents).
-  - You typically use the sender's wallet to find a compatible key pair and key agreement method with each recipient.
+  - You typically use the sender's DidController to find a compatible key pair and key agreement method with each recipient.
   - Use the `matchKeysInKeyAgreement` extension method to find compatible key IDs from the sender's wallet for all recipients.
 
 - **Anoncrypt (anonymous encryption, ECDH-ES):**
@@ -388,7 +409,6 @@ Examples:
 **Authcrypt:**
 ```dart
 final compatibleKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-  wallet: aliceWallet,
   otherDidDocuments: [
     bobDidDocument
     // and other recipients

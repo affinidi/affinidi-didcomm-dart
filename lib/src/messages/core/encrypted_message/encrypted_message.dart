@@ -9,7 +9,6 @@ import '../../../../didcomm.dart';
 import '../../../annotations/own_json_properties.dart';
 import '../../../common/crypto.dart';
 import '../../../converters/base64_url_converter.dart';
-import '../../../converters/jwe_header_converter.dart';
 import '../../../ecdh/ecdh.dart';
 import '../../../errors/missing_authentication_tag_error.dart';
 import '../../../errors/missing_initialization_vector_error.dart';
@@ -212,7 +211,7 @@ class EncryptedMessage extends DidcommMessage {
   /// Unlike [DidcommMessage.unpackToPlainTextMessage], this method does not recursively unpack nested messages,
   /// but returns the top most message from the ciphertext.
   ///
-  /// [recipientWallet]: The wallet to use for decryption.
+  /// [recipientDidController]: The DID controller to use for decryption.
   ///
   /// Returns the decrypted inner message as a JSON map.
   Future<Map<String, dynamic>> unpack({
