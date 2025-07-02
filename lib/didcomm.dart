@@ -6,10 +6,11 @@
 
 library;
 
+export 'src/converters/jwe_header_converter.dart';
 export 'src/errors/errors.dart';
 export 'src/extensions/affinidi_authenticator_extension.dart';
+export 'src/extensions/did_controller_extension.dart';
 export 'src/extensions/did_document_extension.dart';
-export 'src/extensions/wallet_extension.dart';
 export 'src/mediator_client.dart';
 export 'src/messages/algorithm_types/algorithms_types.dart';
 export 'src/messages/attachments.dart';

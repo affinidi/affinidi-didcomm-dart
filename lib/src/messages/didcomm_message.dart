@@ -134,10 +134,13 @@ abstract class DidcommMessage {
   /// Returns the [PlainTextMessage].
   static Future<PlainTextMessage> unpackToPlainTextMessage({
     required Map<String, dynamic> message,
-    required Wallet recipientWallet,
+    required DidController recipientDidController,
     bool validateAddressingConsistency = true,
     List<MessageWrappingType>? expectedMessageWrappingTypes,
     List<String>? expectedSigners,
+    void Function({
+      required List<DidcommMessage> foundMessages,
+    })? onUnpacked,
   }) async {
     final foundMessages = <DidcommMessage>[];
     var currentMessage = message;
@@ -148,7 +151,7 @@ abstract class DidcommMessage {
         final encryptedMessage = EncryptedMessage.fromJson(currentMessage);
 
         currentMessage = await encryptedMessage.unpack(
-          recipientWallet: recipientWallet,
+          recipientDidController: recipientDidController,
         );
 
         foundMessages.add(encryptedMessage);
@@ -171,6 +174,10 @@ abstract class DidcommMessage {
       expectedMessageWrappingTypes: expectedMessageWrappingTypes,
       expectedSigners: expectedSigners,
     );
+
+    if (onUnpacked != null) {
+      onUnpacked(foundMessages: foundMessages);
+    }
 
     return plainTextMessage;
   }

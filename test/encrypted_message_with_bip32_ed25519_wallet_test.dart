@@ -2,8 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:didcomm/didcomm.dart';
-import 'package:didcomm/src/converters/jwe_header_converter.dart';
-import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:ssi/ssi.dart';
 import 'package:test/test.dart';
 
@@ -27,43 +25,42 @@ void main() {
       final aliceKeyId = "m/44'/60'/0'/0'/0'";
       final bobKeyId = "m/44'/60'/0'/0'/0'";
 
+      late DidController aliceDidController;
+      late DidController bobDidController;
       late DidDocument aliceDidDocument;
       late DidDocument bobDidDocument;
       late DidSigner aliceSigner;
 
       setUp(() async {
-        final aliceKeyPair = await aliceWallet.generateKey(
+        aliceDidController = DidKeyController(
+          wallet: aliceWallet,
+          store: InMemoryDidStore(),
+        );
+
+        bobDidController = DidKeyController(
+          wallet: bobWallet,
+          store: InMemoryDidStore(),
+        );
+
+        await aliceWallet.generateKey(
           keyId: aliceKeyId,
           keyType: KeyType.ed25519,
         );
 
-        aliceDidDocument = DidKey.generateDocument(aliceKeyPair.publicKey);
+        await aliceDidController.addVerificationMethod(aliceKeyId);
+        aliceDidDocument = await aliceDidController.getDidDocument();
 
-        for (var keyAgreement in aliceDidDocument.keyAgreement) {
-          // Important! link JWK, so the wallet should be able to find the key pair by JWK
-          // It will be replaced with DID Manager
-          aliceWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, aliceKeyId);
-        }
-
-        aliceSigner = DidSigner(
-          didDocument: aliceDidDocument,
-          keyPair: aliceKeyPair,
-          didKeyId: aliceDidDocument.verificationMethod[0].id,
-          signatureScheme: SignatureScheme.eddsa_sha512,
+        aliceSigner = await aliceDidController.getSigner(
+          aliceDidDocument.assertionMethod.first.id,
         );
 
-        final bobKeyPair = await bobWallet.generateKey(
+        await bobWallet.generateKey(
           keyId: bobKeyId,
           keyType: KeyType.ed25519,
         );
 
-        bobDidDocument = DidKey.generateDocument(bobKeyPair.publicKey);
-
-        for (var keyAgreement in bobDidDocument.keyAgreement) {
-          // Important! link JWK, so the wallet should be able to find the key pair by JWK
-          // It will be replaced with DID Manager
-          bobWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, bobKeyId);
-        }
+        await bobDidController.addVerificationMethod(bobKeyId);
+        bobDidDocument = await bobDidController.getDidDocument();
       });
 
       for (final encryptionAlgorithm in [
@@ -90,26 +87,20 @@ void main() {
                   );
 
                   // find keys whose curve is common in other DID Documents
-                  final aliceMatchedKeyIds =
+                  final aliceMatchedDidKeyIds =
                       aliceDidDocument.matchKeysInKeyAgreement(
-                    wallet: aliceWallet,
-                    otherDidDocuments: [
-                      bobDidDocument,
-                    ],
+                    otherDidDocuments: [bobDidDocument],
                   );
 
                   final sut = await EncryptedMessage.pack(
                     signedMessage,
                     keyPair: isAuthenticated
-                        ? await aliceWallet.generateKey(
-                            keyId: aliceMatchedKeyIds.first,
+                        ? await aliceDidController.getKeyPairByDidKeyId(
+                            aliceMatchedDidKeyIds.first,
                           )
                         : null,
-                    didKeyId: isAuthenticated
-                        ? aliceWallet.getDidIdByKeyId(
-                            aliceMatchedKeyIds.first,
-                          )!
-                        : null,
+                    didKeyId:
+                        isAuthenticated ? aliceMatchedDidKeyIds.first : null,
                     keyType: isAuthenticated
                         ? null
                         : [
@@ -129,7 +120,7 @@ void main() {
                     message: jsonDecode(
                       sharedMessageToBobInJson,
                     ) as Map<String, dynamic>,
-                    recipientWallet: bobWallet,
+                    recipientDidController: bobDidController,
                     validateAddressingConsistency: true,
                     expectedMessageWrappingTypes: [
                       isAuthenticated

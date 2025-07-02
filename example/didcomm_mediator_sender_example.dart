@@ -54,6 +54,11 @@ void main() async {
   final senderKeyStore = InMemoryKeyStore();
   final senderWallet = PersistentWallet(senderKeyStore);
 
+  final senderDidController = DidKeyController(
+    wallet: senderWallet,
+    store: InMemoryDidStore(),
+  );
+
   final senderKeyId = 'alice-key-1';
   final senderPrivateKeyBytes = await extractPrivateKeyBytes(
     './example/keys/alice_private_key.pem',
@@ -67,29 +72,22 @@ void main() async {
     ),
   );
 
-  final senderKeyPair = await senderWallet.getKeyPair(senderKeyId);
-  final senderDidDocument = DidKey.generateDocument(senderKeyPair.publicKey);
+  await senderDidController.addVerificationMethod(senderKeyId);
+  final senderDidDocument = await senderDidController.getDidDocument();
 
   prettyPrint(
     'Sender DID',
     object: senderDidDocument.id,
   );
 
-  final senderSigner = DidSigner(
-    didDocument: senderDidDocument,
-    keyPair: senderKeyPair,
-    didKeyId: senderDidDocument.verificationMethod[0].id,
+  final senderSigner = await senderDidController.getSigner(
+    senderDidDocument.assertionMethod.first.id,
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
-  for (var keyAgreement in senderDidDocument.keyAgreement) {
-    // Important! link JWK, so the wallet should be able to find the key pair by JWK
-    // It will be replaced with DID Manager
-    senderWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, senderKeyId);
-  }
-
-  final receiverMediatorDidDocument =
-      await readDidDocument('./example/mediator/mediator_did_document.json');
+  final receiverMediatorDidDocument = await readDidDocument(
+    './example/mediator/mediator_did_document.json',
+  );
 
   final senderPlainTextMassage = PlainTextMessage(
     id: const Uuid().v4(),
@@ -100,14 +98,14 @@ void main() async {
   );
 
   senderPlainTextMassage['custom-header'] = 'custom-value';
+
   prettyPrint(
     'Plain Text Message for Receiver',
     object: senderPlainTextMassage,
   );
 
   // find keys whose curve is common in other DID Documents
-  final senderMatchedKeyIds = senderDidDocument.matchKeysInKeyAgreement(
-    wallet: senderWallet,
+  final senderMatchedDidKeyIds = senderDidDocument.matchKeysInKeyAgreement(
     otherDidDocuments: [
       receiverDidDocument,
     ],
@@ -116,10 +114,10 @@ void main() async {
   final senderSignedAndEncryptedMessage =
       await DidcommMessage.packIntoSignedAndEncryptedMessages(
     senderPlainTextMassage,
-    keyPair: await senderWallet.generateKey(
-      keyId: senderMatchedKeyIds.first,
+    keyPair: await senderDidController.getKeyPairByDidKeyId(
+      senderMatchedDidKeyIds.first,
     ),
-    didKeyId: senderWallet.getDidIdByKeyId(senderMatchedKeyIds.first)!,
+    didKeyId: senderMatchedDidKeyIds.first,
     recipientDidDocuments: [receiverDidDocument],
     keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
@@ -158,8 +156,11 @@ void main() async {
 
   final senderMediatorClient = MediatorClient(
     mediatorDidDocument: receiverMediatorDidDocument,
-    keyPair: senderKeyPair,
-    didKeyId: senderWallet.getDidIdByKeyId(senderMatchedKeyIds.first)!,
+    // TODO: add mediator key negotiotion
+    keyPair: await senderDidController.getKeyPairByDidKeyId(
+      senderMatchedDidKeyIds.first,
+    ),
+    didKeyId: senderMatchedDidKeyIds.first,
     signer: senderSigner,
     // optional. if omitted defaults will be used
     forwardMessageOptions: const ForwardMessageOptions(
