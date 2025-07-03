@@ -187,6 +187,7 @@ await aliceWallet.generateKey(
   keyId: aliceKeyId,
   keyType: KeyType.p256,
 );
+
 await aliceDidController.addVerificationMethod(aliceKeyId);
 final aliceDidDocument = await aliceDidController.getDidDocument();
 
@@ -195,6 +196,7 @@ await bobWallet.generateKey(
   keyId: bobKeyId,
   keyType: KeyType.p256,
 );
+
 await bobDidController.addVerificationMethod(bobKeyId);
 final bobDidDocument = await bobDidController.getDidDocument();
 ```
@@ -211,6 +213,7 @@ final plainTextMessage = PlainTextMessage(
   type: Uri.parse('https://didcomm.org/example/1.0/message'), // Message type URI
   body: {'content': 'Hello, Bob!'},            // Message payload
 );
+
 plainTextMessage['custom-header'] = 'custom-value'; // Add custom headers if needed
 ```
 
@@ -259,6 +262,7 @@ Choose **anoncrypt** when you want to keep the sender's identity hidden (anonymo
 final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
   otherDidDocuments: [bobDidDocument],
 );
+
 final encryptedMessage = await EncryptedMessage.packWithAuthentication(
   message, // The signed or plain text message to encrypt
   keyPair: await aliceDidController.getKeyPairByDidKeyId(aliceMatchedKeyIds.first),
@@ -266,6 +270,7 @@ final encryptedMessage = await EncryptedMessage.packWithAuthentication(
   recipientDidDocuments: [bobDidDocument],
   encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
 );
+
 ```
 - `keyPair`: Alice's key pair used for authenticated encryption.
 - `didKeyId`: The key ID from Alice's DID Document for key agreement.
@@ -279,9 +284,9 @@ If you want to encrypt a message without revealing the sender's identity, use `p
 ```dart
 final anonymousEncryptedMessage = await EncryptedMessage.packAnonymously(
   message, // The signed or plain text message to encrypt
+  keyType: KeyType.p256, // Key type for recipient's key agreement (required)
   recipientDidDocuments: [bobDidDocument], // List of recipient DID Documents
   encryptionAlgorithm: EncryptionAlgorithm.a256cbc, // Encryption algorithm
-  keyType: KeyType.p256, // Key type for recipient's key agreement (required)
 );
 ```
 - `message`: The message to encrypt (can be plain or signed).
@@ -381,6 +386,8 @@ final unpackedMessage = await DidcommMessage.unpackToPlainTextMessage(
 - `expectedMessageWrappingTypes`: List of expected message wrapping types. This argument ensures the unpacked message matches the expected security and privacy guarantees. 
 
   The values are from the `MessageWrappingType` enum, which maps to the [DIDComm IANA media types](https://identity.foundation/didcomm-messaging/spec/#iana-media-types), such as `authcryptPlaintext` for authenticated encryption, `signedPlaintext` for signed messages, and `plaintext` for unprotected messages. It helps prevent downgrade attacks and ensures the message is processed as intended.
+
+  **Note:** If `expectedMessageWrappingTypes` is omitted or set to `null`, the default expected wrapping type is `[MessageWrappingType.authcryptPlaintext]` according to the DIDComm specification. This means only authenticated encrypted messages will be accepted by default unless you explicitly specify otherwise.
 
 - `expectedSigners`: List of key IDs whose signatures are expected and will be verified.
 

@@ -36,12 +36,11 @@ void main() async {
   );
 
   await aliceDidController.addVerificationMethod(aliceKeyId);
-
   final aliceDidDocument = await aliceDidController.getDidDocument();
 
   final aliceSigner = await aliceDidController.getSigner(
     aliceDidDocument.assertionMethod.first.id,
-    signatureScheme: SignatureScheme.eddsa_sha512,
+    signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
   final bobKeyId = "m/44'/60'/0'/0'/0'";
@@ -67,6 +66,7 @@ void main() async {
   );
 
   alicePlainTextMassage['custom-header'] = 'custom-value';
+
   prettyPrint(
     'Plain Text Message for Bob',
     object: alicePlainTextMassage,
