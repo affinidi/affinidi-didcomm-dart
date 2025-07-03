@@ -72,17 +72,20 @@ class EncryptedMessage extends DidcommMessage {
   /// Packs a [DidcommMessage] into an [EncryptedMessage] using anonymous encryption (ECDH-ES).
   ///
   /// [message]: The message to encrypt (plain or signed).
+  /// [keyType]: The key type to use for key agreement.
   /// [recipientDidDocuments]: List of recipient's DID documents.
   /// [encryptionAlgorithm]: Algorithm for content encryption.
   ///
   /// Returns an [EncryptedMessage].
   static Future<EncryptedMessage> packAnonymously(
     DidcommMessage message, {
+    required KeyType keyType,
     required List<DidDocument> recipientDidDocuments,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
     return await EncryptedMessage.pack(
       message,
+      keyType: keyType,
       recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
       encryptionAlgorithm: encryptionAlgorithm,

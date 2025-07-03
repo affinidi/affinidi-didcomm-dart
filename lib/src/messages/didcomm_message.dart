@@ -129,6 +129,7 @@ abstract class DidcommMessage {
   /// [validateAddressingConsistency]: Whether to validate addressing consistency between wrappers (default is true).
   /// [expectedMessageWrappingTypes]: List of expected message wrapping types (optional).
   ///   For example: [MessageWrappingType.authcryptSignPlaintext, MessageWrappingType.authcryptPlaintext].
+  ///   If null, [MessageWrappingType.authcryptPlaintext] is expected by default according to the DIDComm spec.
   /// [expectedSigners]: List of expected signer key IDs (optional).
   /// [onUnpacked]: Optional callback invoked with the list of all unpacked [DidcommMessage]s (from outermost to innermost) after unpacking is complete.
   ///
@@ -141,9 +142,12 @@ abstract class DidcommMessage {
     List<String>? expectedSigners,
     void Function({
       required List<DidcommMessage> foundMessages,
+      required List<String> foundSigners,
     })? onUnpacked,
   }) async {
     final foundMessages = <DidcommMessage>[];
+    final foundSigners = <String>[];
+
     var currentMessage = message;
 
     while (EncryptedMessage.isEncryptedMessage(currentMessage) ||
@@ -162,6 +166,10 @@ abstract class DidcommMessage {
         final signedMessage = SignedMessage.fromJson(currentMessage);
         currentMessage = await signedMessage.unpack();
 
+        foundSigners.addAll(
+          signedMessage.signatures.map((signature) => signature.header.keyId),
+        );
+
         foundMessages.add(signedMessage);
       }
     }
@@ -177,7 +185,10 @@ abstract class DidcommMessage {
     );
 
     if (onUnpacked != null) {
-      onUnpacked(foundMessages: foundMessages);
+      onUnpacked(
+        foundMessages: foundMessages,
+        foundSigners: foundSigners,
+      );
     }
 
     return plainTextMessage;
@@ -228,22 +239,22 @@ abstract class DidcommMessage {
     required List<MessageWrappingType>? expectedMessageWrappingTypes,
     required List<DidcommMessage> messages,
   }) {
-    if (expectedMessageWrappingTypes != null) {
-      final currentMessageWrappingType =
-          MessageWrappingType.findFromMessages(messages);
+    expectedMessageWrappingTypes ??= [MessageWrappingType.authcryptPlaintext];
 
-      if (currentMessageWrappingType == null) {
-        throw UnsupportedError(
-          'Can not find matching MessageWrappingType',
-        );
-      }
+    final currentMessageWrappingType =
+        MessageWrappingType.findFromMessages(messages);
 
-      if (!expectedMessageWrappingTypes.contains(currentMessageWrappingType)) {
-        throw ArgumentError(
-          '$currentMessageWrappingType in not in expected list: $expectedMessageWrappingTypes',
-          'message',
-        );
-      }
+    if (currentMessageWrappingType == null) {
+      throw UnsupportedError(
+        'Can not find matching MessageWrappingType',
+      );
+    }
+
+    if (!expectedMessageWrappingTypes.contains(currentMessageWrappingType)) {
+      throw ArgumentError(
+        '$currentMessageWrappingType in not in expected list: $expectedMessageWrappingTypes',
+        'message',
+      );
     }
   }
 

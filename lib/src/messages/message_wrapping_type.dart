@@ -2,7 +2,6 @@
 import 'package:collection/collection.dart';
 
 import '../../didcomm.dart';
-import '../converters/jwe_header_converter.dart';
 
 /// The type of message wrapping as defined by the DIDComm Messaging specification.
 /// See: https://identity.foundation/didcomm-messaging/spec/#iana-media-types
