@@ -131,7 +131,9 @@ abstract class DidcommMessage {
   ///   For example: [MessageWrappingType.authcryptSignPlaintext, MessageWrappingType.authcryptPlaintext].
   ///   If null, [MessageWrappingType.authcryptPlaintext] is expected by default according to the DIDComm spec.
   /// [expectedSigners]: List of expected signer key IDs (optional).
-  /// [onUnpacked]: Optional callback invoked with the list of all unpacked [DidcommMessage]s (from outermost to innermost) after unpacking is complete.
+  /// [onUnpacked]: Optional callback invoked after unpacking is complete.
+  ///   Receives the list of all unpacked [DidcommMessage]s (from outermost to innermost)
+  ///   and the list of all found signer key IDs (if any signatures were present).
   ///
   /// Returns the [PlainTextMessage].
   static Future<PlainTextMessage> unpackToPlainTextMessage({
