@@ -88,8 +88,8 @@ void main() async {
     senderWallet.linkDidKeyIdKeyWithKeyId(keyAgreement.id, senderKeyId);
   }
 
-  final receiverMediatorDidDocument =
-      await readDidDocument('./example/mediator/mediator_did_document.json');
+  final receiverMediatorDidDocument = await readDidDocument(
+      './example/mediator/mediator_did_document_example.json');
 
   final senderPlainTextMassage = PlainTextMessage(
     id: const Uuid().v4(),

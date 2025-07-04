@@ -77,7 +77,7 @@ void main() async {
   );
 
   final bobMediatorDocument = await UniversalDIDResolver.resolve(
-    await readDid('./example/mediator/mediator_did.txt'),
+    await readDid('./example/mediator/mediator_did_example.txt'),
   );
 
   final bobSigner = DidSigner(

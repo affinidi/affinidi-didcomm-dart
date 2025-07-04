@@ -38,7 +38,7 @@ void main() async {
   );
 
   final receiverMediatorDocument = await UniversalDIDResolver.resolve(
-    await readDid('./example/mediator/mediator_did.txt'),
+    await readDid('./example/mediator/mediator_did_example.txt'),
   );
 
   final receiverSigner = DidSigner(
