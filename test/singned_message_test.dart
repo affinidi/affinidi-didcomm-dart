@@ -60,8 +60,8 @@ void main() async {
 
               expect(signedMessage.signatures, isNotNull);
               expect(
-                signedMessage.signatures[0].header.keyId,
-                aliceSigner.keyId,
+                signedMessage.signatures.first.header.keyId,
+                aliceDidDocument.assertionMethod.first.didKeyId,
               );
 
               final unpackedPlainTextMessage =
@@ -73,7 +73,7 @@ void main() async {
                   MessageWrappingType.signedPlaintext,
                 ],
                 expectedSigners: [
-                  aliceSigner.didKeyId,
+                  aliceDidDocument.assertionMethod.first.didKeyId,
                 ],
               );
 

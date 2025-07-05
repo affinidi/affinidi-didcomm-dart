@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/authentication_tokens/authentication_tokens.dart';
@@ -46,345 +48,382 @@ void main() async {
 
   group('Mediator Integration Test', () {
     late PersistentWallet aliceWallet;
-    late DidKeyController aliceDidController;
-    late DidSigner aliceSigner;
+    late DidController aliceDidController;
     late DidDocument aliceDidDocument;
     late MediatorClient aliceMediatorClient;
     late AuthenticationTokens aliceTokens;
 
     late PersistentWallet bobWallet;
-    late DidKeyController bobDidController;
-    late DidSigner bobSigner;
+    late DidController bobDidController;
     late DidDocument bobDidDocument;
     late MediatorClient bobMediatorClient;
     late AuthenticationTokens bobTokens;
 
     late DidDocument bobMediatorDocument;
 
-    setUp(() async {
-      final aliceKeyStore = InMemoryKeyStore();
-      aliceWallet = PersistentWallet(aliceKeyStore);
+    for (final didType in [
+      'did:key',
+      'did:peer',
+    ]) {
+      group(didType, () {
+        setUp(() async {
+          final useDidKey = didType == 'did:key';
 
-      aliceDidController = DidKeyController(
-        wallet: aliceWallet,
-        store: InMemoryDidStore(),
-      );
+          final aliceKeyStore = InMemoryKeyStore();
+          aliceWallet = PersistentWallet(aliceKeyStore);
 
-      final bobKeyStore = InMemoryKeyStore();
-      bobWallet = PersistentWallet(bobKeyStore);
+          if (useDidKey) {
+            aliceDidController = DidKeyController(
+              wallet: aliceWallet,
+              store: InMemoryDidStore(),
+            );
+          } else {
+            aliceDidController = DidPeerController(
+              wallet: aliceWallet,
+              store: InMemoryDidStore(),
+            );
+          }
 
-      bobDidController = DidKeyController(
-        wallet: bobWallet,
-        store: InMemoryDidStore(),
-      );
+          final bobKeyStore = InMemoryKeyStore();
+          bobWallet = PersistentWallet(bobKeyStore);
 
-      final aliceKeyId = 'alice-key-1';
-      final alicePrivateKeyBytes = await extractPrivateKeyBytes(
-        alicePrivateKeyPath,
-      );
+          if (useDidKey) {
+            bobDidController = DidKeyController(
+              wallet: bobWallet,
+              store: InMemoryDidStore(),
+            );
+          } else {
+            bobDidController = DidPeerController(
+              wallet: bobWallet,
+              store: InMemoryDidStore(),
+            );
+          }
 
-      await aliceKeyStore.set(
-        aliceKeyId,
-        StoredKey(
-          keyType: KeyType.p256,
-          privateKeyBytes: alicePrivateKeyBytes,
-        ),
-      );
+          final aliceKeyId = 'alice-key-1';
+          final alicePrivateKeyBytes = await extractPrivateKeyBytes(
+            alicePrivateKeyPath,
+          );
 
-      await aliceDidController.addVerificationMethod(aliceKeyId);
-      aliceDidDocument = await aliceDidController.getDidDocument();
+          await aliceKeyStore.set(
+            aliceKeyId,
+            StoredKey(
+              keyType: KeyType.p256,
+              privateKeyBytes: alicePrivateKeyBytes,
+            ),
+          );
 
-      aliceSigner = await aliceDidController.getSigner(
-        aliceDidDocument.assertionMethod.first.id,
-        signatureScheme: SignatureScheme.ecdsa_p256_sha256,
-      );
+          await aliceDidController.addVerificationMethod(aliceKeyId);
+          aliceDidDocument = await aliceDidController.getDidDocument();
 
-      final bobKeyId = 'bob-key-1';
-      final bobPrivateKeyBytes = await extractPrivateKeyBytes(
-        bobPrivateKeyPath,
-      );
+          final bobKeyId = 'bob-key-1';
+          final bobPrivateKeyBytes = await extractPrivateKeyBytes(
+            bobPrivateKeyPath,
+          );
 
-      await bobKeyStore.set(
-        bobKeyId,
-        StoredKey(
-          keyType: KeyType.p256,
-          privateKeyBytes: bobPrivateKeyBytes,
-        ),
-      );
+          await bobKeyStore.set(
+            bobKeyId,
+            StoredKey(
+              keyType: KeyType.p256,
+              privateKeyBytes: bobPrivateKeyBytes,
+            ),
+          );
 
-      await bobDidController.addVerificationMethod(bobKeyId);
+          await bobDidController.addVerificationMethod(bobKeyId);
+          bobDidDocument = await bobDidController.getDidDocument();
 
-      bobDidDocument = await bobDidController.getDidDocument();
-      bobSigner = await bobDidController.getSigner(
-        bobDidDocument.assertionMethod.first.id,
-        signatureScheme: SignatureScheme.ecdsa_p256_sha256,
-      );
+          bobMediatorDocument = await UniversalDIDResolver.resolve(
+            await readDid(mediatorDidPath),
+          );
 
-      bobMediatorDocument = await UniversalDIDResolver.resolve(
-        await readDid(mediatorDidPath),
-      );
+          final aliceMatchedDidKeyIds =
+              aliceDidDocument.matchKeysInKeyAgreement(
+            otherDidDocuments: [
+              bobDidDocument,
+              bobMediatorDocument,
+            ],
+          );
 
-      final aliceMatchedDidKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-        otherDidDocuments: [
-          bobDidDocument,
-          bobMediatorDocument,
-        ],
-      );
+          final bobMatchedDidKeyIds = bobDidDocument.matchKeysInKeyAgreement(
+            otherDidDocuments: [
+              bobMediatorDocument,
+              // bob only sends messages to the mediator, so we don't need to match keys with Alice's DID Document
+            ],
+          );
 
-      final bobMatchedDidKeyIds = bobDidDocument.matchKeysInKeyAgreement(
-        otherDidDocuments: [
-          bobMediatorDocument,
-          // bob only sends messages to the mediator, so we don't need to match keys with Alice's DID Document
-        ],
-      );
+          aliceMediatorClient = MediatorClient(
+            mediatorDidDocument: bobMediatorDocument,
+            keyPair: await aliceDidController.getKeyPairByDidKeyId(
+              aliceMatchedDidKeyIds.first,
+            ),
+            didKeyId: aliceMatchedDidKeyIds.first,
+            signer: await aliceDidController.getSigner(
+              aliceDidDocument.authentication.first.id,
+              signatureScheme: SignatureScheme.ecdsa_p256_sha256,
+            ),
+            forwardMessageOptions: const ForwardMessageOptions(
+              shouldSign: true,
+              shouldEncrypt: true,
+              keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+              encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+            ),
+          );
 
-      aliceMediatorClient = MediatorClient(
-        mediatorDidDocument: bobMediatorDocument,
-        keyPair: await aliceDidController.getKeyPairByDidKeyId(
-          aliceMatchedDidKeyIds.first,
-        ),
-        didKeyId: aliceMatchedDidKeyIds.first,
-        signer: aliceSigner,
-        forwardMessageOptions: const ForwardMessageOptions(
-          shouldSign: true,
-          shouldEncrypt: true,
-          keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
-          encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-        ),
-      );
-
-      bobMediatorClient = MediatorClient(
-        mediatorDidDocument: bobMediatorDocument,
-        keyPair: await bobDidController.getKeyPairByDidKeyId(
-          bobMatchedDidKeyIds.first,
-        ),
-        didKeyId: bobMatchedDidKeyIds.first,
-        signer: bobSigner,
-        webSocketOptions: const WebSocketOptions(
-          liveDeliveryChangeMessageOptions: LiveDeliveryChangeMessageOptions(
-            shouldSend: true,
-            shouldSign: true,
-            shouldEncrypt: true,
-            keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
-            encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-          ),
-          statusRequestMessageOptions: StatusRequestMessageOptions(
-            shouldSend: true,
-            shouldSign: true,
-            shouldEncrypt: true,
-            keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
-            encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-          ),
-        ),
-      );
-
-      aliceTokens = await aliceMediatorClient.authenticate();
-      bobTokens = await bobMediatorClient.authenticate();
-    });
-
-    test('REST API works correctly', () async {
-      final expectedBodyContent = const Uuid().v4();
-
-      final alicePlainTextMassage = PlainTextMessage(
-        id: const Uuid().v4(),
-        from: aliceDidDocument.id,
-        to: [bobDidDocument.id],
-        type: Uri.parse('https://didcomm.org/example/1.0/message'),
-        body: {'content': expectedBodyContent},
-      );
-
-      alicePlainTextMassage['custom-header'] = 'custom-value';
-
-      // find keys whose curve is common in other DID Documents
-      final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-        otherDidDocuments: [
-          bobDidDocument,
-          bobMediatorDocument,
-        ],
-      );
-
-      final aliceSignedAndEncryptedMessage =
-          await DidcommMessage.packIntoSignedAndEncryptedMessages(
-        alicePlainTextMassage,
-        keyPair: await aliceDidController.getKeyPairByDidKeyId(
-          aliceMatchedKeyIds.first,
-        ),
-        didKeyId: aliceMatchedKeyIds.first,
-        recipientDidDocuments: [bobDidDocument],
-        keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
-        encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-        signer: aliceSigner,
-      );
-
-      final createdTime = DateTime.now().toUtc();
-      final expiresTime = createdTime.add(const Duration(seconds: 60));
-
-      final forwardMessage = ForwardMessage(
-        id: const Uuid().v4(),
-        to: [bobMediatorDocument.id],
-        from: aliceDidDocument.id,
-        next: bobDidDocument.id,
-        expiresTime: expiresTime,
-        attachments: [
-          Attachment(
-            mediaType: 'application/json',
-            data: AttachmentData(
-              base64: base64UrlEncodeNoPadding(
-                aliceSignedAndEncryptedMessage.toJsonBytes(),
+          bobMediatorClient = MediatorClient(
+            mediatorDidDocument: bobMediatorDocument,
+            keyPair: await bobDidController.getKeyPairByDidKeyId(
+              bobMatchedDidKeyIds.first,
+            ),
+            didKeyId: bobMatchedDidKeyIds.first,
+            signer: await bobDidController.getSigner(
+              bobDidDocument.authentication.first.id,
+              signatureScheme: SignatureScheme.ecdsa_p256_sha256,
+            ),
+            webSocketOptions: const WebSocketOptions(
+              liveDeliveryChangeMessageOptions:
+                  LiveDeliveryChangeMessageOptions(
+                shouldSend: true,
+                shouldSign: true,
+                shouldEncrypt: true,
+                keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+                encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+              ),
+              statusRequestMessageOptions: StatusRequestMessageOptions(
+                shouldSend: true,
+                shouldSign: true,
+                shouldEncrypt: true,
+                keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+                encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
               ),
             ),
-          ),
-        ],
-      );
+          );
 
-      await aliceMediatorClient.sendMessage(
-        forwardMessage,
-        accessToken: aliceTokens.accessToken,
-      );
+          aliceTokens = await aliceMediatorClient.authenticate();
+          bobTokens = await bobMediatorClient.authenticate();
+        });
 
-      final messageIds = await bobMediatorClient.listInboxMessageIds(
-        accessToken: bobTokens.accessToken,
-      );
+        test('REST API works correctly', () async {
+          final expectedBodyContent = const Uuid().v4();
 
-      final messages = await bobMediatorClient.receiveMessages(
-        messageIds: messageIds,
-        accessToken: bobTokens.accessToken,
-      );
+          final alicePlainTextMassage = PlainTextMessage(
+            id: const Uuid().v4(),
+            from: aliceDidDocument.id,
+            to: [bobDidDocument.id],
+            type: Uri.parse('https://didcomm.org/example/1.0/message'),
+            body: {'content': expectedBodyContent},
+          );
 
-      expect(messages.isNotEmpty, isTrue);
+          alicePlainTextMassage['custom-header'] = 'custom-value';
 
-      final actualUnpackedMessages = await Future.wait(
-        messages.map(
-          (message) => DidcommMessage.unpackToPlainTextMessage(
-            message: message,
-            recipientDidController: bobDidController,
-            validateAddressingConsistency: true,
-            expectedMessageWrappingTypes: [
-              MessageWrappingType.authcryptSignPlaintext,
+          // find keys whose curve is common in other DID Documents
+          final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
+            otherDidDocuments: [
+              bobDidDocument,
+              bobMediatorDocument,
             ],
-            expectedSigners: [
-              aliceSigner.didKeyId,
-            ],
-          ),
-        ),
-      );
+          );
 
-      final actualBodyContents = actualUnpackedMessages
-          .map<String?>((message) => message.body?['content'] as String)
-          .toList();
+          final aliceSignedAndEncryptedMessage =
+              await DidcommMessage.packIntoSignedAndEncryptedMessages(
+            alicePlainTextMassage,
+            keyPair: await aliceDidController.getKeyPairByDidKeyId(
+              aliceMatchedKeyIds.first,
+            ),
+            didKeyId: aliceMatchedKeyIds.first,
+            recipientDidDocuments: [bobDidDocument],
+            keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+            encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+            signer: await aliceDidController.getSigner(
+              aliceDidDocument.assertionMethod.first.id,
+              signatureScheme: SignatureScheme.ecdsa_p256_sha256,
+            ),
+          );
 
-      expect(
-        actualBodyContents.singleWhereOrNull(
-          (content) => content == expectedBodyContent,
-        ),
-        isNotNull,
-      );
-    });
+          final createdTime = DateTime.now().toUtc();
+          final expiresTime = createdTime.add(const Duration(seconds: 60));
 
-    test(
-      'WebSockets API works correctly',
-      () async {
-        final expectedBodyContent = const Uuid().v4();
-
-        final alicePlainTextMassage = PlainTextMessage(
-          id: const Uuid().v4(),
-          from: aliceDidDocument.id,
-          to: [bobDidDocument.id],
-          type: Uri.parse('https://didcomm.org/example/1.0/message'),
-          body: {'content': expectedBodyContent},
-        );
-
-        alicePlainTextMassage['custom-header'] = 'custom-value';
-
-        final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-          otherDidDocuments: [
-            bobDidDocument,
-            bobMediatorDocument,
-          ],
-        );
-
-        final aliceSignedAndEncryptedMessage =
-            await DidcommMessage.packIntoSignedAndEncryptedMessages(
-          alicePlainTextMassage,
-          keyPair: await aliceDidController.getKeyPairByDidKeyId(
-            aliceMatchedKeyIds.first,
-          ),
-          didKeyId: aliceMatchedKeyIds.first,
-          recipientDidDocuments: [bobDidDocument],
-          keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
-          encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-          signer: aliceSigner,
-        );
-
-        final createdTime = DateTime.now().toUtc();
-        final expiresTime = createdTime.add(const Duration(seconds: 60));
-
-        final forwardMessage = ForwardMessage(
-          id: const Uuid().v4(),
-          to: [bobMediatorDocument.id],
-          from: aliceDidDocument.id,
-          next: bobDidDocument.id,
-          expiresTime: expiresTime,
-          attachments: [
-            Attachment(
-              mediaType: 'application/json',
-              data: AttachmentData(
-                base64: base64UrlEncodeNoPadding(
-                  aliceSignedAndEncryptedMessage.toJsonBytes(),
+          final forwardMessage = ForwardMessage(
+            id: const Uuid().v4(),
+            to: [bobMediatorDocument.id],
+            from: aliceDidDocument.id,
+            next: bobDidDocument.id,
+            expiresTime: expiresTime,
+            attachments: [
+              Attachment(
+                mediaType: 'application/json',
+                data: AttachmentData(
+                  base64: base64UrlEncodeNoPadding(
+                    aliceSignedAndEncryptedMessage.toJsonBytes(),
+                  ),
                 ),
               ),
+            ],
+          );
+
+          await aliceMediatorClient.sendMessage(
+            forwardMessage,
+            accessToken: aliceTokens.accessToken,
+          );
+
+          final messageIds = await bobMediatorClient.listInboxMessageIds(
+            accessToken: bobTokens.accessToken,
+          );
+
+          final messages = await bobMediatorClient.receiveMessages(
+            messageIds: messageIds,
+            accessToken: bobTokens.accessToken,
+          );
+
+          expect(messages.isNotEmpty, isTrue);
+
+          final actualUnpackedMessages = await Future.wait(
+            messages.map(
+              (message) => DidcommMessage.unpackToPlainTextMessage(
+                message: message,
+                recipientDidController: bobDidController,
+                validateAddressingConsistency: true,
+                expectedMessageWrappingTypes: [
+                  MessageWrappingType.authcryptSignPlaintext,
+                ],
+                expectedSigners: [
+                  aliceDidDocument.assertionMethod.first.didKeyId,
+                ],
+              ),
             ),
-          ],
-        );
+          );
 
-        String? actualBodyContent;
+          final actualBodyContents = actualUnpackedMessages
+              .map<String?>((message) => message.body?['content'] as String)
+              .toList();
 
-        await bobMediatorClient.listenForIncomingMessages(
-          (message) async {
-            final encryptedMessage = EncryptedMessage.fromJson(message);
-            final senderDid = const JweHeaderConverter()
-                .fromJson(encryptedMessage.protected)
-                .subjectKeyId;
+          expect(
+            actualBodyContents.singleWhereOrNull(
+              (content) => content == expectedBodyContent,
+            ),
+            isNotNull,
+          );
+        });
 
-            final isMediatorTelemetryMessage =
-                senderDid?.contains('.atlas.affinidi.io') == true;
+        test(
+          'WebSockets API works correctly',
+          () async {
+            final expectedBodyContent = const Uuid().v4();
 
-            final unpackedMessage =
-                await DidcommMessage.unpackToPlainTextMessage(
-              message: message,
-              recipientDidController: bobDidController,
-              validateAddressingConsistency: true,
-              expectedMessageWrappingTypes: [
-                MessageWrappingType.authcryptSignPlaintext,
-              ],
-              expectedSigners: [
-                isMediatorTelemetryMessage
-                    ? bobMediatorDocument.assertionMethod.first.id
-                    : aliceSigner.didKeyId,
+            final alicePlainTextMassage = PlainTextMessage(
+              id: const Uuid().v4(),
+              from: aliceDidDocument.id,
+              to: [bobDidDocument.id],
+              type: Uri.parse('https://didcomm.org/example/1.0/message'),
+              body: {'content': expectedBodyContent},
+            );
+
+            alicePlainTextMassage['custom-header'] = 'custom-value';
+
+            final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
+              otherDidDocuments: [
+                bobDidDocument,
+                bobMediatorDocument,
               ],
             );
 
-            final content = unpackedMessage.body?['content'] as String;
+            final aliceSignedAndEncryptedMessage =
+                await DidcommMessage.packIntoSignedAndEncryptedMessages(
+              alicePlainTextMassage,
+              keyPair: await aliceDidController.getKeyPairByDidKeyId(
+                aliceMatchedKeyIds.first,
+              ),
+              didKeyId: aliceMatchedKeyIds.first,
+              recipientDidDocuments: [bobDidDocument],
+              keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+              encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+              signer: await aliceDidController.getSigner(
+                aliceDidDocument.assertionMethod.first.id,
+                signatureScheme: SignatureScheme.ecdsa_p256_sha256,
+              ),
+            );
 
-            if (content == expectedBodyContent) {
-              actualBodyContent = content;
-              await bobMediatorClient.disconnect();
-            }
+            final createdTime = DateTime.now().toUtc();
+            final expiresTime = createdTime.add(const Duration(seconds: 60));
+
+            final forwardMessage = ForwardMessage(
+              id: const Uuid().v4(),
+              to: [bobMediatorDocument.id],
+              from: aliceDidDocument.id,
+              next: bobDidDocument.id,
+              expiresTime: expiresTime,
+              attachments: [
+                Attachment(
+                  mediaType: 'application/json',
+                  data: AttachmentData(
+                    base64: base64UrlEncodeNoPadding(
+                      aliceSignedAndEncryptedMessage.toJsonBytes(),
+                    ),
+                  ),
+                ),
+              ],
+            );
+
+            String? actualBodyContent;
+            bool? telemetryMessageReceived;
+
+            final completer = Completer<void>();
+
+            await bobMediatorClient.listenForIncomingMessages(
+              (message) async {
+                final encryptedMessage = EncryptedMessage.fromJson(message);
+                final senderDid = const JweHeaderConverter()
+                    .fromJson(encryptedMessage.protected)
+                    .subjectKeyId;
+
+                final isMediatorTelemetryMessage =
+                    senderDid?.contains('.atlas.affinidi.io') == true;
+
+                final unpackedMessage =
+                    await DidcommMessage.unpackToPlainTextMessage(
+                  message: message,
+                  recipientDidController: bobDidController,
+                  validateAddressingConsistency: true,
+                  expectedMessageWrappingTypes: [
+                    MessageWrappingType.authcryptSignPlaintext,
+                  ],
+                  expectedSigners: [
+                    isMediatorTelemetryMessage
+                        ? bobMediatorDocument.assertionMethod.first.didKeyId
+                        : aliceDidDocument.assertionMethod.first.didKeyId,
+                  ],
+                );
+
+                if (isMediatorTelemetryMessage) {
+                  telemetryMessageReceived = true;
+                } else {
+                  actualBodyContent ??=
+                      unpackedMessage.body?['content'] as String?;
+                }
+
+                if (actualBodyContent == expectedBodyContent &&
+                    telemetryMessageReceived == true) {
+                  await bobMediatorClient.disconnect();
+                  completer.complete();
+                }
+              },
+              onError: (Object error) => prettyPrint('error', object: error),
+              onDone: () => prettyPrint('done'),
+              accessToken: bobTokens.accessToken,
+              cancelOnError: false,
+            );
+
+            await aliceMediatorClient.sendMessage(
+              forwardMessage,
+              accessToken: aliceTokens.accessToken,
+            );
+
+            await completer.future;
+
+            expect(actualBodyContent, expectedBodyContent);
+            expect(telemetryMessageReceived, isTrue);
           },
-          onError: (Object error) => prettyPrint('error', object: error),
-          onDone: () => prettyPrint('done'),
-          accessToken: bobTokens.accessToken,
-          cancelOnError: false,
+          retry: webSocketsTestRetries,
         );
-
-        await aliceMediatorClient.sendMessage(
-          forwardMessage,
-          accessToken: aliceTokens.accessToken,
-        );
-
-        expect(actualBodyContent, expectedBodyContent);
-      },
-      retry: webSocketsTestRetries,
-    );
+      });
+    }
   });
 }

@@ -237,7 +237,8 @@ void main() async {
           final sharedMessageToBobInJson = jsonEncode(sut);
 
           final expectedBodyContent = 'Hello, Bob!';
-          final expectedSigner = aliceSigner.didKeyId;
+          final expectedSigner =
+              aliceDidDocument.assertionMethod.first.didKeyId;
 
           final expectedMessageWrappingType =
               MessageWrappingType.anoncryptSignPlaintext;
@@ -283,7 +284,8 @@ void main() async {
           final sharedMessageToBobInJson = jsonEncode(sut);
 
           final expectedBodyContent = 'Hello, Bob!';
-          final expectedSigner = aliceSigner.didKeyId;
+          final expectedSigner =
+              aliceDidDocument.assertionMethod.first.didKeyId;
 
           final expectedMessageWrappingType =
               MessageWrappingType.authcryptSignPlaintext;

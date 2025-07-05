@@ -5,7 +5,6 @@ import '../../../../didcomm.dart';
 import '../../../annotations/own_json_properties.dart';
 import '../../../common/did.dart';
 import '../../../converters/epoch_seconds_converter.dart';
-import '../../../converters/jwe_header_converter.dart';
 
 part 'plain_text_message.g.dart';
 part 'plain_text_message.own_json_props.g.dart';

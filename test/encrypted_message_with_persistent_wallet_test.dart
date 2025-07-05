@@ -135,7 +135,7 @@ void main() async {
                               : MessageWrappingType.anoncryptSignPlaintext,
                         ],
                         expectedSigners: [
-                          aliceSigner.didKeyId,
+                          aliceDidDocument.assertionMethod.first.didKeyId,
                         ],
                       );
 

@@ -206,7 +206,7 @@ void main() async {
         MessageWrappingType.authcryptSignPlaintext,
       ],
       expectedSigners: [
-        aliceSigner.didKeyId,
+        aliceDidDocument.assertionMethod.first.didKeyId,
       ],
     );
 

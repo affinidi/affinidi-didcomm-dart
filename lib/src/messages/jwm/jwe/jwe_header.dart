@@ -165,9 +165,8 @@ class JweHeader {
     // keys merged with comma and sorted alphabetically
 
     final keyIdsByCurve = recipientDidDocuments
-        .map((document) => document.keyAgreement.firstWithCurve(curve).id)
+        .map((document) => document.keyAgreement.firstWithCurve(curve).didKeyId)
         .toList();
-
     keyIdsByCurve.sort();
     return keyIdsByCurve;
   }

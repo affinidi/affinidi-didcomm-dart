@@ -8,6 +8,7 @@ import 'package:ssi/ssi.dart' hide Jwk;
 import '../../../../didcomm.dart';
 import '../../../annotations/own_json_properties.dart';
 import '../../../common/crypto.dart';
+import '../../../common/did.dart';
 import '../../../converters/base64_url_converter.dart';
 import '../../../ecdh/ecdh.dart';
 import '../../../errors/missing_authentication_tag_error.dart';
@@ -264,11 +265,11 @@ class EncryptedMessage extends DidcommMessage {
   }
 
   Future<Jwk> _getSenderJwk(String subjectKeyId) async {
-    final senderDid = subjectKeyId.split('#').first;
+    final senderDid = getDidFromId(subjectKeyId);
     final senderDidDocument = await UniversalDIDResolver.resolve(senderDid);
 
     final keyAgreement = senderDidDocument.keyAgreement.firstWhere(
-      (keyAgreement) => keyAgreement.id == subjectKeyId,
+      (keyAgreement) => keyAgreement.didKeyId == subjectKeyId,
       orElse: () => throw MissingKeyAgreementError(
           'Can not find a key agreement for subject ID'),
     );
@@ -282,7 +283,9 @@ class EncryptedMessage extends DidcommMessage {
 
   Future<Recipient> _findSelfAsRecipient(DidController didController) async {
     for (final recipient in recipients) {
-      final keyId = await didController.getWalletKeyId(recipient.header.keyId);
+      final keyId = await didController.getWalletKeyIdUniversally(
+        recipient.header.keyId,
+      );
 
       if (keyId != null) {
         return recipient;
@@ -383,7 +386,7 @@ class EncryptedMessage extends DidcommMessage {
       );
 
       return Recipient(
-        header: RecipientHeader(keyId: keyAgreement.id),
+        header: RecipientHeader(keyId: keyAgreement.didKeyId),
         encryptedKey: encryptedKey,
       );
     });

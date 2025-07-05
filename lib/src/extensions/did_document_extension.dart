@@ -154,7 +154,7 @@ extension DidDocumentExtension on DidDocument {
           .firstWhere(
             (keyAgreement) => _getCurve(keyAgreement) == curve,
           )
-          .id;
+          .didKeyId;
     }).toList();
   }
 }

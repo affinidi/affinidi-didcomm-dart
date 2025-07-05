@@ -222,8 +222,8 @@ void main() async {
         ],
         expectedSigners: [
           isMediatorTelemetryMessage
-              ? bobMediatorDocument.assertionMethod.first.id
-              : aliceSigner.didKeyId,
+              ? bobMediatorDocument.assertionMethod.first.didKeyId
+              : aliceDidDocument.assertionMethod.first.didKeyId,
         ],
       );
 

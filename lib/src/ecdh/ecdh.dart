@@ -98,16 +98,18 @@ abstract class Ecdh {
     }
 
     final recipientKeyId =
-        await recipientDidController.getWalletKeyId(self.header.keyId);
+        await recipientDidController.getWalletKeyIdUniversally(
+      self.header.keyId,
+    );
 
     if (recipientKeyId == null) {
-      Exception('JWK kid is not linked with any Key ID in the Wallet');
+      throw Exception('JWK kid is not linked with any Key ID in the Wallet');
     }
 
     return await ecdh.decryptData(
       data: self.encryptedKey,
       recipientKeyPair: await recipientDidController.getKeyPair(
-        recipientKeyId!,
+        recipientKeyId,
       ),
     );
   }
