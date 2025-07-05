@@ -5,7 +5,8 @@ import '../../didcomm.dart';
 import '../curves/curve_type.dart';
 import '../jwks/jwk.dart';
 
-/// Extension methods for [VerificationMethod] to support JWK conversion.
+/// Extension methods for the [VerificationMethod] class, providing additional
+/// functionality and utilities related to verification methods in DIDComm.
 extension VerificationMethodExtention on VerificationMethod {
   /// Converts this [VerificationMethod] to a [Jwk] object.
   ///
@@ -14,6 +15,12 @@ extension VerificationMethodExtention on VerificationMethod {
     final jwk = asJwk().toJson();
     return Jwk.fromJson(jwk);
   }
+
+  /// Returns the DID key identifier by prefixing the [id] with [controller] if [id] starts with '#',
+  /// otherwise returns [id] as is.
+  ///
+  /// This is useful for resolving relative key references within a DID document.
+  String get didKeyId => id.startsWith('#') ? '$controller$id' : id;
 }
 
 /// Extension methods for [List<VerificationMethod>] to support curve-based lookup.

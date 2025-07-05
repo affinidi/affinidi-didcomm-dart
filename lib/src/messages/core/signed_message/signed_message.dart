@@ -7,6 +7,7 @@ import '../../../../didcomm.dart';
 import '../../../annotations/own_json_properties.dart';
 import '../../../common/did.dart';
 import '../../../common/encoding.dart';
+import '../../../extensions/did_signer_extension.dart';
 import '../../../extensions/extensions.dart';
 import '../../jwm.dart';
 
@@ -63,7 +64,7 @@ class SignedMessage extends DidcommMessage {
       Signature(
         signature: await signer.sign(signingInput),
         protected: jwsHeader,
-        header: SignatureHeader(keyId: signer.keyId),
+        header: SignatureHeader(keyId: signer.didKeyId),
       ),
     ];
 
@@ -97,12 +98,15 @@ class SignedMessage extends DidcommMessage {
   Future<bool> areSignaturesValid() async {
     for (final signature in signatures) {
       final signatureScheme =
-          SignatureScheme.fromString(signature.protected.algorithm);
+          SignatureScheme.fromAlg(signature.protected.algorithm);
 
       final verifier = await DidVerifier.create(
         algorithm: signatureScheme,
         issuerDid: getDidFromId(signature.header.keyId),
-        kid: signature.header.keyId,
+        // TODO: remove did:peer check when Dart SSI is fixed
+        kid: signature.header.keyId.startsWith('did:peer')
+            ? getKeyIdFromId(signature.header.keyId)
+            : signature.header.keyId,
       );
 
       final jwsHeader = JwsHeader(

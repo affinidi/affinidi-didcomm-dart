@@ -9,7 +9,9 @@ import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
 
 import '../../didcomm.dart';
+import '../common/did.dart';
 import '../common/did_document_service_type.dart';
+import 'mediator_client_exception.dart';
 
 /// Client for interacting with a DIDComm mediator, supporting message sending, inbox management,
 /// and real-time message delivery via WebSockets.
@@ -94,13 +96,17 @@ class MediatorClient {
     final headers =
         accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
 
-    await _dio.post<Map<String, dynamic>>(
-      '/inbound',
-      data: messageToSend,
-      options: Options(headers: headers),
-    );
+    try {
+      await _dio.post<Map<String, dynamic>>(
+        '/inbound',
+        data: messageToSend,
+        options: Options(headers: headers),
+      );
 
-    return messageToSend;
+      return messageToSend;
+    } on DioException catch (error) {
+      throw MediatorClientException(innerException: error);
+    }
   }
 
   /// Lists message IDs in the inbox for the current actor.
@@ -111,21 +117,25 @@ class MediatorClient {
   Future<List<String>> listInboxMessageIds({
     String? accessToken,
   }) async {
-    final actorDidDocument = await _getActorDidDocument();
-
     final headers =
         accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
 
-    final response = await _dio.get<Map<String, dynamic>>(
-      '/list/${sha256.convert(utf8.encode(actorDidDocument.id)).toString()}/inbox',
-      options: Options(headers: headers),
-    );
+    final did = getDidFromId(didKeyId);
 
-    return (response.data!['data'] as List<dynamic>)
-        .map(
-          (item) => (item as Map<String, dynamic>)['msg_id'] as String,
-        )
-        .toList();
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/list/${sha256.convert(utf8.encode(did)).toString()}/inbox',
+        options: Options(headers: headers),
+      );
+
+      return (response.data!['data'] as List<dynamic>)
+          .map(
+            (item) => (item as Map<String, dynamic>)['msg_id'] as String,
+          )
+          .toList();
+    } on DioException catch (error) {
+      throw MediatorClientException(innerException: error);
+    }
   }
 
   /// Receives messages from the mediator by message IDs.
@@ -145,21 +155,25 @@ class MediatorClient {
     final headers =
         accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
 
-    final response = await _dio.post<Map<String, dynamic>>(
-      '/outbound',
-      data: {'message_ids': messageIds, 'delete': deleteOnMediator},
-      options: Options(headers: headers),
-    );
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/outbound',
+        data: {'message_ids': messageIds, 'delete': deleteOnMediator},
+        options: Options(headers: headers),
+      );
 
-    final data = response.data!['data'] as Map<String, dynamic>;
+      final data = response.data!['data'] as Map<String, dynamic>;
 
-    return (data['success'] as List<dynamic>)
-        .map(
-          (item) => jsonDecode(
-            (item as Map<String, dynamic>)['msg'] as String,
-          ) as Map<String, dynamic>,
-        )
-        .toList();
+      return (data['success'] as List<dynamic>)
+          .map(
+            (item) => jsonDecode(
+              (item as Map<String, dynamic>)['msg'] as String,
+            ) as Map<String, dynamic>,
+          )
+          .toList();
+    } on DioException catch (error) {
+      throw MediatorClientException(innerException: error);
+    }
   }
 
   /// Listens for incoming messages from the mediator via WebSocket.
@@ -193,14 +207,14 @@ class MediatorClient {
       cancelOnError: cancelOnError,
     );
 
-    final actorDidDocument = await _getActorDidDocument();
+    final senderDid = getDidFromId(didKeyId);
 
     if (webSocketOptions.statusRequestMessageOptions.shouldSend) {
       final setupRequestMessage = StatusRequestMessage(
         id: const Uuid().v4(),
         to: [mediatorDidDocument.id],
-        from: actorDidDocument.id,
-        recipientDid: actorDidDocument.id,
+        from: senderDid,
+        recipientDid: senderDid,
       );
 
       _sendMessageToChannel(
@@ -215,7 +229,7 @@ class MediatorClient {
       final liveDeliveryChangeMessage = LiveDeliveryChangeMessage(
         id: const Uuid().v4(),
         to: [mediatorDidDocument.id],
-        from: actorDidDocument.id,
+        from: senderDid,
         liveDelivery: true,
       );
 
@@ -235,12 +249,6 @@ class MediatorClient {
     if (_channel != null) {
       await _channel.sink.close(status.normalClosure);
     }
-  }
-
-  Future<DidDocument> _getActorDidDocument() async {
-    return DidKey.generateDocument(
-      keyPair.publicKey,
-    );
   }
 
   Future<DidcommMessage> _packMessage(
