@@ -1,6 +1,5 @@
 import 'package:ssi/ssi.dart';
 
-
 /// Extension on [ServiceEndpointValue] to normalize and extract all endpoint representations as [MapEndpoint]s.
 extension ServiceEndpointValueExtension on ServiceEndpointValue {
   /// Returns a list of [MapEndpoint] objects representing all possible forms of the service endpoint.
