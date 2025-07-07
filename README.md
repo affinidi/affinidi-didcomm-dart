@@ -312,6 +312,7 @@ Packs a plain text message into an encrypted message. Use this for confidential 
 final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
   otherDidDocuments: [bobDidDocument],
 );
+
 final encrypted = await DidcommMessage.packIntoEncryptedMessage(
   plainTextMessage,
   keyPair: await aliceDidController.getKeyPairByDidKeyId(aliceMatchedKeyIds.first),
@@ -344,26 +345,27 @@ final signed = await DidcommMessage.packIntoSignedMessage(
 
 ### packIntoSignedAndEncryptedMessages
 
-Packs a plain text message into a signed message and then encrypts it. Use this for both non-repudiation and confidentiality in a single step. Encryption can be authenticated (authcrypt) or anonymous (anoncrypt), depending on the provided parameters.
+Packs a plain text message into a signed message and then encrypts it. Use this for both non-repudiation and confidentiality in a single step. Encryption can be anonymous (anoncrypt) or authenticated (authcrypt), depending on the provided parameters. `anoncrypt(singed(plaintext))` should be preferred over `authcrypt(singed(plaintext))` (see [here](https://identity.foundation/didcomm-messaging/spec/#iana-media-types))
 
 ```dart
-// Authenticated encryption (authcrypt)
+// Anonymous encryption - anoncrypt(singed(plaintext))
+// this is a preferred way
+final signedAndAnonEncrypted = await DidcommMessage.packIntoSignedAndEncryptedMessages(
+  plainTextMessage,
+  keyType: KeyType.p256,
+  recipientDidDocuments: [bobDidDocument],
+  keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Es,
+  encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+  signer: aliceSigner,
+);
+
+// Authenticated encryption with signed message - authcrypt(signed(plaintext)))
 final signedAndEncrypted = await DidcommMessage.packIntoSignedAndEncryptedMessages(
   plainTextMessage,
   keyPair: aliceKeyPair,
   didKeyId: aliceDidDocument.keyAgreement[0].id,
   recipientDidDocuments: [bobDidDocument],
   keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
-  encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-  signer: aliceSigner,
-);
-
-// Anonymous encryption (anoncrypt)
-final signedAndAnonEncrypted = await DidcommMessage.packIntoSignedAndEncryptedMessages(
-  plainTextMessage,
-  keyType: KeyType.p256,
-  recipientDidDocuments: [bobDidDocument],
-  keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Es,
   encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   signer: aliceSigner,
 );

@@ -114,12 +114,11 @@ void main() async {
   final senderSignedAndEncryptedMessage =
       await DidcommMessage.packIntoSignedAndEncryptedMessages(
     senderPlainTextMassage,
-    keyPair: await senderDidController.getKeyPairByDidKeyId(
-      senderMatchedDidKeyIds.first,
-    ),
-    didKeyId: senderMatchedDidKeyIds.first,
+    keyType: [
+      receiverDidDocument,
+    ].getCommonKeyTypesInKeyAgreements().first,
     recipientDidDocuments: [receiverDidDocument],
-    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     signer: senderSigner,
   );
@@ -165,7 +164,7 @@ void main() async {
     forwardMessageOptions: const ForwardMessageOptions(
       shouldSign: true,
       shouldEncrypt: true,
-      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
       encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     ),
   );

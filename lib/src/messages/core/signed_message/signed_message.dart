@@ -7,6 +7,7 @@ import '../../../../didcomm.dart';
 import '../../../annotations/own_json_properties.dart';
 import '../../../common/did.dart';
 import '../../../common/encoding.dart';
+import '../../../converters/jws_header_converter.dart';
 import '../../../extensions/did_signer_extension.dart';
 import '../../../extensions/extensions.dart';
 import '../../jwm.dart';
@@ -22,6 +23,7 @@ part 'signed_message.own_json_props.g.dart';
 class SignedMessage extends DidcommMessage {
   /// The default media type for signed DIDComm messages as per the spec.
   static final mediaType = 'application/didcomm-signed+json';
+  static final _jwsHeaderConverter = const JwsHeaderConverter();
 
   /// The base64url-encoded payload (the inner message).
   final String payload;
@@ -56,14 +58,14 @@ class SignedMessage extends DidcommMessage {
     );
 
     final encodedPayload = base64UrlEncodeNoPadding(message.toJsonBytes());
-    final encodedHeader = base64UrlEncodeNoPadding(jwsHeader.toJsonBytes());
+    final encodedHeader = _jwsHeaderConverter.toJson(jwsHeader);
 
     final signingInput = ascii.encode('$encodedHeader.$encodedPayload');
 
     final signatures = [
       Signature(
         signature: await signer.sign(signingInput),
-        protected: jwsHeader,
+        protected: encodedHeader,
         header: SignatureHeader(keyId: signer.didKeyId),
       ),
     ];
@@ -83,7 +85,7 @@ class SignedMessage extends DidcommMessage {
   /// Throws an [Exception] if the signature is invalid.
   Future<Map<String, dynamic>> unpack() async {
     if (!(await areSignaturesValid())) {
-      Exception('Invalid signature was found');
+      throw Exception('Invalid signature was found');
     }
 
     final payloadBytes = base64UrlDecodeWithPadding(payload);
@@ -97,8 +99,8 @@ class SignedMessage extends DidcommMessage {
   /// Returns true if all signatures are valid, false otherwise.
   Future<bool> areSignaturesValid() async {
     for (final signature in signatures) {
-      final signatureScheme =
-          SignatureScheme.fromAlg(signature.protected.algorithm);
+      final jwsHeader = _jwsHeaderConverter.fromJson(signature.protected);
+      final signatureScheme = SignatureScheme.fromAlg(jwsHeader.algorithm);
 
       final verifier = await DidVerifier.create(
         algorithm: signatureScheme,
@@ -109,17 +111,8 @@ class SignedMessage extends DidcommMessage {
             : signature.header.keyId,
       );
 
-      final jwsHeader = JwsHeader(
-        mimeType: mediaType,
-        algorithm: signature.protected.algorithm,
-        curve: signature.protected.curve,
-      );
-
-      final encodedPayload = base64UrlEncodeNoPadding(toJsonBytes());
-      final encodedHeader = base64UrlEncodeNoPadding(jwsHeader.toJsonBytes());
-
       final isValid = verifier.verify(
-          ascii.encode('$encodedHeader.$encodedPayload'), signature.signature);
+          ascii.encode('${signature.protected}.$payload'), signature.signature);
 
       if (!isValid) {
         return false;

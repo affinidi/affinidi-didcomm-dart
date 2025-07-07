@@ -138,7 +138,6 @@ void main() async {
           final aliceMatchedDidKeyIds =
               aliceDidDocument.matchKeysInKeyAgreement(
             otherDidDocuments: [
-              bobDidDocument,
               bobMediatorDocument,
             ],
           );
@@ -163,7 +162,7 @@ void main() async {
             forwardMessageOptions: const ForwardMessageOptions(
               shouldSign: true,
               shouldEncrypt: true,
-              keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+              keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
               encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
             ),
           );
@@ -184,14 +183,14 @@ void main() async {
                 shouldSend: true,
                 shouldSign: true,
                 shouldEncrypt: true,
-                keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+                keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
                 encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
               ),
               statusRequestMessageOptions: StatusRequestMessageOptions(
                 shouldSend: true,
                 shouldSign: true,
                 shouldEncrypt: true,
-                keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+                keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
                 encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
               ),
             ),
@@ -225,12 +224,9 @@ void main() async {
           final aliceSignedAndEncryptedMessage =
               await DidcommMessage.packIntoSignedAndEncryptedMessages(
             alicePlainTextMassage,
-            keyPair: await aliceDidController.getKeyPairByDidKeyId(
-              aliceMatchedKeyIds.first,
-            ),
-            didKeyId: aliceMatchedKeyIds.first,
+            keyType: [bobDidDocument].getCommonKeyTypesInKeyAgreements().first,
             recipientDidDocuments: [bobDidDocument],
-            keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+            keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
             encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
             signer: await aliceDidController.getSigner(
               aliceDidDocument.assertionMethod.first.id,
@@ -282,6 +278,7 @@ void main() async {
                 recipientDidController: bobDidController,
                 validateAddressingConsistency: true,
                 expectedMessageWrappingTypes: [
+                  MessageWrappingType.anoncryptSignPlaintext,
                   MessageWrappingType.authcryptSignPlaintext,
                 ],
                 expectedSigners: [
@@ -318,22 +315,14 @@ void main() async {
 
             alicePlainTextMassage['custom-header'] = 'custom-value';
 
-            final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-              otherDidDocuments: [
-                bobDidDocument,
-                bobMediatorDocument,
-              ],
-            );
-
             final aliceSignedAndEncryptedMessage =
                 await DidcommMessage.packIntoSignedAndEncryptedMessages(
               alicePlainTextMassage,
-              keyPair: await aliceDidController.getKeyPairByDidKeyId(
-                aliceMatchedKeyIds.first,
-              ),
-              didKeyId: aliceMatchedKeyIds.first,
+              keyType: [
+                bobDidDocument,
+              ].getCommonKeyTypesInKeyAgreements().first,
               recipientDidDocuments: [bobDidDocument],
-              keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+              keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
               encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
               signer: await aliceDidController.getSigner(
                 aliceDidDocument.assertionMethod.first.id,
@@ -383,7 +372,9 @@ void main() async {
                   recipientDidController: bobDidController,
                   validateAddressingConsistency: true,
                   expectedMessageWrappingTypes: [
-                    MessageWrappingType.authcryptSignPlaintext,
+                    isMediatorTelemetryMessage
+                        ? MessageWrappingType.authcryptSignPlaintext
+                        : MessageWrappingType.anoncryptSignPlaintext,
                   ],
                   expectedSigners: [
                     isMediatorTelemetryMessage
@@ -406,7 +397,6 @@ void main() async {
                 }
               },
               onError: (Object error) => prettyPrint('error', object: error),
-              onDone: () => prettyPrint('done'),
               accessToken: bobTokens.accessToken,
               cancelOnError: false,
             );
