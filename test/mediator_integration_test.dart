@@ -135,6 +135,7 @@ void main() async {
             await readDid(mediatorDidPath),
           );
 
+          // find keys whose curve is common in the mediator DID Document
           final aliceMatchedDidKeyIds =
               aliceDidDocument.matchKeysInKeyAgreement(
             otherDidDocuments: [
@@ -142,10 +143,10 @@ void main() async {
             ],
           );
 
+          // find keys whose curve is common in the mediator DID Document
           final bobMatchedDidKeyIds = bobDidDocument.matchKeysInKeyAgreement(
             otherDidDocuments: [
               bobMediatorDocument,
-              // bob only sends messages to the mediator, so we don't need to match keys with Alice's DID Document
             ],
           );
 
@@ -212,14 +213,6 @@ void main() async {
           );
 
           alicePlainTextMassage['custom-header'] = 'custom-value';
-
-          // find keys whose curve is common in other DID Documents
-          final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-            otherDidDocuments: [
-              bobDidDocument,
-              bobMediatorDocument,
-            ],
-          );
 
           final aliceSignedAndEncryptedMessage =
               await DidcommMessage.packIntoSignedAndEncryptedMessages(
