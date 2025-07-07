@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:json_annotation/json_annotation.dart';
 import '../../../converters/base64_url_converter.dart';
-import '../../../converters/jws_header_converter.dart';
 import '../../jwm.dart';
 
 part 'signature.g.dart';
@@ -16,8 +15,7 @@ class Signature {
   /// The protected JWS header, base64url-encoded.
   ///
   /// Contains cryptographic and metadata parameters for the signature.
-  @JwsHeaderConverter()
-  final JwsHeader protected;
+  final String protected;
 
   /// The signature value, base64url-encoded.
   @Base64UrlConverter()

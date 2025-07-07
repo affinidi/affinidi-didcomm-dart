@@ -101,22 +101,12 @@ void main() async {
     object: alicePlainTextMassage,
   );
 
-  // find keys whose curve is common in other DID Documents
-  final aliceMatchedDidKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-    otherDidDocuments: [
-      bobDidDocument,
-    ],
-  );
-
   final aliceSignedAndEncryptedMessage =
       await DidcommMessage.packIntoSignedAndEncryptedMessages(
     alicePlainTextMassage,
-    keyPair: await aliceDidController.getKeyPairByDidKeyId(
-      aliceMatchedDidKeyIds.first,
-    ),
-    didKeyId: aliceMatchedDidKeyIds.first,
+    keyType: [bobDidDocument].getCommonKeyTypesInKeyAgreements().first,
     recipientDidDocuments: [bobDidDocument],
-    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
     encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     signer: aliceSigner,
   );
@@ -151,6 +141,13 @@ void main() async {
     object: forwardMessage,
   );
 
+  // find keys whose curve is common with keys in mediator's did document
+  final aliceMatchedDidKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
+    otherDidDocuments: [
+      bobMediatorDocument,
+    ],
+  );
+
   final aliceMediatorClient = MediatorClient(
       mediatorDidDocument: bobMediatorDocument,
       keyPair: await aliceDidController.getKeyPairByDidKeyId(
@@ -163,7 +160,7 @@ void main() async {
       forwardMessageOptions: const ForwardMessageOptions(
         shouldSign: true,
         shouldEncrypt: true,
-        keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+        keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
         encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
       ));
 
@@ -218,7 +215,9 @@ void main() async {
         message: message,
         recipientDidController: bobDidController,
         expectedMessageWrappingTypes: [
-          MessageWrappingType.authcryptSignPlaintext,
+          isMediatorTelemetryMessage
+              ? MessageWrappingType.authcryptSignPlaintext
+              : MessageWrappingType.anoncryptSignPlaintext,
         ],
         expectedSigners: [
           isMediatorTelemetryMessage
