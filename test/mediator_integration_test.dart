@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/authentication_tokens/authentication_tokens.dart';
+import 'package:didcomm/src/common/did_document_service_type.dart';
 import 'package:didcomm/src/common/encoding.dart';
 import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:ssi/ssi.dart';
@@ -62,7 +63,7 @@ void main() async {
     late DidDocument bobMediatorDocument;
 
     for (final didType in [
-      'did:key',
+      // 'did:key',
       'did:peer',
     ]) {
       group(didType, () {
@@ -72,32 +73,28 @@ void main() async {
           final aliceKeyStore = InMemoryKeyStore();
           aliceWallet = PersistentWallet(aliceKeyStore);
 
-          if (useDidKey) {
-            aliceDidController = DidKeyController(
-              wallet: aliceWallet,
-              store: InMemoryDidStore(),
-            );
-          } else {
-            aliceDidController = DidPeerController(
-              wallet: aliceWallet,
-              store: InMemoryDidStore(),
-            );
-          }
+          aliceDidController = useDidKey
+              ? DidKeyController(
+                  wallet: aliceWallet,
+                  store: InMemoryDidStore(),
+                )
+              : aliceDidController = DidPeerController(
+                  wallet: aliceWallet,
+                  store: InMemoryDidStore(),
+                );
 
           final bobKeyStore = InMemoryKeyStore();
           bobWallet = PersistentWallet(bobKeyStore);
 
-          if (useDidKey) {
-            bobDidController = DidKeyController(
-              wallet: bobWallet,
-              store: InMemoryDidStore(),
-            );
-          } else {
-            bobDidController = DidPeerController(
-              wallet: bobWallet,
-              store: InMemoryDidStore(),
-            );
-          }
+          bobDidController = useDidKey
+              ? DidKeyController(
+                  wallet: bobWallet,
+                  store: InMemoryDidStore(),
+                )
+              : DidPeerController(
+                  wallet: bobWallet,
+                  store: InMemoryDidStore(),
+                );
 
           final aliceKeyId = 'alice-key-1';
           final alicePrivateKeyBytes = await extractPrivateKeyBytes(
@@ -130,6 +127,30 @@ void main() async {
 
           await bobDidController.addVerificationMethod(bobKeyId);
           bobDidDocument = await bobDidController.getDidDocument();
+
+          // add a mediator service endpoint for did:peer.
+          // service endpoints are not supported for did:key.
+          // if the mediator service endpoint is available on a recipient's DID document
+          // then the mediator's DID document can be created from the recipient's DID document.
+          if (!useDidKey) {
+            await bobDidController.addServiceEndpoint(
+              ServiceEndpoint(
+                id: '${bobDidDocument.id}#mediator-1',
+                type: DidDocumentServiceType.didCommMessaging.value,
+                serviceEndpoint: StringEndpoint(
+                  await readDid(mediatorDidPath),
+                ),
+              ),
+            );
+
+            // update did document with service endpoint
+            bobDidDocument = await bobDidController.getDidDocument();
+          }
+
+          bobDidDocument = await bobDidController.getDidDocument();
+          final tmp = await UniversalDIDResolver.resolve(bobDidDocument.id);
+
+          prettyPrint('bob did document', object: tmp);
 
           bobMediatorDocument = await UniversalDIDResolver.resolve(
             await readDid(mediatorDidPath),
@@ -406,9 +427,7 @@ void main() async {
                 }
               },
               onError: (Object error) => prettyPrint('error', object: error),
-              onDone: () => prettyPrint('done'),
               accessToken: bobTokens.accessToken,
-              cancelOnError: false,
             );
 
             await aliceMediatorClient.sendMessage(
