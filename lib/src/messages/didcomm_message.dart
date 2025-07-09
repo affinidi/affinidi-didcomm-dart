@@ -138,7 +138,7 @@ abstract class DidcommMessage {
   /// Returns the [PlainTextMessage].
   static Future<PlainTextMessage> unpackToPlainTextMessage({
     required Map<String, dynamic> message,
-    required DidController recipientDidController,
+    required DidManager recipientDidManager,
     bool validateAddressingConsistency = true,
     List<MessageWrappingType>? expectedMessageWrappingTypes,
     List<String>? expectedSigners,
@@ -158,7 +158,7 @@ abstract class DidcommMessage {
         final encryptedMessage = EncryptedMessage.fromJson(currentMessage);
 
         currentMessage = await encryptedMessage.unpack(
-          recipientDidController: recipientDidController,
+          recipientDidManager: recipientDidManager,
         );
 
         foundMessages.add(encryptedMessage);

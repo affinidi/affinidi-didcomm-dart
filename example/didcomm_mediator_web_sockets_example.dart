@@ -17,7 +17,7 @@ void main() async {
   final aliceKeyStore = InMemoryKeyStore();
   final aliceWallet = PersistentWallet(aliceKeyStore);
 
-  final aliceDidController = DidKeyController(
+  final aliceDidManager = DidKeyManager(
     wallet: aliceWallet,
     store: InMemoryDidStore(),
   );
@@ -25,7 +25,7 @@ void main() async {
   final bobKeyStore = InMemoryKeyStore();
   final bobWallet = PersistentWallet(bobKeyStore);
 
-  final bobDidController = DidKeyController(
+  final bobDidManager = DidKeyManager(
     wallet: bobWallet,
     store: InMemoryDidStore(),
   );
@@ -43,15 +43,15 @@ void main() async {
     ),
   );
 
-  await aliceDidController.addVerificationMethod(aliceKeyId);
-  final aliceDidDocument = await aliceDidController.getDidDocument();
+  await aliceDidManager.addVerificationMethod(aliceKeyId);
+  final aliceDidDocument = await aliceDidManager.getDidDocument();
 
   prettyPrint(
     'Alice DID',
     object: aliceDidDocument.id,
   );
 
-  final aliceSigner = await aliceDidController.getSigner(
+  final aliceSigner = await aliceDidManager.getSigner(
     aliceDidDocument.assertionMethod.first.id,
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
@@ -68,8 +68,8 @@ void main() async {
     ),
   );
 
-  await bobDidController.addVerificationMethod(bobKeyId);
-  final bobDidDocument = await bobDidController.getDidDocument();
+  await bobDidManager.addVerificationMethod(bobKeyId);
+  final bobDidDocument = await bobDidManager.getDidDocument();
 
   // Serialized bobDidDocument needs to shared with sender
   prettyPrint(
@@ -81,7 +81,7 @@ void main() async {
     await readDid('./example/mediator/mediator_did.txt'),
   );
 
-  final bobSigner = await bobDidController.getSigner(
+  final bobSigner = await bobDidManager.getSigner(
     bobDidDocument.assertionMethod.first.id,
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
@@ -150,7 +150,7 @@ void main() async {
 
   final aliceMediatorClient = MediatorClient(
       mediatorDidDocument: bobMediatorDocument,
-      keyPair: await aliceDidController.getKeyPairByDidKeyId(
+      keyPair: await aliceDidManager.getKeyPairByDidKeyId(
         aliceMatchedDidKeyIds.first,
       ),
       didKeyId: aliceMatchedDidKeyIds.first,
@@ -177,7 +177,7 @@ void main() async {
 
   final bobMediatorClient = MediatorClient(
     mediatorDidDocument: bobMediatorDocument,
-    keyPair: await bobDidController.getKeyPairByDidKeyId(
+    keyPair: await bobDidManager.getKeyPairByDidKeyId(
       bobMatchedDidKeyIds.first,
     ),
     didKeyId: bobMatchedDidKeyIds.first,
@@ -213,7 +213,7 @@ void main() async {
       final unpackedMessageByBob =
           await DidcommMessage.unpackToPlainTextMessage(
         message: message,
-        recipientDidController: bobDidController,
+        recipientDidManager: bobDidManager,
         expectedMessageWrappingTypes: [
           isMediatorTelemetryMessage
               ? MessageWrappingType.authcryptSignPlaintext

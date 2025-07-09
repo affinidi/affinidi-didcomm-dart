@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:ssi/ssi.dart' show DidController, KeyPair;
+import 'package:ssi/ssi.dart' show DidController, DidManager, KeyPair;
 
 import '../../didcomm.dart';
 import '../extensions/extensions.dart';
@@ -65,7 +65,7 @@ abstract class Ecdh {
   /// [data]: The encrypted data to decrypt.
   /// [self]: The recipient.
   /// [jweHeader]: The JWE header.
-  /// [recipientDidController]: The recipient's DID controller.
+  /// [recipientDidManager]: The recipient's DID manager.
   /// [authenticationTag]: The authentication tag for the JWE.
   /// [senderJwk]: Optional sender's JWK.
   ///
@@ -74,7 +74,7 @@ abstract class Ecdh {
     Uint8List data, {
     required Recipient self,
     required JweHeader jweHeader,
-    required DidController recipientDidController,
+    required DidManager recipientDidManager,
     required Uint8List authenticationTag,
     Jwk? senderJwk,
   }) async {
@@ -97,8 +97,7 @@ abstract class Ecdh {
       throw UnsupportedCurveError(curveType);
     }
 
-    final recipientKeyId =
-        await recipientDidController.getWalletKeyIdUniversally(
+    final recipientKeyId = await recipientDidManager.getWalletKeyIdUniversally(
       self.header.keyId,
     );
 
@@ -108,7 +107,7 @@ abstract class Ecdh {
 
     return await ecdh.decryptData(
       data: self.encryptedKey,
-      recipientKeyPair: await recipientDidController.getKeyPair(
+      recipientKeyPair: await recipientDidManager.getKeyPair(
         recipientKeyId,
       ),
     );

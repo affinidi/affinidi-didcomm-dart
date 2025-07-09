@@ -47,14 +47,14 @@ void main() async {
       group(keyType.name, () {
         final keyId = keyIds[keyType]!;
 
-        late DidController didController;
+        late DidManager didManager;
         late DidDocument didDocument;
         late DidSigner signer;
 
         setUp(() async {
           final wallet = wallets[keyType]!;
 
-          didController = DidKeyController(
+          didManager = DidKeyManager(
             wallet: wallet,
             store: InMemoryDidStore(),
           );
@@ -64,12 +64,12 @@ void main() async {
             keyType: keyType,
           );
 
-          await didController.addVerificationMethod(keyId);
-          didDocument = await didController.getDidDocument();
+          await didManager.addVerificationMethod(keyId);
+          didDocument = await didManager.getDidDocument();
 
           final signatureScheme = signatureSchemes[keyType]!;
 
-          signer = await didController.getSigner(
+          signer = await didManager.getSigner(
             didDocument.assertionMethod.first.id,
             signatureScheme: signatureScheme,
           );
@@ -99,7 +99,7 @@ void main() async {
           final unpackedPlainTextMessage =
               await DidcommMessage.unpackToPlainTextMessage(
             message: signedMessage.toJson(),
-            recipientDidController: didController,
+            recipientDidManager: didManager,
             validateAddressingConsistency: true,
             expectedMessageWrappingTypes: [
               MessageWrappingType.signedPlaintext,
@@ -137,7 +137,7 @@ void main() async {
 
           final actualFuture = DidcommMessage.unpackToPlainTextMessage(
             message: brokenMessage,
-            recipientDidController: didController,
+            recipientDidManager: didManager,
             validateAddressingConsistency: true,
             expectedMessageWrappingTypes: [
               MessageWrappingType.signedPlaintext,

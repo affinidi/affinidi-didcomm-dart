@@ -23,19 +23,19 @@ void main() async {
           final aliceKeyId = 'alice-key-1-${keyType.name}';
           final bobKeyId = 'bob-key-1-${keyType.name}';
 
-          late DidController aliceDidController;
-          late DidController bobDidController;
+          late DidManager aliceDidManager;
+          late DidManager bobDidController;
           late DidDocument aliceDidDocument;
           late DidDocument bobDidDocument;
           late DidSigner aliceSigner;
 
           setUp(() async {
-            aliceDidController = DidKeyController(
+            aliceDidManager = DidKeyManager(
               wallet: aliceWallet,
               store: InMemoryDidStore(),
             );
 
-            bobDidController = DidKeyController(
+            bobDidController = DidKeyManager(
               wallet: bobWallet,
               store: InMemoryDidStore(),
             );
@@ -45,10 +45,10 @@ void main() async {
               keyType: keyType,
             );
 
-            await aliceDidController.addVerificationMethod(aliceKeyId);
-            aliceDidDocument = await aliceDidController.getDidDocument();
+            await aliceDidManager.addVerificationMethod(aliceKeyId);
+            aliceDidDocument = await aliceDidManager.getDidDocument();
 
-            aliceSigner = await aliceDidController.getSigner(
+            aliceSigner = await aliceDidManager.getSigner(
               aliceDidDocument.assertionMethod.first.id,
             );
 
@@ -96,7 +96,7 @@ void main() async {
                       final sut = await EncryptedMessage.pack(
                         signedMessage,
                         keyPair: isAuthenticated
-                            ? await aliceDidController.getKeyPairByDidKeyId(
+                            ? await aliceDidManager.getKeyPairByDidKeyId(
                                 aliceMatchedDidKeyIds.first,
                               )
                             : null,
@@ -127,7 +127,7 @@ void main() async {
                         message: jsonDecode(
                           sharedMessageToBobInJson,
                         ) as Map<String, dynamic>,
-                        recipientDidController: bobDidController,
+                        recipientDidManager: bobDidController,
                         validateAddressingConsistency: true,
                         expectedMessageWrappingTypes: [
                           isAuthenticated
@@ -183,7 +183,7 @@ void main() async {
 
                       final sut = await EncryptedMessage.packWithAuthentication(
                         plainTextMessage,
-                        keyPair: await aliceDidController.getKeyPairByDidKeyId(
+                        keyPair: await aliceDidManager.getKeyPairByDidKeyId(
                           aliceMatchedDidKeyIds.first,
                         ),
                         didKeyId: aliceMatchedDidKeyIds.first,
@@ -207,7 +207,7 @@ void main() async {
                       final actualFuture =
                           DidcommMessage.unpackToPlainTextMessage(
                         message: receivedMessage,
-                        recipientDidController: bobDidController,
+                        recipientDidManager: bobDidController,
                       );
 
                       await expectLater(

@@ -2,9 +2,9 @@ import 'package:ssi/ssi.dart';
 
 import '../common/did.dart';
 
-/// Extension methods for [DidController] to simplify key pair retrieval by DID key ID.
-extension DidControllerExtension on DidController {
-  /// Retrieves the [KeyPair] associated with the given [didKeyId] from this [DidController].
+/// Extension methods for [DidManager] to simplify key pair retrieval by DID key ID.
+extension DidControllerExtension on DidManager {
+  /// Retrieves the [KeyPair] associated with the given [didKeyId] from this [DidManager].
   ///
   /// Throws if the key is not found or cannot be retrieved.
   Future<KeyPair> getKeyPairByDidKeyId(String didKeyId) async {

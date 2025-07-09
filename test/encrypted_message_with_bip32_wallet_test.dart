@@ -25,19 +25,19 @@ void main() {
       final aliceKeyId = "m/44'/60'/0'/0'/0'";
       final bobKeyId = "m/44'/60'/0'/0'/0'";
 
-      late DidController aliceDidController;
-      late DidController bobDidController;
+      late DidManager aliceDidManager;
+      late DidManager bobDidManager;
       late DidDocument aliceDidDocument;
       late DidDocument bobDidDocument;
       late DidSigner aliceSigner;
 
       setUp(() async {
-        aliceDidController = DidKeyController(
+        aliceDidManager = DidKeyManager(
           wallet: aliceWallet,
           store: InMemoryDidStore(),
         );
 
-        bobDidController = DidKeyController(
+        bobDidManager = DidKeyManager(
           wallet: bobWallet,
           store: InMemoryDidStore(),
         );
@@ -47,10 +47,10 @@ void main() {
           keyType: KeyType.secp256k1,
         );
 
-        await aliceDidController.addVerificationMethod(aliceKeyId);
-        aliceDidDocument = await aliceDidController.getDidDocument();
+        await aliceDidManager.addVerificationMethod(aliceKeyId);
+        aliceDidDocument = await aliceDidManager.getDidDocument();
 
-        aliceSigner = await aliceDidController.getSigner(
+        aliceSigner = await aliceDidManager.getSigner(
           aliceDidDocument.assertionMethod.first.id,
         );
 
@@ -59,8 +59,8 @@ void main() {
           keyType: KeyType.secp256k1,
         );
 
-        await bobDidController.addVerificationMethod(bobKeyId);
-        bobDidDocument = await bobDidController.getDidDocument();
+        await bobDidManager.addVerificationMethod(bobKeyId);
+        bobDidDocument = await bobDidManager.getDidDocument();
       });
       for (final encryptionAlgorithm in [
         EncryptionAlgorithm.a256cbc,
@@ -94,7 +94,7 @@ void main() {
                   final sut = await EncryptedMessage.pack(
                     signedMessage,
                     keyPair: isAuthenticated
-                        ? await aliceDidController.getKeyPairByDidKeyId(
+                        ? await aliceDidManager.getKeyPairByDidKeyId(
                             aliceMatchedDidKeyIds.first,
                           )
                         : null,
@@ -119,7 +119,7 @@ void main() {
                     message: jsonDecode(
                       sharedMessageToBobInJson,
                     ) as Map<String, dynamic>,
-                    recipientDidController: bobDidController,
+                    recipientDidManager: bobDidManager,
                     validateAddressingConsistency: true,
                     expectedMessageWrappingTypes: [
                       isAuthenticated

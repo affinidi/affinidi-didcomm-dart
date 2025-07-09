@@ -215,13 +215,13 @@ class EncryptedMessage extends DidcommMessage {
   /// Unlike [DidcommMessage.unpackToPlainTextMessage], this method does not recursively unpack nested messages,
   /// but returns the top most message from the ciphertext.
   ///
-  /// [recipientDidController]: The DID controller to use for decryption.
+  /// [recipientDidManager]: The DID manager to use for decryption.
   ///
   /// Returns the decrypted inner message as a JSON map.
   Future<Map<String, dynamic>> unpack({
-    required DidController recipientDidController,
+    required DidManager recipientDidManager,
   }) async {
-    final self = await _findSelfAsRecipient(recipientDidController);
+    final self = await _findSelfAsRecipient(recipientDidManager);
     final jweHeader = _jweHeaderConverter.fromJson(protected);
 
     final subjectKeyId = jweHeader.subjectKeyId;
@@ -235,7 +235,7 @@ class EncryptedMessage extends DidcommMessage {
 
     final contentEncryptionKey = await Ecdh.decrypt(
       self.encryptedKey,
-      recipientDidController: recipientDidController,
+      recipientDidManager: recipientDidManager,
       jweHeader: jweHeader,
       senderJwk: jweHeader.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu
           ? await _getSenderJwk(subjectKeyId!)
@@ -281,9 +281,9 @@ class EncryptedMessage extends DidcommMessage {
     return senderJwk;
   }
 
-  Future<Recipient> _findSelfAsRecipient(DidController didController) async {
+  Future<Recipient> _findSelfAsRecipient(DidManager didManager) async {
     for (final recipient in recipients) {
-      final keyId = await didController.getWalletKeyIdUniversally(
+      final keyId = await didManager.getWalletKeyIdUniversally(
         recipient.header.keyId,
       );
 
