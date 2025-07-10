@@ -15,6 +15,31 @@ Packages with breaking changes:
 
 Packages with other changes:
 
+ - [`didcomm` - `v0.0.8+2`](#didcomm---v0082)
+
+---
+
+#### `didcomm` - `v0.0.8+2`
+
+ - **FIX**: use default signature schema.
+
+## 0.0.8+2
+
+ - **FIX**: use default signature schema.
+
+
+## 2025-07-10
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
  - [`didcomm` - `v0.0.8+1`](#didcomm---v0081)
 
 ---
