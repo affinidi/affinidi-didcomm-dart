@@ -26,7 +26,7 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
     - [unpackToPlainTextMessage](#unpacktoplaintextmessage)
   - [More Usage Examples](#more-usage-examples)
   - [Key Type Selection for Authcrypt and Anoncrypt](#key-type-selection-for-authcrypt-and-anoncrypt)
-  - [Ed25519/X25519 Curve Conversion](#ed25519x25519-curve-conversion)
+  - [Ed25519/X25519 Key Derivation](#ed25519x25519-key-derivation)
   - [Support & feedback](#support--feedback)
   - [Contributing](#contributing)
 
@@ -447,16 +447,11 @@ final keyType = commonKeyTypes.first; // Use this key type for anoncrypt
 
 This ensures that the correct and compatible keys are used for ECDH-1PU (authcrypt) and ECDH-ES (anoncrypt) operations, and that all recipients can decrypt the message using a supported key agreement method.
 
-## Ed25519/X25519 Curve Conversion
+## Ed25519/X25519 Key Derivation
 
-If you selected the Ed25519 key (Edwards curve) for your DID or wallet, the Dart SSI package will use this curve for digital signatures. However, for encryption and ECDH key agreement, the Ed25519 key is automatically converted to the corresponding X25519 key.
+If you select an Ed25519 key (Edwards curve) for your DID or wallet for key agreement purposes, the [Dart SSI package](https://pub.dev/packages/ssi) automatically derives an X25519 key from the Ed25519 key.
 
-When you generate a DID Document with the Dart SSI package using an Ed25519 key, the resulting DID Document will include both Ed25519 (for signing) and X25519 (for encryption/ECDH) verification methods.
-
-- **Signing:** Uses Ed25519 (Edwards curve).
-- **Encryption/ECDH:** Uses X25519, converted from Ed25519 as needed.
-
-This conversion and DID Document construction are handled automatically by the Dart SSI and DIDComm libraries. You do not need to manually convert keys or add verification methods, but be aware that it uses the same key material in different forms for signing and encryption operations.
+Read more about [Ed25519/X25519 Key Derivation](https://pub.dev/packages/ssi#ed25519x25519-key-derivation) from the Dart SSI project.
 
 ## Support & feedback
 
