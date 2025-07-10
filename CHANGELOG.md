@@ -15,6 +15,31 @@ Packages with breaking changes:
 
 Packages with other changes:
 
+ - [`didcomm` - `v0.0.8+1`](#didcomm---v0081)
+
+---
+
+#### `didcomm` - `v0.0.8+1`
+
+ - **FIX**: include parent fields in toJson (#28).
+
+## 0.0.8+1
+
+ - **FIX**: include parent fields in toJson (#28).
+
+
+## 2025-07-10
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
  - [`didcomm` - `v0.0.8`](#didcomm---v008)
 
 ---
