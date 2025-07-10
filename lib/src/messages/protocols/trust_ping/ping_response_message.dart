@@ -38,6 +38,8 @@ class PingResponseMessage extends PlainTextMessage {
 
   /// Converts this [PingResponseMessage] to a JSON map, including custom headers.
   @override
-  Map<String, dynamic> toJson() =>
-      withCustomHeaders(_$PingResponseMessageToJson(this));
+  Map<String, dynamic> toJson() => withCustomHeaders({
+        ...super.toJson(),
+        ..._$PingResponseMessageToJson(this),
+      });
 }

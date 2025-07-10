@@ -49,6 +49,8 @@ class MessagePickupMessage extends PlainTextMessage {
 
   /// Converts this [MessagePickupMessage] to a JSON map, including custom headers.
   @override
-  Map<String, dynamic> toJson() =>
-      withCustomHeaders(_$MessagePickupMessageToJson(this));
+  Map<String, dynamic> toJson() => withCustomHeaders({
+        ...super.toJson(),
+        ..._$MessagePickupMessageToJson(this),
+      });
 }
