@@ -38,7 +38,7 @@ void main() async {
     KeyType.secp256k1: "m/44'/60'/0'/0'/0'",
   };
 
-  group('Encrypted message', () {
+  group('Signed message', () {
     for (final keyType in [
       KeyType.p256,
       KeyType.ed25519,
