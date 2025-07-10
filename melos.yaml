@@ -8,3 +8,11 @@ scripts:
     run: dart run coverage:test_with_coverage
     exec: 
       concurrency: 1
+
+command:
+  version:
+    changelogCommitBodies:
+      include: true
+      onlyBreaking: false
+    workspaceChangelog: false
+
