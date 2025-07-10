@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:ssi/ssi.dart' show DidController, DidManager, KeyPair;
+import 'package:ssi/ssi.dart' show DidManager, KeyPair;
 
 import '../../didcomm.dart';
 import '../extensions/extensions.dart';

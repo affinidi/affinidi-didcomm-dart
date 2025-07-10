@@ -24,7 +24,7 @@ void main() async {
           final bobKeyId = 'bob-key-1-${keyType.name}';
 
           late DidManager aliceDidManager;
-          late DidManager bobDidController;
+          late DidManager bobDidManager;
           late DidDocument aliceDidDocument;
           late DidDocument bobDidDocument;
           late DidSigner aliceSigner;
@@ -35,7 +35,7 @@ void main() async {
               store: InMemoryDidStore(),
             );
 
-            bobDidController = DidKeyManager(
+            bobDidManager = DidKeyManager(
               wallet: bobWallet,
               store: InMemoryDidStore(),
             );
@@ -57,8 +57,8 @@ void main() async {
               keyType: keyType,
             );
 
-            await bobDidController.addVerificationMethod(bobKeyId);
-            bobDidDocument = await bobDidController.getDidDocument();
+            await bobDidManager.addVerificationMethod(bobKeyId);
+            bobDidDocument = await bobDidManager.getDidDocument();
           });
 
           for (final encryptionAlgorithm in [
@@ -127,7 +127,7 @@ void main() async {
                         message: jsonDecode(
                           sharedMessageToBobInJson,
                         ) as Map<String, dynamic>,
-                        recipientDidManager: bobDidController,
+                        recipientDidManager: bobDidManager,
                         validateAddressingConsistency: true,
                         expectedMessageWrappingTypes: [
                           isAuthenticated
@@ -207,7 +207,7 @@ void main() async {
                       final actualFuture =
                           DidcommMessage.unpackToPlainTextMessage(
                         message: receivedMessage,
-                        recipientDidManager: bobDidController,
+                        recipientDidManager: bobDidManager,
                       );
 
                       await expectLater(

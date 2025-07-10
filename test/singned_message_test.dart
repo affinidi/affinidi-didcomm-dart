@@ -75,7 +75,7 @@ void main() async {
           );
         });
 
-        test('Pack and unpack encrypted message successfully', () async {
+        test('Pack and unpack signed message successfully', () async {
           // Act: create and sign the message
           const content = 'Hello, Bob!';
           final plainTextMessage =
