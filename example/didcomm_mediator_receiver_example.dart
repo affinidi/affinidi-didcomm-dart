@@ -13,7 +13,7 @@ void main() async {
   final receiverKeyStore = InMemoryKeyStore();
   final receiverWallet = PersistentWallet(receiverKeyStore);
 
-  final receiverDidController = DidKeyController(
+  final receiverDidManager = DidKeyManager(
     wallet: receiverWallet,
     store: InMemoryDidStore(),
   );
@@ -25,8 +25,8 @@ void main() async {
     keyType: KeyType.p256,
   );
 
-  await receiverDidController.addVerificationMethod(receiverKeyId);
-  final receiverDidDocument = await receiverDidController.getDidDocument();
+  await receiverDidManager.addVerificationMethod(receiverKeyId);
+  final receiverDidDocument = await receiverDidManager.getDidDocument();
 
   // Serialized receiverMediatorDocument needs to shared with sender
   prettyPrint(
@@ -38,7 +38,7 @@ void main() async {
     await readDid('./example/mediator/mediator_did.txt'),
   );
 
-  final receiverSigner = await receiverDidController.getSigner(
+  final receiverSigner = await receiverDidManager.getSigner(
     receiverDidDocument.assertionMethod.first.id,
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
@@ -52,7 +52,7 @@ void main() async {
 
   final receiverMediatorClient = MediatorClient(
     mediatorDidDocument: receiverMediatorDocument,
-    keyPair: await receiverDidController.getKeyPairByDidKeyId(
+    keyPair: await receiverDidManager.getKeyPairByDidKeyId(
       receiverMatchedDidKeyIds.first,
     ),
     didKeyId: receiverMatchedDidKeyIds.first,
@@ -75,7 +75,7 @@ void main() async {
     final originalPlainTextMessageFromSender =
         await DidcommMessage.unpackToPlainTextMessage(
       message: message,
-      recipientDidController: receiverDidController,
+      recipientDidManager: receiverDidManager,
       expectedMessageWrappingTypes: [
         MessageWrappingType.anoncryptSignPlaintext,
       ],

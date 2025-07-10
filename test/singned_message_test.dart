@@ -39,7 +39,7 @@ void main() async {
     KeyType.secp256k1: "m/44'/60'/0'/0'/0'",
   };
 
-  group('Encrypted message', () {
+  group('Signed message', () {
     for (final keyType in [
       KeyType.p256,
       KeyType.ed25519,
@@ -48,14 +48,14 @@ void main() async {
       group(keyType.name, () {
         final keyId = keyIds[keyType]!;
 
-        late DidController didController;
+        late DidManager didManager;
         late DidDocument didDocument;
         late DidSigner signer;
 
         setUp(() async {
           final wallet = wallets[keyType]!;
 
-          didController = DidKeyController(
+          didManager = DidKeyManager(
             wallet: wallet,
             store: InMemoryDidStore(),
           );
@@ -65,18 +65,18 @@ void main() async {
             keyType: keyType,
           );
 
-          await didController.addVerificationMethod(keyId);
-          didDocument = await didController.getDidDocument();
+          await didManager.addVerificationMethod(keyId);
+          didDocument = await didManager.getDidDocument();
 
           final signatureScheme = signatureSchemes[keyType]!;
 
-          signer = await didController.getSigner(
+          signer = await didManager.getSigner(
             didDocument.assertionMethod.first.id,
             signatureScheme: signatureScheme,
           );
         });
 
-        test('Pack and unpack encrypted message successfully', () async {
+        test('Pack and unpack signed message successfully', () async {
           const content = 'Hello, Bob!';
           final plainTextMessage =
               MessageAssertionService.createPlainTextMessageAssertion(
@@ -99,7 +99,7 @@ void main() async {
           final unpackedPlainTextMessage =
               await DidcommMessage.unpackToPlainTextMessage(
             message: signedMessage.toJson(),
-            recipientDidController: didController,
+            recipientDidManager: didManager,
             validateAddressingConsistency: true,
             expectedMessageWrappingTypes: [
               MessageWrappingType.signedPlaintext,
@@ -138,7 +138,7 @@ void main() async {
 
           final actualFuture = DidcommMessage.unpackToPlainTextMessage(
             message: brokenMessage,
-            recipientDidController: didController,
+            recipientDidManager: didManager,
             validateAddressingConsistency: true,
             expectedMessageWrappingTypes: [
               MessageWrappingType.signedPlaintext,
@@ -154,23 +154,20 @@ void main() async {
         test(
             'Pack and unpack encrypted message with multiple signatures successfully',
             () async {
-          final extraDidController = DidKeyController(
+          final extraDidManager = DidKeyManager(
             store: InMemoryDidStore(),
             wallet: PersistentWallet(InMemoryKeyStore()),
           );
 
-          final extraKeyPair = await extraDidController.wallet.generateKey(
+          final extraKeyPair = await extraDidManager.wallet.generateKey(
             // extra wallet always has p256
             keyType: KeyType.p256,
           );
 
-          await extraDidController.addVerificationMethod(extraKeyPair.id);
+          await extraDidManager.addVerificationMethod(extraKeyPair.id);
 
-          final extraSigner = await extraDidController.getSigner(
-            (await extraDidController.getDidDocument())
-                .assertionMethod
-                .first
-                .id,
+          final extraSigner = await extraDidManager.getSigner(
+            (await extraDidManager.getDidDocument()).assertionMethod.first.id,
             signatureScheme: SignatureScheme.ecdsa_p256_sha256,
           );
 
@@ -205,7 +202,7 @@ void main() async {
           final unpackedPlainTextMessage =
               await DidcommMessage.unpackToPlainTextMessage(
             message: signedMessage.toJson(),
-            recipientDidController: didController,
+            recipientDidManager: didManager,
             validateAddressingConsistency: true,
             expectedMessageWrappingTypes: [
               MessageWrappingType.signedPlaintext,
@@ -250,7 +247,7 @@ void main() async {
 
           final actualFuture = DidcommMessage.unpackToPlainTextMessage(
             message: signedMessage.toJson(),
-            recipientDidController: didController,
+            recipientDidManager: didManager,
             validateAddressingConsistency: true,
             expectedMessageWrappingTypes: [
               MessageWrappingType.signedPlaintext,

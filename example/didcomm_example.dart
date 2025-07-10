@@ -9,7 +9,7 @@ void main() async {
   final aliceKeyStore = InMemoryKeyStore();
   final aliceWallet = PersistentWallet(aliceKeyStore);
 
-  final aliceDidController = DidKeyController(
+  final aliceDidManager = DidKeyManager(
     wallet: aliceWallet,
     store: InMemoryDidStore(),
   );
@@ -17,7 +17,7 @@ void main() async {
   final bobKeyStore = InMemoryKeyStore();
   final bobWallet = PersistentWallet(bobKeyStore);
 
-  final bobDidController = DidKeyController(
+  final bobDidManager = DidKeyManager(
     wallet: bobWallet,
     store: InMemoryDidStore(),
   );
@@ -28,10 +28,10 @@ void main() async {
     keyType: KeyType.p256,
   );
 
-  await aliceDidController.addVerificationMethod(aliceKeyId);
-  final aliceDidDocument = await aliceDidController.getDidDocument();
+  await aliceDidManager.addVerificationMethod(aliceKeyId);
+  final aliceDidDocument = await aliceDidManager.getDidDocument();
 
-  final aliceSigner = await aliceDidController.getSigner(
+  final aliceSigner = await aliceDidManager.getSigner(
     aliceDidDocument.assertionMethod.first.id,
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
@@ -42,8 +42,8 @@ void main() async {
     keyType: KeyType.p256,
   );
 
-  await bobDidController.addVerificationMethod(bobKeyId);
-  final bobDidDocument = await bobDidController.getDidDocument();
+  await bobDidManager.addVerificationMethod(bobKeyId);
+  final bobDidDocument = await bobDidManager.getDidDocument();
 
   final alicePlainTextMassage = PlainTextMessage(
     id: '041b47d4-9c8f-4a24-ae85-b60ec91b025c',
@@ -77,7 +77,7 @@ void main() async {
 
   final aliceEncryptedMessage = await EncryptedMessage.packWithAuthentication(
     aliceSignedMessage,
-    keyPair: await aliceDidController.getKeyPairByDidKeyId(
+    keyPair: await aliceDidManager.getKeyPairByDidKeyId(
       aliceMatchedKeyIds.first,
     ),
     didKeyId: aliceMatchedKeyIds.first,
@@ -94,7 +94,7 @@ void main() async {
 
   final unpackedMessageByBob = await DidcommMessage.unpackToPlainTextMessage(
     message: jsonDecode(sentMessageByAlice) as Map<String, dynamic>,
-    recipientDidController: bobDidController,
+    recipientDidManager: bobDidManager,
     expectedMessageWrappingTypes: [
       MessageWrappingType.authcryptSignPlaintext,
     ],
