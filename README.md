@@ -43,7 +43,7 @@ The DIDComm for Dart package utilises existing open standards and cryptographic 
 
 - **Mediator** - A service that handles and routes messages sent between participants (e.g., users, organisations, another mediator, or even AI agents).
 
-- **DidController** - A controller to manage cryptographic keys and DIDs, supporting different algorithms for signing and verifying messages.
+- **DidManager** - Establishes the relationship between DID methods and key pairs from the Wallet, supporting different algorithms for signing and verifying messages.
 
 ## Key Features
 
