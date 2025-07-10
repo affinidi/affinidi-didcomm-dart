@@ -3,6 +3,37 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 2025-07-10
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
+ - [`didcomm` - `v0.0.8`](#didcomm---v008)
+
+---
+
+#### `didcomm` - `v0.0.8`
+
+ - **FIX**: dart analyzer issue.
+ - **FIX**: dart format.
+ - **FEAT**: add did controller.
+ - **FEAT**: use did controller.
+
+## 0.0.8
+
+ - **FIX**: dart analyzer issue.
+ - **FIX**: dart format.
+ - **FEAT**: add did controller.
+ - **FEAT**: use did controller.
+
+
 ## 2025-07-01
 
 ### Changes
