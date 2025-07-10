@@ -228,7 +228,6 @@ Signing a message is optional in DIDComm. It is required when you need to provid
 ```dart
 final aliceSigner = await aliceDidManager.getSigner(
   aliceDidDocument.assertionMethod.first.id,
-  signatureScheme: SignatureScheme.ecdsa_p256_sha256,
 );
 
 final signedMessage = await SignedMessage.pack(

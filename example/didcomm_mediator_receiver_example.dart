@@ -40,7 +40,6 @@ void main() async {
 
   final receiverSigner = await receiverDidManager.getSigner(
     receiverDidDocument.assertionMethod.first.id,
-    signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
   final receiverMatchedDidKeyIds = receiverDidDocument.matchKeysInKeyAgreement(

@@ -46,7 +46,6 @@ void main() async {
 
   final aliceSigner = await aliceDidManager.getSigner(
     aliceDidDocument.assertionMethod.first.id,
-    signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
   final bobKeyId = 'bob-key-1';
@@ -69,7 +68,6 @@ void main() async {
 
   final bobSigner = await bobDidManager.getSigner(
     bobDidDocument.assertionMethod.first.id,
-    signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
   final alicePlainTextMassage = PlainTextMessage(

@@ -82,7 +82,6 @@ void main() async {
 
   final senderSigner = await senderDidManager.getSigner(
     senderDidDocument.assertionMethod.first.id,
-    signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
   final receiverMediatorDidDocument = await readDidDocument(
