@@ -125,7 +125,7 @@ abstract class DidcommMessage {
   /// Verified signers against the expected list if provided.
   ///
   /// [message]: The message as a JSON map.
-  /// [recipientDidController]: The DID controller to use for decryption.
+  /// [recipientDidManager]: The DID manager to use for decryption.
   /// [validateAddressingConsistency]: Whether to validate addressing consistency between wrappers (default is true).
   /// [expectedMessageWrappingTypes]: List of expected message wrapping types (optional).
   ///   For example: [MessageWrappingType.authcryptSignPlaintext, MessageWrappingType.authcryptPlaintext].
@@ -138,7 +138,7 @@ abstract class DidcommMessage {
   /// Returns the [PlainTextMessage].
   static Future<PlainTextMessage> unpackToPlainTextMessage({
     required Map<String, dynamic> message,
-    required DidController recipientDidController,
+    required DidManager recipientDidManager,
     bool validateAddressingConsistency = true,
     List<MessageWrappingType>? expectedMessageWrappingTypes,
     List<String>? expectedSigners,
@@ -158,7 +158,7 @@ abstract class DidcommMessage {
         final encryptedMessage = EncryptedMessage.fromJson(currentMessage);
 
         currentMessage = await encryptedMessage.unpack(
-          recipientDidController: recipientDidController,
+          recipientDidManager: recipientDidManager,
         );
 
         foundMessages.add(encryptedMessage);

@@ -20,20 +20,20 @@ void main() async {
       final aliceKeyId = 'alice-key-1-${keyType.name}';
       final bobKeyId = 'bob-key-1-${keyType.name}';
 
-      late DidController aliceDidController;
-      late DidController bobDidController;
+      late DidManager aliceDidManager;
+      late DidManager bobDidManager;
       late KeyPair aliceKeyPair;
       late DidDocument aliceDidDocument;
       late DidDocument bobDidDocument;
       late DidSigner aliceSigner;
 
       setUp(() async {
-        aliceDidController = DidKeyController(
+        aliceDidManager = DidKeyManager(
           wallet: aliceWallet,
           store: InMemoryDidStore(),
         );
 
-        bobDidController = DidKeyController(
+        bobDidManager = DidKeyManager(
           wallet: bobWallet,
           store: InMemoryDidStore(),
         );
@@ -43,10 +43,10 @@ void main() async {
           keyType: keyType,
         );
 
-        await aliceDidController.addVerificationMethod(aliceKeyId);
-        aliceDidDocument = await aliceDidController.getDidDocument();
+        await aliceDidManager.addVerificationMethod(aliceKeyId);
+        aliceDidDocument = await aliceDidManager.getDidDocument();
 
-        aliceSigner = await aliceDidController.getSigner(
+        aliceSigner = await aliceDidManager.getSigner(
           aliceDidDocument.assertionMethod.first.id,
         );
 
@@ -55,8 +55,8 @@ void main() async {
           keyType: keyType,
         );
 
-        await bobDidController.addVerificationMethod(bobKeyId);
-        bobDidDocument = await bobDidController.getDidDocument();
+        await bobDidManager.addVerificationMethod(bobKeyId);
+        bobDidDocument = await bobDidManager.getDidDocument();
       });
 
       test(
@@ -82,7 +82,7 @@ void main() async {
             message: jsonDecode(
               sharedMessageToBobInJson,
             ) as Map<String, dynamic>,
-            recipientDidController: bobDidController,
+            recipientDidManager: bobDidManager,
             expectedMessageWrappingTypes: [expectedMessageWrappingType],
           );
 
@@ -120,7 +120,7 @@ void main() async {
             message: jsonDecode(
               sharedMessageToBobInJson,
             ) as Map<String, dynamic>,
-            recipientDidController: bobDidController,
+            recipientDidManager: bobDidManager,
             expectedMessageWrappingTypes: [expectedMessageWrappingType],
           );
 
@@ -161,7 +161,7 @@ void main() async {
             message: jsonDecode(
               sharedMessageToBobInJson,
             ) as Map<String, dynamic>,
-            recipientDidController: bobDidController,
+            recipientDidManager: bobDidManager,
             expectedMessageWrappingTypes: [expectedMessageWrappingType],
           );
 
@@ -203,7 +203,7 @@ void main() async {
             message: jsonDecode(
               sharedMessageToBobInJson,
             ) as Map<String, dynamic>,
-            recipientDidController: bobDidController,
+            recipientDidManager: bobDidManager,
             expectedMessageWrappingTypes: [expectedMessageWrappingType],
           );
 
@@ -248,7 +248,7 @@ void main() async {
             message: jsonDecode(
               sharedMessageToBobInJson,
             ) as Map<String, dynamic>,
-            recipientDidController: bobDidController,
+            recipientDidManager: bobDidManager,
             expectedMessageWrappingTypes: [expectedMessageWrappingType],
             expectedSigners: [expectedSigner],
           );
@@ -295,7 +295,7 @@ void main() async {
             message: jsonDecode(
               sharedMessageToBobInJson,
             ) as Map<String, dynamic>,
-            recipientDidController: bobDidController,
+            recipientDidManager: bobDidManager,
             expectedMessageWrappingTypes: [expectedMessageWrappingType],
             expectedSigners: [expectedSigner],
           );
@@ -345,7 +345,7 @@ void main() async {
             message: jsonDecode(
               sharedMessageToBobInJson,
             ) as Map<String, dynamic>,
-            recipientDidController: bobDidController,
+            recipientDidManager: bobDidManager,
             expectedMessageWrappingTypes: [expectedMessageWrappingType],
           );
 
@@ -386,7 +386,7 @@ void main() async {
             message: jsonDecode(
               sharedMessageToBobInJson,
             ) as Map<String, dynamic>,
-            recipientDidController: bobDidController,
+            recipientDidManager: bobDidManager,
             expectedMessageWrappingTypes: expectedMessageWrappingTypes,
           );
 
@@ -419,7 +419,7 @@ void main() async {
             message: jsonDecode(
               sharedMessageToBobInJson,
             ) as Map<String, dynamic>,
-            recipientDidController: bobDidController,
+            recipientDidManager: bobDidManager,
             expectedMessageWrappingTypes: [expectedMessageWrappingType],
           );
 

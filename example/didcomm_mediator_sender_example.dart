@@ -54,7 +54,7 @@ void main() async {
   final senderKeyStore = InMemoryKeyStore();
   final senderWallet = PersistentWallet(senderKeyStore);
 
-  final senderDidController = DidKeyController(
+  final senderDidManager = DidKeyManager(
     wallet: senderWallet,
     store: InMemoryDidStore(),
   );
@@ -72,15 +72,15 @@ void main() async {
     ),
   );
 
-  await senderDidController.addVerificationMethod(senderKeyId);
-  final senderDidDocument = await senderDidController.getDidDocument();
+  await senderDidManager.addVerificationMethod(senderKeyId);
+  final senderDidDocument = await senderDidManager.getDidDocument();
 
   prettyPrint(
     'Sender DID',
     object: senderDidDocument.id,
   );
 
-  final senderSigner = await senderDidController.getSigner(
+  final senderSigner = await senderDidManager.getSigner(
     senderDidDocument.assertionMethod.first.id,
     signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
@@ -155,7 +155,7 @@ void main() async {
 
   final senderMediatorClient = MediatorClient(
     mediatorDidDocument: receiverMediatorDidDocument,
-    keyPair: await senderDidController.getKeyPairByDidKeyId(
+    keyPair: await senderDidManager.getKeyPairByDidKeyId(
       senderMatchedDidKeyIds.first,
     ),
     didKeyId: senderMatchedDidKeyIds.first,

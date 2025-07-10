@@ -48,13 +48,13 @@ void main() async {
 
   group('Mediator Integration Test', () {
     late PersistentWallet aliceWallet;
-    late DidController aliceDidController;
+    late DidManager aliceDidManager;
     late DidDocument aliceDidDocument;
     late MediatorClient aliceMediatorClient;
     late AuthenticationTokens aliceTokens;
 
     late PersistentWallet bobWallet;
-    late DidController bobDidController;
+    late DidManager bobDidManager;
     late DidDocument bobDidDocument;
     late MediatorClient bobMediatorClient;
     late AuthenticationTokens bobTokens;
@@ -73,12 +73,12 @@ void main() async {
           aliceWallet = PersistentWallet(aliceKeyStore);
 
           if (useDidKey) {
-            aliceDidController = DidKeyController(
+            aliceDidManager = DidKeyManager(
               wallet: aliceWallet,
               store: InMemoryDidStore(),
             );
           } else {
-            aliceDidController = DidPeerController(
+            aliceDidManager = DidPeerManager(
               wallet: aliceWallet,
               store: InMemoryDidStore(),
             );
@@ -88,12 +88,12 @@ void main() async {
           bobWallet = PersistentWallet(bobKeyStore);
 
           if (useDidKey) {
-            bobDidController = DidKeyController(
+            bobDidManager = DidKeyManager(
               wallet: bobWallet,
               store: InMemoryDidStore(),
             );
           } else {
-            bobDidController = DidPeerController(
+            bobDidManager = DidPeerManager(
               wallet: bobWallet,
               store: InMemoryDidStore(),
             );
@@ -112,8 +112,8 @@ void main() async {
             ),
           );
 
-          await aliceDidController.addVerificationMethod(aliceKeyId);
-          aliceDidDocument = await aliceDidController.getDidDocument();
+          await aliceDidManager.addVerificationMethod(aliceKeyId);
+          aliceDidDocument = await aliceDidManager.getDidDocument();
 
           final bobKeyId = 'bob-key-1';
           final bobPrivateKeyBytes = await extractPrivateKeyBytes(
@@ -128,8 +128,8 @@ void main() async {
             ),
           );
 
-          await bobDidController.addVerificationMethod(bobKeyId);
-          bobDidDocument = await bobDidController.getDidDocument();
+          await bobDidManager.addVerificationMethod(bobKeyId);
+          bobDidDocument = await bobDidManager.getDidDocument();
 
           bobMediatorDocument = await UniversalDIDResolver.resolve(
             await readDid(mediatorDidPath),
@@ -152,11 +152,11 @@ void main() async {
 
           aliceMediatorClient = MediatorClient(
             mediatorDidDocument: bobMediatorDocument,
-            keyPair: await aliceDidController.getKeyPairByDidKeyId(
+            keyPair: await aliceDidManager.getKeyPairByDidKeyId(
               aliceMatchedDidKeyIds.first,
             ),
             didKeyId: aliceMatchedDidKeyIds.first,
-            signer: await aliceDidController.getSigner(
+            signer: await aliceDidManager.getSigner(
               aliceDidDocument.authentication.first.id,
               signatureScheme: SignatureScheme.ecdsa_p256_sha256,
             ),
@@ -170,11 +170,11 @@ void main() async {
 
           bobMediatorClient = MediatorClient(
             mediatorDidDocument: bobMediatorDocument,
-            keyPair: await bobDidController.getKeyPairByDidKeyId(
+            keyPair: await bobDidManager.getKeyPairByDidKeyId(
               bobMatchedDidKeyIds.first,
             ),
             didKeyId: bobMatchedDidKeyIds.first,
-            signer: await bobDidController.getSigner(
+            signer: await bobDidManager.getSigner(
               bobDidDocument.authentication.first.id,
               signatureScheme: SignatureScheme.ecdsa_p256_sha256,
             ),
@@ -221,7 +221,7 @@ void main() async {
             recipientDidDocuments: [bobDidDocument],
             keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
             encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-            signer: await aliceDidController.getSigner(
+            signer: await aliceDidManager.getSigner(
               aliceDidDocument.assertionMethod.first.id,
               signatureScheme: SignatureScheme.ecdsa_p256_sha256,
             ),
@@ -268,7 +268,7 @@ void main() async {
             messages.map(
               (message) => DidcommMessage.unpackToPlainTextMessage(
                 message: message,
-                recipientDidController: bobDidController,
+                recipientDidManager: bobDidManager,
                 validateAddressingConsistency: true,
                 expectedMessageWrappingTypes: [
                   MessageWrappingType.anoncryptSignPlaintext,
@@ -317,7 +317,7 @@ void main() async {
               recipientDidDocuments: [bobDidDocument],
               keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
               encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-              signer: await aliceDidController.getSigner(
+              signer: await aliceDidManager.getSigner(
                 aliceDidDocument.assertionMethod.first.id,
                 signatureScheme: SignatureScheme.ecdsa_p256_sha256,
               ),
@@ -362,7 +362,7 @@ void main() async {
                 final unpackedMessage =
                     await DidcommMessage.unpackToPlainTextMessage(
                   message: message,
-                  recipientDidController: bobDidController,
+                  recipientDidManager: bobDidManager,
                   validateAddressingConsistency: true,
                   expectedMessageWrappingTypes: [
                     isMediatorTelemetryMessage
