@@ -158,7 +158,6 @@ void main() async {
             didKeyId: aliceMatchedDidKeyIds.first,
             signer: await aliceDidManager.getSigner(
               aliceDidDocument.authentication.first.id,
-              signatureScheme: SignatureScheme.ecdsa_p256_sha256,
             ),
             forwardMessageOptions: const ForwardMessageOptions(
               shouldSign: true,
@@ -176,7 +175,6 @@ void main() async {
             didKeyId: bobMatchedDidKeyIds.first,
             signer: await bobDidManager.getSigner(
               bobDidDocument.authentication.first.id,
-              signatureScheme: SignatureScheme.ecdsa_p256_sha256,
             ),
             webSocketOptions: const WebSocketOptions(
               liveDeliveryChangeMessageOptions:
@@ -223,7 +221,6 @@ void main() async {
             encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
             signer: await aliceDidManager.getSigner(
               aliceDidDocument.assertionMethod.first.id,
-              signatureScheme: SignatureScheme.ecdsa_p256_sha256,
             ),
           );
 
@@ -319,7 +316,6 @@ void main() async {
               encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
               signer: await aliceDidManager.getSigner(
                 aliceDidDocument.assertionMethod.first.id,
-                signatureScheme: SignatureScheme.ecdsa_p256_sha256,
               ),
             );
 

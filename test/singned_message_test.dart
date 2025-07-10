@@ -21,12 +21,6 @@ void main() async {
 
   final bip32Wallet = Bip32Wallet.fromSeed(Uint8List.fromList(seed));
 
-  final signatureSchemes = {
-    KeyType.p256: SignatureScheme.ecdsa_p256_sha256,
-    KeyType.ed25519: SignatureScheme.ed25519,
-    KeyType.secp256k1: SignatureScheme.ecdsa_secp256k1_sha256,
-  };
-
   final wallets = {
     KeyType.p256: persistentWallet,
     KeyType.ed25519: persistentWallet,
@@ -68,11 +62,8 @@ void main() async {
           await didManager.addVerificationMethod(keyId);
           didDocument = await didManager.getDidDocument();
 
-          final signatureScheme = signatureSchemes[keyType]!;
-
           signer = await didManager.getSigner(
             didDocument.assertionMethod.first.id,
-            signatureScheme: signatureScheme,
           );
         });
 
@@ -168,7 +159,6 @@ void main() async {
 
           final extraSigner = await extraDidManager.getSigner(
             (await extraDidManager.getDidDocument()).assertionMethod.first.id,
-            signatureScheme: SignatureScheme.ecdsa_p256_sha256,
           );
 
           const content = 'Hello, Bob!';

@@ -40,7 +40,6 @@ void main() async {
 
   final aliceSigner = await aliceDidManager.getSigner(
     aliceDidDocument.assertionMethod.first.id,
-    signatureScheme: SignatureScheme.ecdsa_p256_sha256,
   );
 
   final bobKeyId = "m/44'/60'/0'/0'/0'";
