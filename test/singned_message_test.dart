@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:didcomm/didcomm.dart';
+import 'package:didcomm/src/extensions/did_signer_extension.dart';
 import 'package:didcomm/src/extensions/object_extension.dart';
 import 'package:ssi/ssi.dart';
 import 'package:test/test.dart';
@@ -76,7 +77,6 @@ void main() async {
         });
 
         test('Pack and unpack signed message successfully', () async {
-          // Act: create and sign the message
           const content = 'Hello, Bob!';
           final plainTextMessage =
               MessageAssertionService.createPlainTextMessageAssertion(
@@ -113,7 +113,8 @@ void main() async {
           expect(unpackedPlainTextMessage.body!['content'], content);
         });
 
-        test('Should fail on invalid signature', () async {
+        test('Should fail on invalid signature if there is only one signature',
+            () async {
           // Act: create and sign the message
           const content = 'Hello, Bob!';
           final plainTextMessage =
@@ -138,6 +139,118 @@ void main() async {
           final actualFuture = DidcommMessage.unpackToPlainTextMessage(
             message: brokenMessage,
             recipientDidManager: didManager,
+            validateAddressingConsistency: true,
+            expectedMessageWrappingTypes: [
+              MessageWrappingType.signedPlaintext,
+            ],
+            expectedSigners: [
+              didDocument.assertionMethod.first.didKeyId,
+            ],
+          );
+
+          await expectLater(actualFuture, throwsA(isA<Exception>()));
+        });
+
+        test(
+            'Pack and unpack encrypted message with multiple signatures successfully',
+            () async {
+          final extraDidController = DidKeyController(
+            store: InMemoryDidStore(),
+            wallet: PersistentWallet(InMemoryKeyStore()),
+          );
+
+          final extraKeyPair = await extraDidController.wallet.generateKey(
+            // extra wallet always has p256
+            keyType: KeyType.p256,
+          );
+
+          await extraDidController.addVerificationMethod(extraKeyPair.id);
+
+          final extraSigner = await extraDidController.getSigner(
+            (await extraDidController.getDidDocument())
+                .assertionMethod
+                .first
+                .id,
+            signatureScheme: SignatureScheme.ecdsa_p256_sha256,
+          );
+
+          const content = 'Hello, Bob!';
+          final plainTextMessage =
+              MessageAssertionService.createPlainTextMessageAssertion(
+            content,
+            from: didDocument.id,
+            to: ['did:rand:0x1234567890abcdef1234567890abcdef12345678'],
+          );
+
+          final signedMessage = await SignedMessage.pack(
+            plainTextMessage,
+            signer: signer,
+          );
+
+          final extraSignedMessage = await SignedMessage.pack(
+            plainTextMessage,
+            signer: extraSigner,
+          );
+
+          signedMessage.signatures.add(
+            extraSignedMessage.signatures.first,
+          );
+
+          expect(signedMessage.signatures, isNotNull);
+          expect(
+            signedMessage.signatures.first.header.keyId,
+            didDocument.assertionMethod.first.didKeyId,
+          );
+
+          final unpackedPlainTextMessage =
+              await DidcommMessage.unpackToPlainTextMessage(
+            message: signedMessage.toJson(),
+            recipientDidController: didController,
+            validateAddressingConsistency: true,
+            expectedMessageWrappingTypes: [
+              MessageWrappingType.signedPlaintext,
+            ],
+            expectedSigners: [
+              signer.didKeyId,
+              extraSigner.didKeyId,
+            ],
+          );
+
+          expect(unpackedPlainTextMessage, isNotNull);
+          expect(unpackedPlainTextMessage.body!['content'], content);
+        });
+
+        test('Should fail on invalid signature if there are multiple signature',
+            () async {
+          const content = 'Hello, Bob!';
+          final plainTextMessage =
+              MessageAssertionService.createPlainTextMessageAssertion(
+            content,
+            from: didDocument.id,
+            to: ['did:rand:0x1234567890abcdef1234567890abcdef12345678'],
+          );
+
+          final signedMessage = await SignedMessage.pack(
+            plainTextMessage,
+            signer: signer,
+          );
+
+          final originalSignature = signedMessage.signatures.first;
+
+          // simulate invalid signature additionally to a valid signature
+          final fakeSignature = Signature(
+            protected: originalSignature.protected,
+            signature: Uint8List.fromList(
+              List.filled(originalSignature.signature.length, 5),
+            ),
+            header: originalSignature.header,
+          );
+
+          signedMessage.signatures.add(fakeSignature);
+
+          final actualFuture = DidcommMessage.unpackToPlainTextMessage(
+            message: signedMessage.toJson(),
+            recipientDidController: didController,
             validateAddressingConsistency: true,
             expectedMessageWrappingTypes: [
               MessageWrappingType.signedPlaintext,
