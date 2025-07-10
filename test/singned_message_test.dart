@@ -154,23 +154,20 @@ void main() async {
         test(
             'Pack and unpack encrypted message with multiple signatures successfully',
             () async {
-          final extraDidController = DidKeyController(
+          final extraDidManager = DidKeyManager(
             store: InMemoryDidStore(),
             wallet: PersistentWallet(InMemoryKeyStore()),
           );
 
-          final extraKeyPair = await extraDidController.wallet.generateKey(
+          final extraKeyPair = await extraDidManager.wallet.generateKey(
             // extra wallet always has p256
             keyType: KeyType.p256,
           );
 
-          await extraDidController.addVerificationMethod(extraKeyPair.id);
+          await extraDidManager.addVerificationMethod(extraKeyPair.id);
 
-          final extraSigner = await extraDidController.getSigner(
-            (await extraDidController.getDidDocument())
-                .assertionMethod
-                .first
-                .id,
+          final extraSigner = await extraDidManager.getSigner(
+            (await extraDidManager.getDidDocument()).assertionMethod.first.id,
             signatureScheme: SignatureScheme.ecdsa_p256_sha256,
           );
 
@@ -205,7 +202,7 @@ void main() async {
           final unpackedPlainTextMessage =
               await DidcommMessage.unpackToPlainTextMessage(
             message: signedMessage.toJson(),
-            recipientDidController: didController,
+            recipientDidManager: didManager,
             validateAddressingConsistency: true,
             expectedMessageWrappingTypes: [
               MessageWrappingType.signedPlaintext,
@@ -250,7 +247,7 @@ void main() async {
 
           final actualFuture = DidcommMessage.unpackToPlainTextMessage(
             message: signedMessage.toJson(),
-            recipientDidController: didController,
+            recipientDidManager: didManager,
             validateAddressingConsistency: true,
             expectedMessageWrappingTypes: [
               MessageWrappingType.signedPlaintext,
