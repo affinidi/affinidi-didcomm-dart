@@ -11,7 +11,7 @@ void main() async {
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/alice_private_key.pem
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/bob_private_key.pem
 
-  // Create and run a DIDComm mediator, for instance with https://portal.affinidi.com.
+  // Create and run a DIDComm mediator, for instance https://github.com/affinidi/affinidi-tdk-rs/tree/main/crates/affinidi-messaging/affinidi-messaging-mediator or with https://portal.affinidi.com.
   // Copy its DID Document URL into example/mediator/mediator_did.txt.
 
   final aliceKeyStore = InMemoryKeyStore();
@@ -206,7 +206,7 @@ void main() async {
           .subjectKeyId;
 
       final isMediatorTelemetryMessage =
-          senderDid?.contains('.atlas.affinidi.io') == true;
+          senderDid?.contains('.affinidi.io') == true;
 
       final unpackedMessageByBob =
           await DidcommMessage.unpackToPlainTextMessage(

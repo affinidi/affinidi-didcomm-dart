@@ -22,7 +22,7 @@ void main() async {
   // OR
   // set environment variables TEST_MEDIATOR_DID, TEST_ALICE_PRIVATE_KEY_PEM, and TEST_BOB_PRIVATE_KEY_PEM
 
-  // Create and run a DIDComm mediator, for instance with https://portal.affinidi.com.
+  // Create and run a DIDComm mediator, for instance https://github.com/affinidi/affinidi-tdk-rs/tree/main/crates/affinidi-messaging/affinidi-messaging-mediator or with https://portal.affinidi.com.
   // Copy its DID Document URL into example/mediator/mediator_did.txt.
 
   const mediatorDidPath = './example/mediator/mediator_did.txt';
@@ -353,7 +353,7 @@ void main() async {
                     .subjectKeyId;
 
                 final isMediatorTelemetryMessage =
-                    senderDid?.contains('.atlas.affinidi.io') == true;
+                    senderDid?.contains('.affinidi.io') == true;
 
                 final unpackedMessage =
                     await DidcommMessage.unpackToPlainTextMessage(
