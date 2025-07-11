@@ -45,7 +45,7 @@ void main() {
 
       await Future.wait(filesWithMain.map((file) async {
         final result = await Process.run(
-          'dart',
+          Platform.resolvedExecutable,
           [file.path],
           runInShell: true,
         );
