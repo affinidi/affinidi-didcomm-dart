@@ -44,7 +44,12 @@ void main() {
       final errors = <String>[];
 
       await Future.wait(filesWithMain.map((file) async {
-        final result = await Process.run('dart', [file.path]);
+        final result = await Process.run(
+          'dart',
+          [file.path],
+          runInShell: true,
+        );
+
         if (result.exitCode != 0) {
           errors.add(
             'FAILED: ${file.path}.\nExit code: ${result.exitCode}.\nStdout: ${result.stdout}.\nStderr: ${result.stderr}.',
