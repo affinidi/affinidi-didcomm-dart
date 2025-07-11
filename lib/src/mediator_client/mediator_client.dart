@@ -109,6 +109,37 @@ class MediatorClient {
     }
   }
 
+  /// Sends a [ForwardMessage] to the mediator.
+  ///
+  /// [message] - The message to send.
+  /// [accessToken] - Optional bearer token for authentication.
+  ///
+  /// Returns the packed [DidcommMessage] that was sent.
+  Future<DidcommMessage> sendPlaintextMessage(
+    PlainTextMessage message, {
+    String? accessToken,
+  }) async {
+    final messageToSend = await _packMessage(
+      message,
+      messageOptions: forwardMessageOptions,
+    );
+
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+
+    try {
+      await _dio.post<Map<String, dynamic>>(
+        '/inbound',
+        data: messageToSend,
+        options: Options(headers: headers),
+      );
+
+      return messageToSend;
+    } on DioException catch (error) {
+      throw MediatorClientException(innerException: error);
+    }
+  }
+
   /// Lists message IDs in the inbox for the current actor.
   ///
   /// [accessToken] - Optional bearer token for authentication.
