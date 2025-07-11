@@ -1,3 +1,10 @@
+## 0.0.9
+
+ - **FIX**: mediator pointer in example.
+ - **FIX**: resolve executable.
+ - **FIX**: run in shell.
+ - **FEAT**: run example files during testing.
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
