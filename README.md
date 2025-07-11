@@ -43,7 +43,7 @@ The DIDComm for Dart package utilises existing open standards and cryptographic 
 
 - **Mediator** - A service that handles and routes messages sent between participants (e.g., users, organisations, another mediator, or even AI agents).
 
-- **DidManager** - Establishes the relationship between DID methods and key pairs from the Wallet, supporting different algorithms for signing and verifying messages.
+- **DID Manager** - Establishes the relationship between DID methods and key pairs from the Wallet, supporting different algorithms for signing and verifying messages.
 
 ## Key Features
 
@@ -79,33 +79,15 @@ DIDComm v2 messages can be sent in the following formats: plaintext, signed, and
 
 You can combine the DIDComm Message Envelope types in the following ways:
 
-- **plaintext**:  
-  - **Purpose**: Used as the building block of higher-level protocols, but rarely transmitted directly, since it lacks security guarantees.
-  - **Use case**: Public announcements, non-confidential data, debugging, or as the inner content of other envelopes.
-
-- **signed(plaintext)**:  
-  - **Purpose**: Adds non-repudiation to a plaintext message; whoever receives a message wrapped in this way can prove its origin to any external party.
-  - **Use case**: Audit trails, legal or regulatory messages, or when recipients need to prove message origin to third parties.
-
-- **anoncrypt(plaintext)**:  
-  - **Purpose**: Guarantees confidentiality and integrity without revealing the identity of the sender.
-  - **Use case**: Anonymous tips, whistleblowing, or when sender's identity must be hidden.
-
-- **authcrypt(plaintext)**:  
-  - **Purpose**: It guarantees confidentiality and integrity. It also proves the sender's identity—but in a way that only the recipient can verify. This is the default wrapping choice that should be used unless a different goal is clearly identified.
-  - **Use case**: Most secure communications where both privacy and sender authenticity are required.
-
-- **anoncrypt(sign(plaintext))**:  
-  - **Purpose**: Guarantees confidentiality, integrity, and non-repudiation – but prevents an observer of the outer envelope from accessing the signature. Relative to authcrypt(plaintext), this increases guarantees to the recipient since non-repudiation is stronger than simple authentication. However, it also forces the sender to talk “on the record” and is thus not assumed to be desirable by default.
-  - **Use case**: Sensitive communications where sender wants to prove authorship to the recipient but remain anonymous to intermediaries.
-
-- **authcrypt(sign(plaintext))**:  
-  - **Purpose**: It adds no useful guarantees over the previous choice and is slightly more expensive. This wrapping combination should not be emitted by conforming implementations. However, implementations may accept it. If they choose to do so, they must emit an error if the signer of the plaintext is different from the sender identified by the authcrypt layer.
-  - **Use case**: Rarely used; only for compatibility or special cases.
-
-- **anoncrypt(authcrypt(plaintext))**:  
-  - **Purpose**: A specialized combination that hides the sender key ID (skid) header in the authcrypt envelope, so the hop immediately sourceward of a mediator cannot discover an identifier for the sender.
-  - **Use case**: Advanced scenarios requiring layered security and sender anonymity from intermediaries.
+| Envelope Type                      | Purpose                          | Use case                             |
+|------------------------------------|----------------------------------|--------------------------------------|
+| **plaintext**                      | Used as the building block of higher-level protocols, but rarely transmitted directly, since it lacks security guarantees. | Public announcements, non-confidential data, debugging, or as the inner content of other envelopes.                   |
+| **signed(plaintext)**              | Adds non-repudiation to a plaintext message; whoever receives a message wrapped in this way can prove its origin to any external party. | Audit trails, legal or regulatory messages, or when recipients need to prove message origin to third parties. |
+| **anoncrypt(plaintext)**           | Guarantees confidentiality and integrity without revealing the identity of the sender. | Anonymous tips, whistleblowing, or when sender's identity must be hidden.                                                                              |
+| **authcrypt(plaintext)**           | It guarantees confidentiality and integrity. It also proves the sender's identity—but in a way that only the recipient can verify. This is the default wrapping choice that should be used unless a different goal is clearly identified. | Most secure communications where both privacy and sender authenticity are required.                                                                                                      |
+| **anoncrypt(sign(plaintext))**     | Guarantees confidentiality, integrity, and non-repudiation – but prevents an observer of the outer envelope from accessing the signature. Relative to authcrypt(plaintext), this increases guarantees to the recipient since non-repudiation is stronger than simple authentication. However, it also forces the sender to talk “on the record” and is thus not assumed to be desirable by default. | Sensitive communications where sender wants to prove authorship to the recipient but remain anonymous to intermediaries.                                                                            |
+| **authcrypt(sign(plaintext))**     | It adds no useful guarantees over the previous choice and is slightly more expensive. This wrapping combination should not be emitted by conforming implementations. However, implementations may accept it. If they choose to do so, they must emit an error if the signer of the plaintext is different from the sender identified by the authcrypt layer. | Rarely used; only for compatibility or special cases.              |
+| **anoncrypt(authcrypt(plaintext))** | A specialized combination that hides the sender key ID (skid) header in the authcrypt envelope, so the hop immediately sourceward of a mediator cannot discover an identifier for the sender. | Advanced scenarios requiring layered security and sender anonymity from intermediaries. |
 
 
 ### Security Features of Envelope Type Combinations
