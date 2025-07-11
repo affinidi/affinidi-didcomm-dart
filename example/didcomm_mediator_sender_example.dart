@@ -84,8 +84,8 @@ void main() async {
     senderDidDocument.assertionMethod.first.id,
   );
 
-  final receiverMediatorDidDocument = await readDidDocument(
-    './example/mediator/mediator_did_document.json',
+  final receiverMediatorDidDocument = await UniversalDIDResolver.resolve(
+    await readDid('./example/mediator/mediator_did.txt'),
   );
 
   final senderPlainTextMassage = PlainTextMessage(
