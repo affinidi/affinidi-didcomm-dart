@@ -1,3 +1,8 @@
+## 0.0.9+1
+
+ - **FIX**: configure examples before running test.
+ - **FIX**: examples.
+
 ## 0.0.9
 
  - **FIX**: mediator pointer in example.
