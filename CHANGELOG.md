@@ -1,0 +1,82 @@
+## 1.0.0-dev.2
+
+ - **FIX**: store env variables in file.
+ - **FIX**: configure examples before running test.
+ - **FIX**: examples.
+ - **FIX**: mediator pointer in example.
+ - **FIX**: resolve executable.
+ - **FIX**: run in shell.
+ - **FIX**: use default signature schema.
+ - **FIX**: include parent fields in toJson (#28).
+ - **FIX**: dart analyzer issue.
+ - **FIX**: dart format.
+ - **FIX**: examples.
+ - **FIX**: analyzer issues.
+ - **FIX**: dart analyze issues.
+ - **FIX**: dart analyze issues.
+ - **FIX**: did document extension naming.
+ - **FIX**: mediator in user did document.
+ - **FIX**: formatting issues.
+ - **FIX**: code review findings.
+ - **FIX**: formatting.
+ - **FIX**: dart analyzer issues.
+ - **FIX**: integration test.
+ - **FIX**: pem decoding.
+ - **FIX**: integration test pipeline.
+ - **FIX**: integration test pipeline.
+ - **FIX**: pipeline for integration tests.
+ - **FIX**: passing env variables.
+ - **FIX**: set job secrets.
+ - **FIX**: anonymous decryption.
+ - **FIX**: encryption for x curve.
+ - **FIX**: related imports.
+ - **FIX**: typo.
+ - **FIX**: example.
+ - **FIX**: did resolution.
+ - **FIX**: websockets.
+ - **FIX**: keep the original protected header.
+ - **FIX**: sender example.
+ - **FIX**: signature.
+ - **FIX**: example for ed25516.
+ - **FIX**: directory structure.
+ - **FIX**: websockets example.
+ - **FIX**: add melos config.
+ - **FIX**: add melos dependency.
+ - **FIX**: add tests for anonymous encryption.
+ - **FIX**: dart format.
+ - **FIX**: update gitignore, add pubignore (#11).
+ - **FEAT**: add attachments, jwks and algorithms to exports.
+ - **FEAT**: integration test for mediator.
+ - **FEAT**: update OOB message class.
+ - **FEAT**: resolve conflicts after rebase.
+ - **FEAT**: add basic test for signed message.
+ - **FEAT**: update tests.
+ - **FEAT**: update tests.
+ - **FEAT**: recipients validation.
+ - **FEAT**: add test/encrypted_message_with_bip32_ed25519_wallet_test.dart.
+ - **FEAT**: update errors being thrown & add respective constructors.
+ - **FEAT**: add overrides.
+ - **FEAT**: delete invitation message as oob message generalizes the interface for it.
+ - **FEAT**: initial release.
+ - **FEAT**: update exports.
+ - **FEAT**: add inherited dart pipeline.
+ - **FEAT**: update model.
+ - **FEAT**: add basic test and update model.
+ - **FEAT**: update test.
+ - **FEAT**: enable ECDH secret computation for secp256.
+ - **FEAT**: update after review.
+ - **FEAT**: did doc extensions for mediator.
+ - **FEAT**: check message envelop chain if it is as expected.
+ - **FEAT**: validate signers.
+ - **FEAT**: use did controller.
+ - **FEAT**: add did controller.
+ - **FEAT**: update after review.
+ - **FEAT**: update ssi version & examples.
+ - **FEAT**: run example files during testing.
+ - **FEAT**: add algorithm a256gcm.
+ - **DOCS**: address readme comments.
+ - **DOCS**: update didcomm overview.
+ - **DOCS**: update readme to add support for keytype SECP256K1.
+ - **DOCS**: update readme to add support for keytype SECP256K1.
+ - **DOCS**: main readme update.
+
