@@ -9,4 +9,4 @@ jobs:
     uses: affinidi/pipeline-dart/.github/workflows/publish.yaml@main
     secrets: inherit
     with:
-      publish: false
+      publish: true
