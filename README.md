@@ -26,8 +26,12 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
     - [unpackToPlainTextMessage](#unpacktoplaintextmessage)
   - [More Usage Examples](#more-usage-examples)
   - [Key Type Selection for Authcrypt and Anoncrypt](#key-type-selection-for-authcrypt-and-anoncrypt)
+  - [Problem report messages](#problem-report-messages)
+    - [Structure of a Problem Report](#structure-of-a-problem-report)
+    - [Usage in Dart](#usage-in-dart)
   - [Ed25519/X25519 Key Derivation](#ed25519x25519-key-derivation)
   - [Support & feedback](#support--feedback)
+    - [Reporting technical issues](#reporting-technical-issues)
   - [Contributing](#contributing)
 
 
@@ -427,6 +431,69 @@ final keyType = commonKeyTypes.first; // Use this key type for anoncrypt
 ```
 
 This ensures that the correct and compatible keys are used for ECDH-1PU (authcrypt) and ECDH-ES (anoncrypt) operations, and that all recipients can decrypt the message using a supported key agreement method.
+
+
+## Problem report messages
+
+DIDComm v2 defines a standard mechanism for reporting problems between parties using a special message type: `problem-report`. Problem reports help communicate errors, warnings, or issues encountered during protocol execution, improving robustness and interoperability.
+
+This is similar to HTTP status codes (400, 401, 500), where each code provides a standardized way to indicate the nature and category of a problem. In DIDComm, problem report codes are structured to convey both the severity (error or warning) and the context (protocol, message, or state), followed by specific descriptors.
+
+### Structure of a Problem Report
+
+A problem report is a DIDComm message with the type `https://didcomm.org/report-problem/2.0/problem-report`. Its `body` contains a required `code` field and optional fields for human-readable comments, arguments, and escalation information.
+
+**Example:**
+
+```json
+{
+  "type": "https://didcomm.org/report-problem/2.0/problem-report",
+  "id": "123",
+  "pthid": "thread-1",
+  "ack": ["122"],
+  "body": {
+    "code": "e.p.xfer.cant-use-endpoint",
+    "comment": "Unable to use the {1} endpoint for {2}.",
+    "args": [
+      "https://mediator.com/inbox",
+      "did:example:123"
+    ],
+    "escalate_to": "mailto:admin@foo.org"
+  }
+}
+```
+
+- `code`: A structured, lower-kebab-case string describing the problem (e.g., `e.p.xfer.cant-use-endpoint`). The code starts with a sorter (`e` for error, `w` for warning), followed by scope (`p` for protocol, `m` for message, or a state name), and one or more descriptors (e.g., `xfer`, `msg`, `trust.crypto`).
+- `comment`: (Optional) Human-friendly, static text describing the problem, with `{1}`, `{2}` placeholders for `args`.
+- `args`: (Optional) Values interpolated into `comment` for context.
+- `pthid`: The parent thread ID where the problem occurred.
+- `ack`: (Optional) Message IDs being acknowledged if the problem is a direct response.
+- `escalate_to`: (Optional) URI for escalation or support.
+
+
+### Usage in Dart
+
+You can construct, serialize, and deserialize a problem report message using the Dart API as shown below (see `test/problem_report_message_test.dart` for a full test):
+
+```dart
+final message = ProblemReportMessage(
+  id: '123',
+  parentThreadId: 'thread-1',
+  acknowledged: ['122'],
+  body: ProblemReportBody(
+    code: ProblemCode(
+      sorter: SorterType.error,
+      scope: Scope(scope: ScopeType.protocol),
+      descriptors: [DescriptorType.xfer.code, 'cant-use-endpoint'],
+    ),
+    comment: 'Unable to use the {1} endpoint for {2}.',
+    arguments: ['https://mediator.com/inbox', 'did:example:123'],
+    escalateTo: 'mailto:admin@foo.org',
+  ),
+);
+```
+
+This approach ensures your problem reports are fully compatible with the DIDComm v2 spec.
 
 ## Ed25519/X25519 Key Derivation
 

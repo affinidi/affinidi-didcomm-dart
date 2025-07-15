@@ -14,8 +14,8 @@ void main() {
             scope: Scope(scope: ScopeType.protocol),
             descriptors: [DescriptorType.xfer.code, 'cant-use-endpoint'],
           ),
-          comment: 'Unable to use the endpoint.',
-          arguments: ['arg1', 'arg2'],
+          comment: 'Unable to use the {1} endpoint for {2}.',
+          arguments: ['https://mediator.com/inbox', 'did:example:123'],
           escalateTo: 'mailto:admin@foo.org',
         ),
       );
@@ -34,8 +34,8 @@ void main() {
       expect(body.code.sorter, SorterType.error);
       expect(body.code.scope.scope, ScopeType.protocol);
       expect(body.code.descriptors, ['xfer', 'cant-use-endpoint']);
-      expect(body.comment, 'Unable to use the endpoint.');
-      expect(body.arguments, ['arg1', 'arg2']);
+      expect(body.comment, 'Unable to use the {1} endpoint for {2}.');
+      expect(body.arguments, ['https://mediator.com/inbox', 'did:example:123']);
       expect(body.escalateTo, 'mailto:admin@foo.org');
     });
   });
