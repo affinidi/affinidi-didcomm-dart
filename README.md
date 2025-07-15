@@ -29,6 +29,7 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
   - [Security Safeguards](#security-safeguards)
     - [Message Layer Addressing Consistency](#message-layer-addressing-consistency)
       - [Enforcement in unpackToPlainTextMessage](#enforcement-in-unpacktoplaintextmessage)
+    - [Message Wrapping Verification](#message-wrapping-verification)
   - [Problem Report Messages](#problem-report-messages)
     - [Structure of a Problem Report](#structure-of-a-problem-report)
     - [Usage in Dart](#usage-in-dart)
@@ -459,6 +460,15 @@ When you call `unpackToPlainTextMessage` in this Dart library, these addressing 
 If any inconsistency is detected, `unpackToPlainTextMessage` throws an error, preventing further processing of potentially malicious or misrouted messages. This strict enforcement helps maintain the integrity and authenticity of DIDComm communications, as required by the specification.
 
 For development or debugging purposes, you can disable addressing consistency checks by passing `validateAddressingConsistency: false` to `unpackToPlainTextMessage`. This allows you to inspect or process messages that would otherwise be rejected due to addressing mismatches. **Warning:** Disabling these checks should only be done in trusted, non-production environments, as it weakens security guarantees and may expose your application to spoofed or misrouted messages.
+
+### Message Wrapping Verification
+
+The `expectedMessageWrappingTypes` argument of `unpackToPlainTextMessage` lets you specify which message wrapping types (e.g., authenticated encryption, signed, plaintext) are allowed when unpacking a message. This is an important security feature that helps prevent downgrade attacks and ensures the message you receive matches your security expectations.
+
+- If you provide a list of wrapping types (such as `[MessageWrappingType.authcryptSignPlaintext, MessageWrappingType.authcryptPlaintext, MessageWrappingType.anoncryptPlaintext]`), only messages with those wrappings will be accepted. Any message with a different wrapping will be rejected.
+- If you do **not** specify `expectedMessageWrappingTypes` (i.e., leave it `null` or omit it), the default is `[MessageWrappingType.authcryptPlaintext]` as recommended by the DIDComm v2 specification. This means only authenticated encrypted messages will be accepted by default.
+
+**Tip:** Always set `expectedMessageWrappingTypes` explicitly to match your protocol or application's requirements. This helps ensure you are not tricked into processing a message with weaker security than intended.
 
 ## Problem Report Messages
 
