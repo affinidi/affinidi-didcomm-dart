@@ -460,8 +460,9 @@ encrypted message:
         - kid: did:example:alice#key-1
       payload:
         plain text message:
-        from: did:example:alice#key-1
-        to: did:example:bob#key-1
+          from: did:example:alice#key-1
+          to: did:example:bob#key-1
+          body: ...
 
 ```
 
