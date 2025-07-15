@@ -461,26 +461,44 @@ The `expectedMessageWrappingTypes` argument of `unpackToPlainTextMessage` lets y
 
 **Tip:** Always set `expectedMessageWrappingTypes` explicitly to match your protocol or application's requirements. This helps ensure you are not tricked into processing a message with weaker security than intended.
 
+Example how to use:
+
+```dart
+final plainTextMessage =
+    await DidcommMessage.unpackToPlainTextMessage(
+  message: json,
+  recipientDidManager: bobDidManager,
+  expectedMessageWrappingTypes: [
+    MessageWrappingType.anoncryptSignPlaintext,
+    MessageWrappingType.authcryptSignPlaintext,
+    MessageWrappingType.authcryptPlaintext,
+    MessageWrappingType.anoncryptAuthcryptPlaintext,
+  ],
+);
+```
+
 ### Verification of Signers
 
 The `expectedSigners` argument of `unpackToPlainTextMessage` lets you specify a set of signers' key IDs that you require to have signed the message. This is especially important for signed messages that may contain multiple signatures (for example, in multi-party workflows or protocols requiring multiple approvals).
 
+Example with multiple signatures:
+
 ```json
 {
-   "payload":"...",
+   "payload":"<decoded plain text message>",
    "signatures":[
       {
          "protected":"...",
-         "signature":"signature-1",
+         "signature":"<signature-1 base64>",
          "header":{
             "kid":"did:example:alice#key-1"
          }
       },
       {
          "protected":"...",
-         "signature":"signature-2",
+         "signature":"<signature-2 base64>",
          "header":{
-            "kid":"did:example:alice#key-2"
+            "kid":"did:example:bob#key-1"
          }
       }
    ]
@@ -492,6 +510,25 @@ When you provide a list of key IDs in `expectedSigners`, the function will check
 If you do not specify `expectedSigners`, the function will not enforce any signer requirements beyond the addressing consistency checks (i.e., it will only check that the `from` field matches at least one signature's key ID, as required by the DIDComm spec).
 
 **Tip:** Always use `expectedSigners` when you need to ensure that a message was signed by at least a specific set of parties, especially in scenarios where multiple signatures are possible or required. This is critical for protocols that require multi-party approval or consensus.
+
+Example how to use:
+
+```dart
+final plainTextMessage =
+    await DidcommMessage.unpackToPlainTextMessage(
+  message: json,
+  recipientDidManager: bobDidManager,
+  expectedMessageWrappingTypes: [
+    MessageWrappingType.anoncryptSignPlaintext,
+    MessageWrappingType.authcryptSignPlaintext,
+    MessageWrappingType.signPlaintext,
+  ],
+  expectedSigners: [
+    'did:example:alice#key-1',
+    'did:example:bob#key-1',
+  ],
+);
+```
 
 ## Problem Report Messages
 
