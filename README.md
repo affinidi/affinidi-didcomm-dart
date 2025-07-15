@@ -26,7 +26,10 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
     - [unpackToPlainTextMessage](#unpacktoplaintextmessage)
   - [More Usage Examples](#more-usage-examples)
   - [Key Type Selection for Authcrypt and Anoncrypt](#key-type-selection-for-authcrypt-and-anoncrypt)
-  - [Problem report messages](#problem-report-messages)
+  - [Security Safeguards](#security-safeguards)
+    - [Message Layer Addressing Consistency](#message-layer-addressing-consistency)
+      - [Enforcement in unpackToPlainTextMessage](#enforcement-in-unpacktoplaintextmessage)
+  - [Problem Report Messages](#problem-report-messages)
     - [Structure of a Problem Report](#structure-of-a-problem-report)
     - [Usage in Dart](#usage-in-dart)
   - [Ed25519/X25519 Key Derivation](#ed25519x25519-key-derivation)
@@ -432,8 +435,32 @@ final keyType = commonKeyTypes.first; // Use this key type for anoncrypt
 
 This ensures that the correct and compatible keys are used for ECDH-1PU (authcrypt) and ECDH-ES (anoncrypt) operations, and that all recipients can decrypt the message using a supported key agreement method.
 
+## Security Safeguards
 
-## Problem report messages
+### Message Layer Addressing Consistency
+
+To ensure trust and prevent message tampering or misrouting, DIDComm v2 enforces message layer addressing consistency between the plaintext message and its cryptographic envelopes. According to the [DIDComm v2 spec](https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency):
+
+- The `from` attribute in the plaintext message **must match** the `skid` (sender key ID) in the encryption layer.
+- The `to` attribute in the plaintext message **must contain** the `kid` (recipient key ID) in the encryption layer.
+- The `from` attribute in the plaintext message **must match** the signer's `kid` in a signed message.
+
+If any of these checks fail, the message is considered invalid and an error is raised.
+
+#### Enforcement in `unpackToPlainTextMessage`
+
+When you call `unpackToPlainTextMessage` in this Dart library, these addressing consistency checks are performed automatically:
+
+- The function extracts the `from` and `to` fields from the decrypted plaintext message.
+- It compares the `from` value to the sender key ID (`skid`) found in the decrypted envelope, ensuring they match.
+- It verifies that the recipient key ID (`kid`) used for decryption is present in the `to` array of the message.
+- For signed messages, it tries to find a signature whose key ID matches the `from` value. The message is only accepted if such a match is found, ensuring the sender's identity is consistent with at least one valid signature.
+
+If any inconsistency is detected, `unpackToPlainTextMessage` throws an error, preventing further processing of potentially malicious or misrouted messages. This strict enforcement helps maintain the integrity and authenticity of DIDComm communications, as required by the specification.
+
+For development or debugging purposes, you can disable addressing consistency checks by passing `validateAddressingConsistency: false` to `unpackToPlainTextMessage`. This allows you to inspect or process messages that would otherwise be rejected due to addressing mismatches. **Warning:** Disabling these checks should only be done in trusted, non-production environments, as it weakens security guarantees and may expose your application to spoofed or misrouted messages.
+
+## Problem Report Messages
 
 DIDComm v2 defines a standard mechanism for reporting problems between parties using a special message type: `problem-report`. Problem reports help communicate errors, warnings, or issues encountered during protocol execution, improving robustness and interoperability.
 
