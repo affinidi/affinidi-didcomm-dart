@@ -30,6 +30,7 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
     - [Message Layer Addressing Consistency](#message-layer-addressing-consistency)
     - [Message Wrapping Verification](#message-wrapping-verification)
     - [Verification of Signers](#verification-of-signers)
+    - [Custom Message Verification and Processing](#custom-message-verification-and-processing)
   - [Problem Report Messages](#problem-report-messages)
     - [Structure of a Problem Report](#structure-of-a-problem-report)
     - [Usage in Dart](#usage-in-dart)
@@ -549,6 +550,41 @@ final plainTextMessage =
   ],
 );
 ```
+
+### Custom Message Verification and Processing
+
+The `onUnpacked` callback argument of `unpackToPlainTextMessage` allows you to perform custom verification and processing after a message has been unpacked, but before it is returned to your application. This is useful for advanced scenarios where you want to enforce additional business rules, audit message metadata, or trigger application-specific logic based on the unpacked message content or its signatures.
+
+You can pass an `onUnpacked` callback function to `unpackToPlainTextMessage`. This function will be called with two arguments:
+
+- `foundMessages`: A list of all message layers that were found and unpacked (e.g., encrypted, signed, and plaintext layers). This allows you to inspect the full message envelope stack and perform checks or logging at any layer.
+- `foundSigners`: A list of key IDs (KIDs) that were found to have signed the message. This is especially useful for multi-signature workflows, auditing, or enforcing custom signer policies beyond what is provided by the `expectedSigners` argument.
+
+Within your `onUnpacked` callback, you can:
+
+- Inspect the unpacked message and its metadata.
+- Perform additional verification (e.g., check for specific custom headers, enforce application-specific signature requirements, or validate message content).
+- Throw an error or return a failed Future to abort processing if your custom checks fail.
+- Trigger application logic, logging, or analytics based on the message or its signers.
+
+```dart
+final unpackedMessage = await DidcommMessage.unpackToPlainTextMessage(
+  message: json,
+  recipientDidManager: bobDidManager,
+  onUnpacked: (foundMessages, foundSigners) {
+    // Custom verification: ensure a specific header is present
+    final plainText = foundMessages.last;
+    if (plainText['my-custom-header'] == null) {
+      throw Exception('Missing required custom header');
+    }
+
+    // Custom signer policy: log all signers
+    print('Signers found: $foundSigners');
+  },
+);
+```
+
+This mechanism gives you full control over post-unpacking validation and processing, making it easy to extend DIDComm workflows with your own security, compliance, or business logic.
 
 ## Problem Report Messages
 
