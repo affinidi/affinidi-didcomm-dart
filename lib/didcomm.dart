@@ -7,6 +7,8 @@
 library;
 
 export 'src/converters/jwe_header_converter.dart';
+export 'src/converters/jws_header_converter.dart';
+export 'src/converters/problem_code_converter.dart';
 export 'src/errors/errors.dart';
 export 'src/extensions/affinidi_authenticator_extension.dart';
 export 'src/extensions/did_document_extension.dart';
