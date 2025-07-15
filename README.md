@@ -72,6 +72,8 @@ The DIDComm for Dart package utilises existing open standards and cryptographic 
 
 DIDComm v2 messages can be sent in the following formats: plaintext, signed, and encrypted. Each format, called "envelope", provides different security and privacy guarantees and can be combined in various ways.
 
+![didcomm messages](assets/didcomm-messages.svg)
+
 - **Plaintext message**: A message that is neither signed nor encrypted. It is readable by anyone and provides no integrity or authenticity guarantees. Used for non-sensitive data, debugging, or as the inner content of other envelopes.
 - **Signed message**: A message that is digitally signed but not encrypted. Anyone can read it, but the recipient can prove who signed it (non-repudiation)—used when the message's origin must be provable to the recipient or third parties.
 - **Encrypted message**: An encrypted message for one or more recipients. Only the intended recipients can read the content of the message. Encryption can be:
