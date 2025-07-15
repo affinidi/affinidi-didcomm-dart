@@ -571,9 +571,15 @@ Within your `onUnpacked` callback, you can:
 final unpackedMessage = await DidcommMessage.unpackToPlainTextMessage(
   message: json,
   recipientDidManager: bobDidManager,
+  expectedMessageWrappingTypes: [
+    MessageWrappingType.anoncryptSignPlaintext,
+    MessageWrappingType.authcryptSignPlaintext,
+    MessageWrappingType.signPlaintext,
+  ],
   onUnpacked: (foundMessages, foundSigners) {
-    // Custom verification: ensure a specific header is present
     final plainText = foundMessages.last;
+
+    // Custom verification: ensure a specific header is present
     if (plainText['my-custom-header'] == null) {
       throw Exception('Missing required custom header');
     }
