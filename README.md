@@ -446,6 +446,25 @@ To ensure trust and prevent message tampering or misrouting, DIDComm v2 enforces
 - The `to` attribute in the plaintext message **must contain** the `kid` (recipient key ID) in the encryption layer.
 - The `from` attribute in the plaintext message **must match** the signer's `kid` in a signed message.
 
+Envelop's layout:
+
+```yaml
+encrypted message:
+  header:
+    skid: did:example:alice#key-1
+  recipients:
+    - kid: did:example:bob#key-1
+  payload:
+    signed message:
+      signatures:
+        - kid: did:example:alice#key-1
+      payload:
+        plain text message:
+        from: did:example:alice#key-1
+        to: did:example:bob#key-1
+
+```
+
 If any of these checks fail, the message is considered invalid and an error is raised.
 
 When you call `unpackToPlainTextMessage` in this Dart library, addressing consistency checks are performed automatically. If any inconsistency is detected, `unpackToPlainTextMessage` throws an error, preventing further processing of potentially malicious or misrouted messages. This strict enforcement helps maintain the integrity and authenticity of DIDComm communications, as required by the specification.
