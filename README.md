@@ -28,8 +28,8 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
   - [Key Type Selection for Authcrypt and Anoncrypt](#key-type-selection-for-authcrypt-and-anoncrypt)
   - [Security Safeguards](#security-safeguards)
     - [Message Layer Addressing Consistency](#message-layer-addressing-consistency)
-      - [Enforcement in unpackToPlainTextMessage](#enforcement-in-unpacktoplaintextmessage)
     - [Message Wrapping Verification](#message-wrapping-verification)
+    - [Verification of Signers](#verification-of-signers)
   - [Problem Report Messages](#problem-report-messages)
     - [Structure of a Problem Report](#structure-of-a-problem-report)
     - [Usage in Dart](#usage-in-dart)
@@ -448,16 +448,7 @@ To ensure trust and prevent message tampering or misrouting, DIDComm v2 enforces
 
 If any of these checks fail, the message is considered invalid and an error is raised.
 
-#### Enforcement in `unpackToPlainTextMessage`
-
-When you call `unpackToPlainTextMessage` in this Dart library, these addressing consistency checks are performed automatically:
-
-- The function extracts the `from` and `to` fields from the decrypted plaintext message.
-- It compares the `from` value to the sender key ID (`skid`) found in the decrypted envelope, ensuring they match.
-- It verifies that the recipient key ID (`kid`) used for decryption is present in the `to` array of the message.
-- For signed messages, it tries to find a signature whose key ID matches the `from` value. The message is only accepted if such a match is found, ensuring the sender's identity is consistent with at least one valid signature.
-
-If any inconsistency is detected, `unpackToPlainTextMessage` throws an error, preventing further processing of potentially malicious or misrouted messages. This strict enforcement helps maintain the integrity and authenticity of DIDComm communications, as required by the specification.
+When you call `unpackToPlainTextMessage` in this Dart library, addressing consistency checks are performed automatically. If any inconsistency is detected, `unpackToPlainTextMessage` throws an error, preventing further processing of potentially malicious or misrouted messages. This strict enforcement helps maintain the integrity and authenticity of DIDComm communications, as required by the specification.
 
 For development or debugging purposes, you can disable addressing consistency checks by passing `validateAddressingConsistency: false` to `unpackToPlainTextMessage`. This allows you to inspect or process messages that would otherwise be rejected due to addressing mismatches. **Warning:** Disabling these checks should only be done in trusted, non-production environments, as it weakens security guarantees and may expose your application to spoofed or misrouted messages.
 
@@ -469,6 +460,38 @@ The `expectedMessageWrappingTypes` argument of `unpackToPlainTextMessage` lets y
 - If you do **not** specify `expectedMessageWrappingTypes` (i.e., leave it `null` or omit it), the default is `[MessageWrappingType.authcryptPlaintext]` as recommended by the DIDComm v2 specification. This means only authenticated encrypted messages will be accepted by default.
 
 **Tip:** Always set `expectedMessageWrappingTypes` explicitly to match your protocol or application's requirements. This helps ensure you are not tricked into processing a message with weaker security than intended.
+
+### Verification of Signers
+
+The `expectedSigners` argument of `unpackToPlainTextMessage` lets you specify a set of signers' key IDs that you require to have signed the message. This is especially important for signed messages that may contain multiple signatures (for example, in multi-party workflows or protocols requiring multiple approvals).
+
+```json
+{
+   "payload":"...",
+   "signatures":[
+      {
+         "protected":"...",
+         "signature":"signature-1",
+         "header":{
+            "kid":"did:example:alice#key-1"
+         }
+      },
+      {
+         "protected":"...",
+         "signature":"signature-2",
+         "header":{
+            "kid":"did:example:alice#key-2"
+         }
+      }
+   ]
+}
+```
+
+When you provide a list of key IDs in `expectedSigners`, the function will check that **all** of the provided signers have actually signed the message. Additional signatures beyond those listed in `expectedSigners` are allowed, but if any of the expected signers are missing from the message's signatures, the message will be rejected. This ensures that all required parties have signed the message, and prevents partial or incomplete multi-signature messages from being processed.
+
+If you do not specify `expectedSigners`, the function will not enforce any signer requirements beyond the addressing consistency checks (i.e., it will only check that the `from` field matches at least one signature's key ID, as required by the DIDComm spec).
+
+**Tip:** Always use `expectedSigners` when you need to ensure that a message was signed by at least a specific set of parties, especially in scenarios where multiple signatures are possible or required. This is critical for protocols that require multi-party approval or consensus.
 
 ## Problem Report Messages
 
