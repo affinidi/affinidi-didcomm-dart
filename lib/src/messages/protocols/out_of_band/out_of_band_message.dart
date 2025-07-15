@@ -105,13 +105,20 @@ class OutOfBandMessage extends PlainTextMessage {
   /// [json]: The JSON map representing the Out-of-Band message.
   factory OutOfBandMessage.fromJson(Map<String, dynamic> json) {
     final message = _$OutOfBandMessageFromJson(json)
-      ..assignCustomHeaders(json, _$ownJsonProperties);
+      ..assignCustomHeaders(
+        json,
+        _$ownJsonProperties,
+      );
 
     return message;
   }
 
   /// Converts this [OutOfBandMessage] to a JSON map, including custom headers.
   @override
-  Map<String, dynamic> toJson() =>
-      withCustomHeaders({...super.toJson(), ..._$OutOfBandMessageToJson(this)});
+  Map<String, dynamic> toJson() => withCustomHeaders(
+        {
+          ...super.toJson(),
+          ..._$OutOfBandMessageToJson(this),
+        },
+      );
 }
