@@ -9,6 +9,8 @@ extension CurveTypeExtension on CurveType {
   ///
   /// Returns the corresponding [KeyType] for the given [CurveType]:
   /// - [CurveType.p256] maps to [KeyType.p256]
+  /// - [CurveType.p384] maps to [KeyType.p384]
+  /// - [CurveType.p521] maps to [KeyType.p521]
   /// - [CurveType.secp256k1] maps to [KeyType.secp256k1]
   /// - [CurveType.x25519] maps to [KeyType.ed25519] (X25519 keys are derived from Ed25519 keys in DIDComm)
   ///
@@ -17,9 +19,19 @@ extension CurveTypeExtension on CurveType {
     if (this == CurveType.p256) {
       return KeyType.p256;
     }
+
+    if (this == CurveType.p384) {
+      return KeyType.p384;
+    }
+
+    if (this == CurveType.p521) {
+      return KeyType.p521;
+    }
+
     if (this == CurveType.secp256k1) {
       return KeyType.secp256k1;
     }
+
     if (this == CurveType.x25519) {
       // In DIDComm, X25519 keys are derived from Ed25519 keys for key agreement
       return KeyType.ed25519;

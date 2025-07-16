@@ -183,11 +183,16 @@ class JweHeader {
         keyType: keyType,
       );
 
+      final publicKey = privateKey.publicKey;
+
       return EphemeralKey(
         curve: curve,
         keyType: EphemeralKeyType.ec,
-        x: privateKey.publicKey.X.toBytes(),
-        y: privateKey.publicKey.Y.toBytes(),
+        // it is important to use the correct coordinate length for the curve
+        // since BigInt can be converted to bytes with length which is not always
+        // the same as the curve's coordinate length
+        x: publicKey.X.toBytes(length: curve.coordinateLength),
+        y: publicKey.Y.toBytes(length: curve.coordinateLength),
       );
     }
 

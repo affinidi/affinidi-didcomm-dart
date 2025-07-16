@@ -17,9 +17,8 @@ void main() async {
         KeyType.ed25519,
         KeyType.secp256k1,
         KeyType.p256,
-        // TODO: Uncomment when supported by Dart SSI
-        // KeyType.p384,
-        // KeyType.p521,
+        KeyType.p384,
+        KeyType.p521,
       ]) {
         group(keyType.name, () {
           for (final didType in [
