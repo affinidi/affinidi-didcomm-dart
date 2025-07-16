@@ -5,7 +5,6 @@ env:
   TEST_MEDIATOR_DID: ${{ vars.TEST_MEDIATOR_DID }}
   TEST_ALICE_PRIVATE_KEY_PEM: ${{ vars.TEST_ALICE_PRIVATE_KEY_PEM }}
   TEST_BOB_PRIVATE_KEY_PEM: ${{ vars.TEST_BOB_PRIVATE_KEY_PEM }}
-  TEST: test
 jobs:
   wiz-scan:
     uses: affinidi/pipeline-security/.github/workflows/wizcli-dirscan.yml@main
@@ -25,6 +24,8 @@ jobs:
       # You can specify other versions if desired, see documentation here:
       # https://github.com/dart-lang/setup-dart/blob/main/README.md
       - uses: dart-lang/setup-dart@v1.7.1
+        with:
+          sdk: 3.6.0
       - uses: bluefireteam/melos-action@v3
       - run: melos format --output=none --set-exit-if-changed .
       - run: melos analyze
