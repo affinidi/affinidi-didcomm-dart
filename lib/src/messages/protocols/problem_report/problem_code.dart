@@ -153,7 +153,8 @@ enum DescriptorType {
 
 /// Scope information for a problem code.
 class Scope {
-  /// The scope type (protocol, message, or state name).
+  /// The scope type (protocol or message). If state name needs to be used,
+  /// it should be set to null.
   final ScopeType? scope;
 
   /// The formal state name from the sender’s state machine in the active protocol.
@@ -207,9 +208,6 @@ class ProblemCode {
   ///
   /// This constructor is used to initialize a [ProblemCode] object,
   /// which represents a specific problem code within the problem report protocol.
-  ///
-  /// You can provide additional parameters to further specify the details
-  /// of the problem code as required by the protocol.
   ProblemCode({
     required this.sorter,
     required this.scope,
