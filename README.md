@@ -458,7 +458,7 @@ To ensure trust and prevent message tampering or misrouting, DIDComm v2 enforces
 - The `to` attribute in the plaintext message **must contain** the `kid` (recipient key ID) in the encryption layer.
 - The `from` attribute in the plaintext message **must match** the signer's `kid` in a signed message.
 
-Envelop's layout:
+Envelope's layout:
 
 ```yaml
 encrypted message:
@@ -480,7 +480,7 @@ encrypted message:
 
 If any of these checks fail, the message is considered invalid and an error is raised.
 
-When you call `unpackToPlainTextMessage` in this Dart library, addressing consistency checks are performed automatically. If any inconsistency is detected, `unpackToPlainTextMessage` throws an error, preventing further processing of potentially malicious or misrouted messages. This strict enforcement helps maintain the integrity and authenticity of DIDComm communications, as required by the specification.
+When you call `unpackToPlainTextMessage` in this Dart library, addressing consistency checks are performed automatically. If any inconsistency is detected, `unpackToPlainTextMessage` throws an error, preventing further processing of potentially malicious or misrouted messages. This strict enforcement helps maintain the integrity and authenticity of DIDComm messages, as required by the specification.
 
 For development or debugging purposes, you can disable addressing consistency checks by passing `validateAddressingConsistency: false` to `unpackToPlainTextMessage`. This allows you to inspect or process messages that would otherwise be rejected due to addressing mismatches. **Warning:** Disabling these checks should only be done in trusted, non-production environments, as it weakens security guarantees and may expose your application to spoofed or misrouted messages.
 
