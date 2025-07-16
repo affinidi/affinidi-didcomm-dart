@@ -106,8 +106,11 @@ You can combine the DIDComm Message Envelope types in the following ways:
 Refer to the table below how security features are affected by combining each envelope type.
 
 **Sender Anonymity** - mediators and other intermediates can not see sender's identity.
+
 **Sender Authenticity** - a recipient can see sender's identity.
+
 **Confidentiality** - only a recipients can see a message, but not mediators and other intermediates.
+
 **Non-repudiation** - a sender is held accountable for their message – they cannot later deny having sent it.
 
 | Envelope Type                      | Confidentiality | Sender Authenticity | Non-repudiation | Sender Anonymity |
