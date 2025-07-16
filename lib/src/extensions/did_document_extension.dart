@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import 'package:ssi/ssi.dart' hide Jwk;
 import 'package:web_socket_channel/io.dart';
 
-import '../common/did.dart';
 import '../common/did_document_service_type.dart';
 import '../curves/curve_type.dart';
 import '../jwks/jwk.dart';
@@ -82,49 +81,6 @@ extension DidDocumentExtension on DidDocument {
   /// Returns the first [ServiceEndpoint] of the given [serviceType], or null if not found.
   ServiceEndpoint? getFirstServiceByType(DidDocumentServiceType serviceType) {
     return service.firstWhereOrNull((item) => item.type == serviceType.value);
-  }
-
-  /// Returns the first mediator DID from the `didcomm-messaging` service, or null if not found.
-  String? getFirstMediatorDid() {
-    final service = getFirstServiceByType(
-      DidDocumentServiceType.didCommMessaging,
-    );
-
-    return service != null
-        ? getDidFromId(service.getDidcommServiceEndpoints().first.uri)
-        : null;
-  }
-
-  /// Adds all mediators from another [didDocument] to this DID Document's services.
-  ///
-  /// [didDocument]: The DID Document from which to add mediators.
-  @deprecated
-  void addMediatorsFromDidDocument(
-    DidDocument didDocument,
-  ) {
-    final mediators = didDocument.getServicesByType(
-      DidDocumentServiceType.didCommMessaging,
-    );
-
-    final servicesToAdd = mediators.map(
-      (service) => ServiceEndpoint(
-        id: service.id.replaceFirst(getDidFromId(service.id), id),
-        type: service.type,
-        serviceEndpoint: StringEndpoint(getDidFromId(service.id)),
-      ),
-    );
-
-    service.addAll(servicesToAdd);
-  }
-
-  /// Resolves a DID and adds all mediators from the resolved DID Document to this DID Document's services.
-  ///
-  /// [did]: The DID to resolve and add mediators from.
-  Future<void> addMediatorsFromResolvedDid(
-    String did,
-  ) async {
-    final didDocument = await UniversalDIDResolver.resolve(did);
-    addMediatorsFromDidDocument(didDocument);
   }
 
   /// Matches and returns key IDs in this DID Document's key agreement section that are compatible with all [otherDidDocuments].
