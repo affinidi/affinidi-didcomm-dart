@@ -450,6 +450,8 @@ This ensures that the correct and compatible keys are used for ECDH-1PU (authcry
 
 ## Security Safeguards
 
+The DIDComm package performs different verification processes to ensure the integrity and authenticity of the messages received, including a custom verification and processing after the message is unpacked.
+
 ### Message Layer Addressing Consistency
 
 To ensure trust and prevent message tampering or misrouting, DIDComm v2 enforces message layer addressing consistency between the plaintext message and its cryptographic envelopes. According to the [DIDComm v2 spec](https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency):
@@ -482,7 +484,9 @@ If any of these checks fail, the message is considered invalid and an error is r
 
 When you call `unpackToPlainTextMessage` in this Dart library, addressing consistency checks are performed automatically. If any inconsistency is detected, `unpackToPlainTextMessage` throws an error, preventing further processing of potentially malicious or misrouted messages. This strict enforcement helps maintain the integrity and authenticity of DIDComm messages, as required by the specification.
 
-For development or debugging purposes, you can disable addressing consistency checks by passing `validateAddressingConsistency: false` to `unpackToPlainTextMessage`. This allows you to inspect or process messages that would otherwise be rejected due to addressing mismatches. **Warning:** Disabling these checks should only be done in trusted, non-production environments, as it weakens security guarantees and may expose your application to spoofed or misrouted messages.
+For development or debugging purposes, you can disable addressing consistency checks by passing `validateAddressingConsistency: false` to `unpackToPlainTextMessage`. This allows you to inspect or process messages that would otherwise be rejected due to addressing mismatches. 
+
+**Important:** Disabling these checks should only be done in trusted, non-production environments, as it weakens security guarantees and may expose your application to spoofed or misrouted messages.
 
 ### Message Wrapping Verification
 
