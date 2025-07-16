@@ -29,7 +29,7 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
   - [Security Safeguards](#security-safeguards)
     - [Message Layer Addressing Consistency](#message-layer-addressing-consistency)
     - [Message Wrapping Verification](#message-wrapping-verification)
-    - [Verification of Signers](#verification-of-signers)
+    - [Signers Verification](#signers-verification)
     - [Custom Message Verification and Processing](#custom-message-verification-and-processing)
   - [Problem Report Messages](#problem-report-messages)
     - [Structure of a Problem Report](#structure-of-a-problem-report)
@@ -509,7 +509,9 @@ final plainTextMessage =
 );
 ```
 
-### Verification of Signers
+### Signers Verification
+
+When unpacking a message, every signature present is automatically and individually verified by the library to be cryptographically correct and to match the claimed key. If you want to make sure that a certain signers signed the message, you can use the `expectedSigners` argument.
 
 The `expectedSigners` argument of `unpackToPlainTextMessage` lets you specify a set of signers' key IDs that you require to have signed the message. This is especially important for signed messages that may contain multiple signatures (for example, in multi-party workflows or protocols requiring multiple approvals).
 
@@ -566,7 +568,7 @@ final plainTextMessage =
 
 The `onUnpacked` callback argument of `unpackToPlainTextMessage` allows you to perform custom verification and processing after a message has been unpacked, but before it is returned to your application. This is useful for advanced scenarios where you want to enforce additional business rules, audit message metadata, or trigger application-specific logic based on the unpacked message content or its signatures.
 
-You can pass an `onUnpacked` callback function to `unpackToPlainTextMessage`. This function will be called with two arguments:
+`onUnpacked` callback will be called with two arguments:
 
 - `foundMessages`: A list of all message layers that were found and unpacked (e.g., encrypted, signed, and plaintext layers). This allows you to inspect the full message envelope stack and perform checks or logging at any layer.
 - `foundSigners`: A list of key IDs (KIDs) that were found to have signed the message. This is especially useful for multi-signature workflows, auditing, or enforcing custom signer policies beyond what is provided by the `expectedSigners` argument.

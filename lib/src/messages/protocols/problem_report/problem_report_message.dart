@@ -35,6 +35,7 @@ class ProblemReportMessage extends PlainTextMessage {
         json,
         _$ownJsonProperties,
       );
+
     return message;
   }
 
