@@ -128,6 +128,26 @@ enum DescriptorType {
   @JsonValue('me.res')
   meResource,
 
+  /// me.res.net: A required network resource is inadequate or unavailable.
+  @JsonValue('me.res.net')
+  meResourceNet,
+
+  /// me.res.memory: A required memory resource is inadequate or unavailable.
+  @JsonValue('me.res.memory')
+  meResourceMemory,
+
+  /// me.res.storage: A required storage resource is inadequate or unavailable.
+  @JsonValue('me.res.storage')
+  meResourceStorage,
+
+  /// me.res.compute: A required compute resource is inadequate or unavailable.
+  @JsonValue('me.res.compute')
+  meResourceCompute,
+
+  /// me.res.money: A required monetary resource is inadequate or unavailable.
+  @JsonValue('me.res.money')
+  meResourceMoney,
+
   /// req: Circumstances don’t satisfy requirements.
   /// A behavior occurred out of order or without satisfying certain
   /// preconditions — or circumstances changed in a way that violates
