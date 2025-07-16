@@ -24,6 +24,24 @@ import '../messages/algorithm_types/algorithms_types.dart';
     );
   }
 
+  if (keyType == KeyType.p384) {
+    return (
+      privateKeyBytes: Uint8List.fromList(
+        ec.getP384().generatePrivateKey().bytes,
+      ),
+      publicKeyBytes: null,
+    );
+  }
+
+  if (keyType == KeyType.p521) {
+    return (
+      privateKeyBytes: Uint8List.fromList(
+        ec.getP521().generatePrivateKey().bytes,
+      ),
+      publicKeyBytes: null,
+    );
+  }
+
   if (keyType == KeyType.secp256k1) {
     return (
       privateKeyBytes: Uint8List.fromList(
@@ -55,6 +73,14 @@ ec.PrivateKey getPrivateKeyFromBytes(
 }) {
   if (keyType == KeyType.p256) {
     return ec.PrivateKey.fromBytes(ec.getP256(), bytes);
+  }
+
+  if (keyType == KeyType.p384) {
+    return ec.PrivateKey.fromBytes(ec.getP384(), bytes);
+  }
+
+  if (keyType == KeyType.p521) {
+    return ec.PrivateKey.fromBytes(ec.getP521(), bytes);
   }
 
   if (keyType == KeyType.secp256k1) {

@@ -10,6 +10,8 @@ extension KeyTypeExtension on KeyType {
   ///
   /// Returns the corresponding [CurveType] for the given [KeyType]:
   /// - [KeyType.p256] maps to [CurveType.p256]
+  /// - [KeyType.p384] maps to [CurveType.p384]
+  /// - [KeyType.p521] maps to [CurveType.p521]
   /// - [KeyType.secp256k1] maps to [CurveType.secp256k1]
   /// - [KeyType.ed25519] maps to [CurveType.x25519] (Ed25519 keys are converted for use in X25519 operations)
   ///
@@ -17,6 +19,14 @@ extension KeyTypeExtension on KeyType {
   CurveType asEncryptionCapableCurve() {
     if (this == KeyType.p256) {
       return CurveType.p256;
+    }
+
+    if (this == KeyType.p384) {
+      return CurveType.p384;
+    }
+
+    if (this == KeyType.p521) {
+      return CurveType.p521;
     }
 
     if (this == KeyType.secp256k1) {
