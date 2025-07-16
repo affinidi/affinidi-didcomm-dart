@@ -6,6 +6,14 @@ repository: https://github.com/affinidi/affinidi-didcomm-dart
 environment:
   sdk: ^3.6.0
 
+platforms:
+  web:
+  android:
+  ios:
+  linux:
+  macos:
+  windows:
+
 dependencies:
   analyzer: ^7.4.5
   build: ^2.4.2
