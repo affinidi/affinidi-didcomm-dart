@@ -14,8 +14,6 @@ import '../../../ecdh/ecdh.dart';
 import '../../../errors/missing_authentication_tag_error.dart';
 import '../../../errors/missing_initialization_vector_error.dart';
 import '../../../errors/missing_key_agreement_error.dart';
-import '../../../jwks/jwk.dart';
-import '../../jwm.dart';
 
 part 'encrypted_message.g.dart';
 part 'encrypted_message.own_json_props.g.dart';
@@ -231,15 +229,15 @@ class EncryptedMessage extends DidcommMessage {
     final subjectKeyId = jweHeader.subjectKeyId;
 
     if (jweHeader.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
-      if (subjectKeyId == null) {
-        throw ArgumentError(
-          'skid is required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
-        );
-      }
-
       if (jweHeader.encryptionAlgorithm == EncryptionAlgorithm.a256gcm) {
         throw IncompatibleEncryptionAlgorithmWithAuthcrypt(
           jweHeader.encryptionAlgorithm,
+        );
+      }
+
+      if (subjectKeyId == null) {
+        throw ArgumentError(
+          'skid is required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
         );
       }
     }

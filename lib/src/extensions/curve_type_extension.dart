@@ -1,7 +1,6 @@
 import 'package:ssi/ssi.dart';
 
 import '../../didcomm.dart';
-import '../curves/curve_type.dart';
 
 /// Extension methods for [CurveType] to support mapping to a compatible [KeyType].
 extension CurveTypeExtension on CurveType {
