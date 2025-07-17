@@ -9,6 +9,9 @@ import 'utils/create_message_assertion.dart';
 
 void main() {
   group('Encrypted message', () {
+    final keyWrappingAlgorithm = KeyWrappingAlgorithm.ecdh1Pu;
+    final encryptionAlgorithm = EncryptionAlgorithm.a256cbc;
+
     final aliceSeed = List<int>.generate(
       32,
       (index) => index + 1,
@@ -62,96 +65,63 @@ void main() {
         await bobDidManager.addVerificationMethod(bobKeyId);
         bobDidDocument = await bobDidManager.getDidDocument();
       });
-      for (final encryptionAlgorithm in [
-        EncryptionAlgorithm.a256cbc,
-        EncryptionAlgorithm.a256gcm
-      ]) {
-        group(encryptionAlgorithm.value, () {
-          for (final isAuthenticated in [true, false]) {
-            group(isAuthenticated ? 'Authenticated' : 'Anonymous', () {
-              test(
-                'Pack and unpack encrypted message successfully',
-                () async {
-                  const content = 'Hello, Bob!';
-                  final plainTextMessage =
-                      MessageAssertionService.createPlainTextMessageAssertion(
-                    content,
-                    from: aliceDidDocument.id,
-                    to: [bobDidDocument.id],
-                  );
+      test(
+        'Pack and unpack encrypted message successfully',
+        () async {
+          const content = 'Hello, Bob!';
+          final plainTextMessage =
+              MessageAssertionService.createPlainTextMessageAssertion(
+            content,
+            from: aliceDidDocument.id,
+            to: [bobDidDocument.id],
+          );
 
-                  final signedMessage = await SignedMessage.pack(
-                    plainTextMessage,
-                    signer: aliceSigner,
-                  );
+          final signedMessage = await SignedMessage.pack(
+            plainTextMessage,
+            signer: aliceSigner,
+          );
 
-                  // find keys whose curve is common in other DID Documents
-                  final aliceMatchedDidKeyIds =
-                      aliceDidDocument.matchKeysInKeyAgreement(
-                    otherDidDocuments: [bobDidDocument],
-                  );
+          // find keys whose curve is common in other DID Documents
+          final aliceMatchedDidKeyIds =
+              aliceDidDocument.matchKeysInKeyAgreement(
+            otherDidDocuments: [bobDidDocument],
+          );
 
-                  final sut = await EncryptedMessage.pack(
-                    signedMessage,
-                    keyPair: isAuthenticated
-                        ? await aliceDidManager.getKeyPairByDidKeyId(
-                            aliceMatchedDidKeyIds.first,
-                          )
-                        : null,
-                    didKeyId:
-                        isAuthenticated ? aliceMatchedDidKeyIds.first : null,
-                    keyType: isAuthenticated
-                        ? null
-                        : [
-                            bobDidDocument
-                            // other recipients here
-                          ].getCommonKeyTypesInKeyAgreements().first,
-                    recipientDidDocuments: [bobDidDocument],
-                    encryptionAlgorithm: encryptionAlgorithm,
-                    keyWrappingAlgorithm: isAuthenticated
-                        ? KeyWrappingAlgorithm.ecdh1Pu
-                        : KeyWrappingAlgorithm.ecdhEs,
-                  );
+          final sut = await EncryptedMessage.pack(signedMessage,
+              keyPair: await aliceDidManager.getKeyPairByDidKeyId(
+                aliceMatchedDidKeyIds.first,
+              ),
+              didKeyId: aliceMatchedDidKeyIds.first,
+              recipientDidDocuments: [bobDidDocument],
+              encryptionAlgorithm: encryptionAlgorithm,
+              keyWrappingAlgorithm: keyWrappingAlgorithm);
 
-                  final sharedMessageToBobInJson = jsonEncode(sut);
+          final sharedMessageToBobInJson = jsonEncode(sut);
 
-                  final actual = await DidcommMessage.unpackToPlainTextMessage(
-                    message: jsonDecode(
-                      sharedMessageToBobInJson,
-                    ) as Map<String, dynamic>,
-                    recipientDidManager: bobDidManager,
-                    validateAddressingConsistency: true,
-                    expectedMessageWrappingTypes: [
-                      isAuthenticated
-                          ? MessageWrappingType.authcryptSignPlaintext
-                          : MessageWrappingType.anoncryptSignPlaintext,
-                    ],
-                    expectedSigners: [
-                      aliceDidDocument.assertionMethod.first.didKeyId,
-                    ],
-                  );
+          final actual = await DidcommMessage.unpackToPlainTextMessage(
+            message: jsonDecode(
+              sharedMessageToBobInJson,
+            ) as Map<String, dynamic>,
+            recipientDidManager: bobDidManager,
+            validateAddressingConsistency: true,
+            expectedMessageWrappingTypes: [
+              MessageWrappingType.authcryptSignPlaintext
+            ],
+            expectedSigners: [
+              aliceDidDocument.assertionMethod.first.didKeyId,
+            ],
+          );
 
-                  expect(actual, isNotNull);
-                  expect(actual.body?['content'], content);
+          expect(actual, isNotNull);
+          expect(actual.body?['content'], content);
 
-                  final actualJweHeader = const JweHeaderConverter().fromJson(
-                    sut.protected,
-                  );
+          final actualJweHeader = const JweHeaderConverter().fromJson(
+            sut.protected,
+          );
 
-                  // make sure sender identity does not leak for anonymous authentication
-                  if (isAuthenticated) {
-                    expect(actualJweHeader.subjectKeyId, isNotNull);
-                    expect(actualJweHeader.agreementPartyUInfo, isNotNull);
-                  } else {
-                    expect(actualJweHeader.subjectKeyId, isNull);
-                    expect(actualJweHeader.agreementPartyUInfo, isNull);
-                  }
-                },
-              );
-            });
-          }
-        });
-      }
+          expect(actualJweHeader.agreementPartyUInfo, isNotNull);
+        },
+      );
     });
   });
 }

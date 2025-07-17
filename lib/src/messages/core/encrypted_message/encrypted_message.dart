@@ -138,11 +138,16 @@ class EncryptedMessage extends DidcommMessage {
     required KeyWrappingAlgorithm keyWrappingAlgorithm,
     required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
-    if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu &&
-        (keyPair == null || didKeyId == null)) {
-      throw ArgumentError(
-        'keyPair and didKeyId are required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
-      );
+    if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
+      if (keyPair == null || didKeyId == null) {
+        throw ArgumentError(
+          'keyPair and didKeyId are required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
+        );
+      }
+
+      if (encryptionAlgorithm == EncryptionAlgorithm.a256gcm) {
+        throw IncompatibleEncryptionAlgorithmWithAuthcrypt(encryptionAlgorithm);
+      }
     }
 
     if (keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdhEs &&
@@ -225,11 +230,18 @@ class EncryptedMessage extends DidcommMessage {
 
     final subjectKeyId = jweHeader.subjectKeyId;
 
-    if (subjectKeyId == null &&
-        jweHeader.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
-      throw ArgumentError(
-        'skid is required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
-      );
+    if (jweHeader.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdh1Pu) {
+      if (subjectKeyId == null) {
+        throw ArgumentError(
+          'skid is required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
+        );
+      }
+
+      if (jweHeader.encryptionAlgorithm == EncryptionAlgorithm.a256gcm) {
+        throw IncompatibleEncryptionAlgorithmWithAuthcrypt(
+          jweHeader.encryptionAlgorithm,
+        );
+      }
     }
 
     final contentEncryptionKey = await Ecdh.decrypt(
