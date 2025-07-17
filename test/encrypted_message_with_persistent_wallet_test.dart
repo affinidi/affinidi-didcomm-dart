@@ -6,6 +6,16 @@ import 'package:test/test.dart';
 import 'utils/create_message_assertion.dart';
 
 void main() async {
+  final keyWrappingToEncryptionAlgorithms = {
+    KeyWrappingAlgorithm.ecdh1Pu: [
+      EncryptionAlgorithm.a256cbc,
+    ],
+    KeyWrappingAlgorithm.ecdhEs: [
+      EncryptionAlgorithm.a256cbc,
+      EncryptionAlgorithm.a256gcm,
+    ],
+  };
+
   group('Encrypted message', () {
     final aliceKeyStore = InMemoryKeyStore();
     final aliceWallet = PersistentWallet(aliceKeyStore);
@@ -105,17 +115,20 @@ void main() async {
                 bobDidDocument = await bobDidManager.getDidDocument();
               });
 
-              for (final encryptionAlgorithm in [
-                EncryptionAlgorithm.a256cbc,
-                EncryptionAlgorithm.a256gcm
-              ]) {
-                group(encryptionAlgorithm.value, () {
-                  for (final isAuthenticated in [true, false]) {
-                    group(isAuthenticated ? 'Authenticated' : 'Anonymous', () {
+              for (final isAuthenticated in [true, false]) {
+                final keyWrappingAlgorithm = isAuthenticated
+                    ? KeyWrappingAlgorithm.ecdh1Pu
+                    : KeyWrappingAlgorithm.ecdhEs;
+
+                final encryptionAlgorithms =
+                    keyWrappingToEncryptionAlgorithms[keyWrappingAlgorithm]!;
+
+                group(isAuthenticated ? 'Authenticated' : 'Anonymous', () {
+                  for (final encryptionAlgorithm in encryptionAlgorithms) {
+                    group(encryptionAlgorithm.value, () {
                       test(
                         'Pack and unpack encrypted message successfully',
                         () async {
-                          // Act: create, sign, and encrypt the message
                           const content = 'Hello, Bob!';
                           final plainTextMessage = MessageAssertionService
                               .createPlainTextMessageAssertion(
@@ -155,9 +168,7 @@ void main() async {
                                   ].getCommonKeyTypesInKeyAgreements().first,
                             recipientDidDocuments: [bobDidDocument],
                             encryptionAlgorithm: encryptionAlgorithm,
-                            keyWrappingAlgorithm: isAuthenticated
-                                ? KeyWrappingAlgorithm.ecdh1Pu
-                                : KeyWrappingAlgorithm.ecdhEs,
+                            keyWrappingAlgorithm: keyWrappingAlgorithm,
                           );
 
                           final sharedMessageToBobInJson = jsonEncode(sut);
@@ -209,7 +220,6 @@ void main() async {
                       test(
                         'Fails to unpack encrypted message with authentication due to missing key',
                         () async {
-                          // Act: create, sign, and encrypt the message
                           const content = 'Hello, Bob!';
                           final plainTextMessage = MessageAssertionService
                               .createPlainTextMessageAssertion(
@@ -226,20 +236,26 @@ void main() async {
                             ],
                           );
 
-                          final sut =
-                              await EncryptedMessage.packWithAuthentication(
+                          final sut = await EncryptedMessage.pack(
                             plainTextMessage,
-                            keyPair: await aliceDidManager.getKeyPairByDidKeyId(
-                              aliceMatchedDidKeyIds.first,
-                            ),
+                            keyPair: isAuthenticated
+                                ? await aliceDidManager.getKeyPairByDidKeyId(
+                                    aliceMatchedDidKeyIds.first,
+                                  )
+                                : null,
                             didKeyId: aliceMatchedDidKeyIds.first,
+                            keyType: isAuthenticated
+                                ? null
+                                : [
+                                    bobDidDocument
+                                    // other recipients here
+                                  ].getCommonKeyTypesInKeyAgreements().first,
                             recipientDidDocuments: [bobDidDocument],
                             encryptionAlgorithm: encryptionAlgorithm,
+                            keyWrappingAlgorithm: keyWrappingAlgorithm,
                           );
 
                           final sharedMessageToBobInJson = jsonEncode(sut);
-
-                          // Assert: unpack and check success
 
                           // Simulate a missing key by modifying the recipient's key ID
                           final receivedMessage = jsonDecode(
