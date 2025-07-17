@@ -91,7 +91,6 @@ void main() async {
     ),
     didKeyId: aliceMatchedKeyIds.first,
     recipientDidDocuments: [bobDidDocument],
-    encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   );
 
   prettyPrint(
