@@ -1,4 +1,6 @@
 export 'protocols/discover_features/disclose_message.dart';
+export 'protocols/discover_features/query.dart';
+export 'protocols/discover_features/query_body.dart';
 export 'protocols/discover_features/query_message.dart';
 export 'protocols/message_pickup/live_delivery_change_message.dart';
 export 'protocols/message_pickup/status_request_message.dart';
