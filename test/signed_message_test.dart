@@ -12,9 +12,11 @@ import 'utils/create_message_assertion.dart';
 void main() async {
   group('Signed message', () {
     for (final keyType in [
-      KeyType.p256,
       KeyType.ed25519,
       KeyType.secp256k1,
+      KeyType.p256,
+      KeyType.p384,
+      KeyType.p521,
     ]) {
       group(keyType.name, () {
         for (final didType in [
