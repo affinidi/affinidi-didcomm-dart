@@ -273,7 +273,9 @@ void main() async {
                           );
 
                           await expectLater(
-                              actualFuture, throwsA(isA<Exception>()));
+                            actualFuture,
+                            throwsA(isA<Exception>()),
+                          );
                         },
                       );
 
@@ -282,6 +284,86 @@ void main() async {
                   }
                 });
               }
+
+              group(
+                  'Prevent ${EncryptionAlgorithm.a256gcm.value} to be used together with ${KeyWrappingAlgorithm.ecdh1Pu}',
+                  () {
+                test('Should fail to pack', () async {
+                  const content = 'Hello, Bob!';
+                  final plainTextMessage =
+                      MessageAssertionService.createPlainTextMessageAssertion(
+                    content,
+                    from: aliceDidDocument.id,
+                    to: [bobDidDocument.id],
+                  );
+
+                  final actualFuture = EncryptedMessage.pack(
+                    plainTextMessage,
+                    keyPair: await aliceDidManager.getKeyPairByDidKeyId(
+                      aliceDidDocument.assertionMethod.first.didKeyId,
+                    ),
+                    didKeyId: aliceDidDocument.assertionMethod.first.didKeyId,
+                    recipientDidDocuments: [bobDidDocument],
+                    encryptionAlgorithm: EncryptionAlgorithm.a256gcm,
+                    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+                  );
+
+                  await expectLater(
+                    actualFuture,
+                    throwsA(
+                      isA<IncompatibleEncryptionAlgorithmWithAuthcrypt>(),
+                    ),
+                  );
+                });
+
+                test('Should fail to unpack', () async {
+                  const content = 'Hello, Bob!';
+                  final plainTextMessage =
+                      MessageAssertionService.createPlainTextMessageAssertion(
+                    content,
+                    from: aliceDidDocument.id,
+                    to: [bobDidDocument.id],
+                  );
+
+                  final encryptedMessage = await EncryptedMessage.pack(
+                    plainTextMessage,
+                    keyPair: await aliceDidManager.getKeyPairByDidKeyId(
+                      aliceDidDocument.assertionMethod.first.didKeyId,
+                    ),
+                    didKeyId: aliceDidDocument.assertionMethod.first.didKeyId,
+                    recipientDidDocuments: [bobDidDocument],
+                    encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+                    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+                  );
+
+                  final converter = const JweHeaderConverter();
+
+                  final json = encryptedMessage.toJson();
+                  final jwe = converter.fromJson(json['protected'] as String);
+
+                  // Simulate a message with a256gcm encryption algorithm with ecdh1Pu
+                  final modifiedJwe = JweHeader(
+                    keyWrappingAlgorithm: jwe.keyWrappingAlgorithm,
+                    encryptionAlgorithm: EncryptionAlgorithm.a256gcm,
+                    ephemeralKey: jwe.ephemeralKey,
+                    agreementPartyVInfo: jwe.agreementPartyVInfo,
+                  );
+
+                  json['protected'] = converter.toJson(modifiedJwe);
+
+                  final actualFuture = DidcommMessage.unpackToPlainTextMessage(
+                    message: json,
+                    recipientDidManager: bobDidManager,
+                  );
+
+                  await expectLater(
+                    actualFuture,
+                    throwsA(
+                      isA<IncompatibleEncryptionAlgorithmWithAuthcrypt>(),
+                    ),
+                  );
+                });
+              });
             });
           }
         });

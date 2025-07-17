@@ -9,7 +9,6 @@ import '../../../common/did.dart';
 import '../../../common/encoding.dart';
 import '../../../extensions/did_signer_extension.dart';
 import '../../../extensions/extensions.dart';
-import '../../jwm.dart';
 
 part 'signed_message.g.dart';
 part 'signed_message.own_json_props.g.dart';
