@@ -73,7 +73,7 @@ The DIDComm package supports the following curves and algorithms for signing and
 #### Curves and Signing Algorithms
 | Curve                   | Signing Algorithm           | Used in Content Encryption           | Notes                  |
 |-------------------------|-----------------------------|-----------------------------|------------------------|
-| Ed25519                 | EdDSA                       | ✅ Yes*                     | Ed25519 is for signing only; **X25519** is used for encryption/key exchange through [Ed25519/X25519 key derivation]((#ed25519x25519-key-derivation)) |
+| Ed25519                 | EdDSA                       | ✅ Yes*                     | Ed25519 is for signing only; **X25519** is used for encryption/key exchange through [Ed25519/X25519 key derivation](#ed25519x25519-key-derivation) |
 | P-384                   | _ES384_                     | ✅ Yes                      | _ES384_ support for signing is not listed in the [DIDComm spec](https://identity.foundation/didcomm-messaging/spec/#algorithms)   |
 | P-521                   | _ES521_                     | ✅ Yes                      | _ES521_ support for signing is not listed in the [DIDComm spec](https://identity.foundation/didcomm-messaging/spec/#algorithms)   |
 | _secp256k1_              | ES256K                     | ✅ Yes                      | _secp256k1_ support for encryption is not listed in the [DIDComm spec](https://identity.foundation/didcomm-messaging/spec/#curves-and-content-encryption-algorithms) |
