@@ -97,7 +97,6 @@ class EncryptedMessage extends DidcommMessage {
   /// [keyPair]: The sender's key pair for encryption.
   /// [didKeyId]: The sender's key ID.
   /// [recipientDidDocuments]: List of recipient's DID documents.
-  /// [encryptionAlgorithm]: Algorithm for content encryption.
   ///
   /// Returns an [EncryptedMessage].
   static Future<EncryptedMessage> packWithAuthentication(
@@ -105,7 +104,6 @@ class EncryptedMessage extends DidcommMessage {
     required KeyPair keyPair,
     required String didKeyId,
     required List<DidDocument> recipientDidDocuments,
-    required EncryptionAlgorithm encryptionAlgorithm,
   }) async {
     return await EncryptedMessage.pack(
       message,
@@ -113,7 +111,7 @@ class EncryptedMessage extends DidcommMessage {
       didKeyId: didKeyId,
       recipientDidDocuments: recipientDidDocuments,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
-      encryptionAlgorithm: encryptionAlgorithm,
+      encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     );
   }
 

@@ -324,7 +324,6 @@ void main() async {
             keyPair: aliceKeyPair,
             didKeyId: aliceDidDocument.keyAgreement.first.id,
             recipientDidDocuments: [bobDidDocument],
-            encryptionAlgorithm: encryptionAlgorithm,
           );
 
           final sut = await EncryptedMessage.packAnonymously(
