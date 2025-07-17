@@ -710,58 +710,58 @@ This approach ensures your problem reports are fully compatible with the DIDComm
 
 ## Discovery Features
 
-DIDComm v2 supports a protocol for feature discovery between agents, using two main message types:
+DIDComm v2 supports a protocol for feature discovery between agents, using two main message types: **Query Message** and **Disclose Message** .
 
-- **Query Message** (`https://didcomm.org/discover-features/2.0/queries`):
-  - Sent by an agent to request information about supported features (protocols, goal-codes, etc.) from another agent.
-  - The message body contains a list of queries, each specifying a `feature-type` (such as `protocol` or `goal-code`) and a `match` pattern (such as a protocol URI or wildcard).
+**Query Message** (`https://didcomm.org/discover-features/2.0/queries`):
+- Sent by an agent to request information about supported features (protocols, goal-codes, etc.) from another agent.
+- The message body contains a list of queries, each specifying a `feature-type` (such as `protocol` or `goal-code`) and a `match` pattern (such as a protocol URI or wildcard).
 
-  **Example:**
+**Example:**
 
-  ```json
-  {
-    "type": "https://didcomm.org/discover-features/2.0/queries",
-    "id": "yWd8wfYzhmuXX3hmLNaV5bVbAjbWaU",
-    "body": {
-      "queries": [
-        {
-          "feature-type": "protocol",
-          "match": "https://didcomm.org/tictactoe/1.*"
-        },
-        {
-          "feature-type": "goal-code",
-          "match": "org.didcomm.*"
-        }
-      ]
-    }
+```json
+{
+  "type": "https://didcomm.org/discover-features/2.0/queries",
+  "id": "yWd8wfYzhmuXX3hmLNaV5bVbAjbWaU",
+  "body": {
+    "queries": [
+      {
+        "feature-type": "protocol",
+        "match": "https://didcomm.org/tictactoe/1.*"
+      },
+      {
+        "feature-type": "goal-code",
+        "match": "org.didcomm.*"
+      }
+    ]
   }
-  ```
+}
+```
 
-- **Disclose Message** (`https://didcomm.org/discover-features/2.0/disclose`):
-  - Sent in response to a Query Message, listing the features supported by the agent.
-  - The message body contains a list of disclosures, each specifying a `feature-type`, an `id` (such as a protocol URI or goal-code), and optionally a list of `roles` supported for that feature.
+**Disclose Message** (`https://didcomm.org/discover-features/2.0/disclose`):
+- Sent in response to a Query Message, listing the features supported by the agent.
+- The message body contains a list of disclosures, each specifying a `feature-type`, an `id` (such as a protocol URI or goal-code), and optionally a list of `roles` supported for that feature.
 
-  **Example:**
-  ```json
-  {
-    "type": "https://didcomm.org/discover-features/2.0/disclose",
-    "thid": "yWd8wfYzhmuXX3hmLNaV5bVbAjbWaU",
-    "body": {
-      "disclosures": [
-        {
-          "feature-type": "protocol",
-          "id": "https://didcomm.org/tictactoe/1.0",
-          "roles": ["player"]
-        },
-        {
-          "feature-type": "goal-code",
-          "id": "org.didcomm.sell.goods.consumer"
-        }
-      ]
-    }
+**Example:**
+```json
+{
+  "type": "https://didcomm.org/discover-features/2.0/disclose",
+  "thid": "yWd8wfYzhmuXX3hmLNaV5bVbAjbWaU",
+  "body": {
+    "disclosures": [
+      {
+        "feature-type": "protocol",
+        "id": "https://didcomm.org/tictactoe/1.0",
+        "roles": ["player"]
+      },
+      {
+        "feature-type": "goal-code",
+        "id": "org.didcomm.sell.goods.consumer"
+      }
+    ]
   }
-  ```
-  
+}
+```
+
 ### Constructing Query and Disclose Messages in Dart
 
 You can easily construct and parse these messages using the classes provided by this library.
