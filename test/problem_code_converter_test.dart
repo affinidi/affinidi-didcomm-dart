@@ -31,8 +31,8 @@ void main() {
         final code = '..unknown1.unknown2';
         final actual = converter.fromJson(code);
 
-        expect(actual.sorter, SorterType.unrecognized);
-        expect(actual.scope.scope, ScopeType.unrecognized);
+        expect(actual.sorter, SorterType.unknown);
+        expect(actual.scope.scope, ScopeType.unknown);
         expect(actual.descriptors, ['unknown1', 'unknown2']);
       });
     });

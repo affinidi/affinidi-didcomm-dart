@@ -15,12 +15,12 @@ class ProblemCodeConverter implements JsonConverter<ProblemCode, String> {
   /// Parses a string into a [ProblemCode] object.
   ///
   /// The string should be in the format: `<sorter>.<scope>.<descriptor1>.<descriptor2>...`.
-  /// Returns a [ProblemCode] with [SorterType.unrecognized] or [ScopeType.unrecognized] if the value is not recognized.
+  /// Returns a [ProblemCode] with [SorterType.unknown] or [ScopeType.unknown] if the value is not recognized.
   @override
   ProblemCode fromJson(String str) {
-    var sorter = SorterType.unrecognized;
+    var sorter = SorterType.unknown;
     var scope = Scope(
-      scope: ScopeType.unrecognized,
+      scope: ScopeType.unknown,
     );
 
     final parts = str.split('.');
@@ -28,17 +28,17 @@ class ProblemCodeConverter implements JsonConverter<ProblemCode, String> {
     if (parts.isNotEmpty) {
       sorter = SorterType.values.firstWhere(
         (s) => s.code == parts[0],
-        orElse: () => SorterType.unrecognized,
+        orElse: () => SorterType.unknown,
       );
     }
 
     if (parts.length > 1 && parts[1].isNotEmpty) {
       final scopeType = ScopeType.values.firstWhere(
         (s) => s.code == parts[1],
-        orElse: () => ScopeType.unrecognized,
+        orElse: () => ScopeType.unknown,
       );
 
-      scope = scopeType != ScopeType.unrecognized
+      scope = scopeType != ScopeType.unknown
           ? Scope(scope: scopeType)
           : Scope(stateName: parts[1]);
     }
@@ -54,19 +54,19 @@ class ProblemCodeConverter implements JsonConverter<ProblemCode, String> {
 
   /// Serializes a [ProblemCode] object to its string representation.
   ///
-  /// Throws a [StateError] if [SorterType.unrecognized] or [ScopeType.unrecognized] is present,
+  /// Throws a [StateError] if [SorterType.unknown] or [ScopeType.unknown] is present,
   /// as these are not intended for serialization.
   @override
   String toJson(ProblemCode object) {
-    if (object.sorter == SorterType.unrecognized) {
+    if (object.sorter == SorterType.unknown) {
       throw StateError(
-        '${SorterType.unrecognized} is not intended for serialization',
+        '${SorterType.unknown} is not intended for serialization',
       );
     }
 
-    if (object.scope.scope == ScopeType.unrecognized) {
+    if (object.scope.scope == ScopeType.unknown) {
       throw StateError(
-        '${ScopeType.unrecognized} is not intended for serialization',
+        '${ScopeType.unknown} is not intended for serialization',
       );
     }
 
