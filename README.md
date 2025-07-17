@@ -301,7 +301,6 @@ final encryptedMessage = await EncryptedMessage.packWithAuthentication(
   keyPair: await aliceDidManager.getKeyPairByDidKeyId(aliceMatchedKeyIds.first),
   didKeyId: aliceMatchedKeyIds.first,
   recipientDidDocuments: [bobDidDocument],
-  encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
 );
 
 ```
