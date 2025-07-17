@@ -8,6 +8,13 @@ import 'package:x25519/x25519.dart' as x25519;
 import '../errors/errors.dart';
 import '../messages/algorithm_types/algorithms_types.dart';
 
+final _keyTypeToEcCurveMap = {
+  KeyType.p256: ec.getP256(),
+  KeyType.p384: ec.getP384(),
+  KeyType.p521: ec.getP521(),
+  KeyType.secp256k1: ec.getSecp256k1(),
+};
+
 /// Generates an ephemeral key pair for the given [keyType].
 ///
 /// [keyType]: The type of key to generate (e.g., p256, secp256k1, ed25519).
@@ -15,47 +22,23 @@ import '../messages/algorithm_types/algorithms_types.dart';
 /// Throws [UnsupportedKeyTypeError] if the key type is not supported.
 ({Uint8List privateKeyBytes, Uint8List? publicKeyBytes})
     generateEphemeralKeyPair(KeyType keyType) {
-  if (keyType == KeyType.p256) {
-    return (
-      privateKeyBytes: Uint8List.fromList(
-        ec.getP256().generatePrivateKey().bytes,
-      ),
-      publicKeyBytes: null,
-    );
-  }
-
-  if (keyType == KeyType.p384) {
-    return (
-      privateKeyBytes: Uint8List.fromList(
-        ec.getP384().generatePrivateKey().bytes,
-      ),
-      publicKeyBytes: null,
-    );
-  }
-
-  if (keyType == KeyType.p521) {
-    return (
-      privateKeyBytes: Uint8List.fromList(
-        ec.getP521().generatePrivateKey().bytes,
-      ),
-      publicKeyBytes: null,
-    );
-  }
-
-  if (keyType == KeyType.secp256k1) {
-    return (
-      privateKeyBytes: Uint8List.fromList(
-        ec.getSecp256k1().generatePrivateKey().bytes,
-      ),
-      publicKeyBytes: null,
-    );
-  }
-
   if (keyType == KeyType.ed25519) {
-    var eKeyPair = x25519.generateKeyPair();
+    final keyPair = x25519.generateKeyPair();
+
     return (
-      privateKeyBytes: Uint8List.fromList(eKeyPair.privateKey),
-      publicKeyBytes: Uint8List.fromList(eKeyPair.publicKey),
+      privateKeyBytes: Uint8List.fromList(keyPair.privateKey),
+      publicKeyBytes: Uint8List.fromList(keyPair.publicKey),
+    );
+  }
+
+  if (_keyTypeToEcCurveMap.containsKey(keyType)) {
+    final ecCurve = _keyTypeToEcCurveMap[keyType]!;
+
+    return (
+      privateKeyBytes: Uint8List.fromList(
+        ecCurve.generatePrivateKey().bytes,
+      ),
+      publicKeyBytes: null,
     );
   }
 
@@ -71,20 +54,8 @@ ec.PrivateKey getPrivateKeyFromBytes(
   Uint8List bytes, {
   required KeyType keyType,
 }) {
-  if (keyType == KeyType.p256) {
-    return ec.PrivateKey.fromBytes(ec.getP256(), bytes);
-  }
-
-  if (keyType == KeyType.p384) {
-    return ec.PrivateKey.fromBytes(ec.getP384(), bytes);
-  }
-
-  if (keyType == KeyType.p521) {
-    return ec.PrivateKey.fromBytes(ec.getP521(), bytes);
-  }
-
-  if (keyType == KeyType.secp256k1) {
-    return ec.PrivateKey.fromBytes(ec.getSecp256k1(), bytes);
+  if (_keyTypeToEcCurveMap.containsKey(keyType)) {
+    return ec.PrivateKey.fromBytes(_keyTypeToEcCurveMap[keyType]!, bytes);
   }
 
   throw UnsupportedKeyTypeError(keyType);
