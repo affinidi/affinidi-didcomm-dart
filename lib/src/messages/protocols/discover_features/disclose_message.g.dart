@@ -7,7 +7,15 @@ part of 'disclose_message.dart';
 // **************************************************************************
 
 DiscloseMessage _$DiscloseMessageFromJson(Map<String, dynamic> json) =>
-    DiscloseMessage();
+    DiscloseMessage(
+      id: json['id'] as String,
+      parentThreadId: json['pthid'] as String?,
+      body: DiscloseBody.fromJson(json['body'] as Map<String, dynamic>),
+    );
 
 Map<String, dynamic> _$DiscloseMessageToJson(DiscloseMessage instance) =>
-    <String, dynamic>{};
+    <String, dynamic>{
+      'id': instance.id,
+      if (instance.parentThreadId case final value?) 'pthid': value,
+      if (instance.body case final value?) 'body': value,
+    };
