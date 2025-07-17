@@ -9,13 +9,13 @@ part of 'problem_code.dart';
 const _$SorterTypeEnumMap = {
   SorterType.error: 'e',
   SorterType.warning: 'w',
-  SorterType.unrecognized: 'unrecognized',
+  SorterType.unknown: 'unknown',
 };
 
 const _$ScopeTypeEnumMap = {
   ScopeType.protocol: 'p',
   ScopeType.message: 'm',
-  ScopeType.unrecognized: 'unrecognized',
+  ScopeType.unknown: 'unknown',
 };
 
 const _$DescriptorTypeEnumMap = {

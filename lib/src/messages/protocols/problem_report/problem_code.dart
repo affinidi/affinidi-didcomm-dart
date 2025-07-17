@@ -28,8 +28,8 @@ enum SorterType {
   @JsonValue('w')
   warning,
 
-  /// Indicates that the sorter code is unrecognized or not defined in the current context.
-  unrecognized;
+  /// Indicates that the sorter code is unknown or not defined in the current context.
+  unknown;
 
   /// Returns the string representation of the current enum value.
   /// This is typically used for serialization
@@ -61,8 +61,8 @@ enum ScopeType {
   @JsonValue('m')
   message,
 
-  /// Indicates that the scope code is unrecognized or not defined in the current context.
-  unrecognized;
+  /// Indicates that the scope code is unknown or not defined in the current context.
+  unknown;
 
   /// Returns the string representation of the current enum value.
   String get code => _$ScopeTypeEnumMap[this]!;
