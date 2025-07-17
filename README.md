@@ -33,9 +33,14 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
     - [Message Wrapping Verification](#message-wrapping-verification)
     - [Signers Verification](#signers-verification)
     - [Custom Message Verification and Processing](#custom-message-verification-and-processing)
+
   - [Problem Report Messages](#problem-report-messages)
     - [Structure of a Problem Report](#structure-of-a-problem-report)
     - [Usage in Dart](#usage-in-dart)
+  - [Discovery Features](#discovery-features)
+    - [Query Message](#query-message)
+    - [Disclose Message](#disclose-message)
+    - [Constructing Query and Disclose Messages in Dart](#constructing-query-and-disclose-messages-in-dart)
   - [Ed25519/X25519 Key Derivation](#ed25519x25519-key-derivation)
   - [Support & feedback](#support--feedback)
     - [Reporting technical issues](#reporting-technical-issues)
@@ -701,6 +706,109 @@ final message = ProblemReportMessage(
 ```
 
 This approach ensures your problem reports are fully compatible with the DIDComm v2 spec.
+
+
+## Discovery Features
+
+DIDComm v2 supports a protocol for feature discovery between agents, using two main message types:
+
+- **Query Message** (`https://didcomm.org/discover-features/2.0/queries`):
+  - Sent by an agent to request information about supported features (protocols, goal-codes, etc.) from another agent.
+  - The message body contains a list of queries, each specifying a `feature-type` (such as `protocol` or `goal-code`) and a `match` pattern (such as a protocol URI or wildcard).
+
+  **Example:**
+
+  ```json
+  {
+    "type": "https://didcomm.org/discover-features/2.0/queries",
+    "id": "yWd8wfYzhmuXX3hmLNaV5bVbAjbWaU",
+    "body": {
+      "queries": [
+        {
+          "feature-type": "protocol",
+          "match": "https://didcomm.org/tictactoe/1.*"
+        },
+        {
+          "feature-type": "goal-code",
+          "match": "org.didcomm.*"
+        }
+      ]
+    }
+  }
+  ```
+
+- **Disclose Message** (`https://didcomm.org/discover-features/2.0/disclose`):
+  - Sent in response to a Query Message, listing the features supported by the agent.
+  - The message body contains a list of disclosures, each specifying a `feature-type`, an `id` (such as a protocol URI or goal-code), and optionally a list of `roles` supported for that feature.
+
+  **Example:**
+  ```json
+  {
+    "type": "https://didcomm.org/discover-features/2.0/disclose",
+    "thid": "yWd8wfYzhmuXX3hmLNaV5bVbAjbWaU",
+    "body": {
+      "disclosures": [
+        {
+          "feature-type": "protocol",
+          "id": "https://didcomm.org/tictactoe/1.0",
+          "roles": ["player"]
+        },
+        {
+          "feature-type": "goal-code",
+          "id": "org.didcomm.sell.goods.consumer"
+        }
+      ]
+    }
+  }
+  ```
+  
+### Constructing Query and Disclose Messages in Dart
+
+You can easily construct and parse these messages using the classes provided by this library.
+
+**Query Message:**
+
+```dart
+final queryMessage = QueryMessage(
+  id: 'yWd8wfYzhmuXX3hmLNaV5bVbAjbWaU',
+  body: QueryBody(
+    queries: [
+      Query(
+        featureType: FeatureType.protocol,
+        match: 'https://didcomm.org/tictactoe/1.*',
+      ),
+      Query(
+        featureType: FeatureType.goalCode,
+        match: 'org.didcomm.*',
+      ),
+    ],
+  ),
+);
+```
+
+**Disclose Message:**
+
+```dart
+final discloseMessage = DiscloseMessage(
+  id: 'a8Fj3kLzQw9Xv2R6sT1bN4yP0eHcVmZq',
+  parentThreadId: 'yWd8wfYzhmuXX3hmLNaV5bVbAjbWaU',
+  body: DiscloseBody(
+    disclosures: [
+      Disclosure(
+        featureType: FeatureType.protocol,
+        id: 'https://didcomm.org/tictactoe/1.0',
+        roles: ['player'],
+      ),
+      Disclosure(
+        featureType: FeatureType.goalCode,
+        id: 'org.didcomm.sell.goods.consumer',
+        roles: null,
+      ),
+    ],
+  ),
+);
+```
+
 
 ## Ed25519/X25519 Key Derivation
 
