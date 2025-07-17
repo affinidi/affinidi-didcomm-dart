@@ -2,8 +2,6 @@ import 'package:collection/collection.dart';
 import 'package:ssi/ssi.dart' hide Jwk;
 
 import '../../didcomm.dart';
-import '../curves/curve_type.dart';
-import '../jwks/jwk.dart';
 
 /// Extension methods for the [VerificationMethod] class, providing additional
 /// functionality and utilities related to verification methods in DIDComm.
