@@ -70,6 +70,8 @@ Map<String, dynamic> _$JwkToJson(Jwk instance) => <String, dynamic>{
 
 const _$CurveTypeEnumMap = {
   CurveType.p256: 'P-256',
+  CurveType.p384: 'P-384',
+  CurveType.p521: 'P-521',
   CurveType.secp256k1: 'secp256k1',
   CurveType.x25519: 'X25519',
 };

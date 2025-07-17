@@ -9,6 +9,8 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
 
   - [Core Concepts](#core-concepts)
   - [Key Features](#key-features)
+    - [Supported Curves and Algorithms](#supported-curves-and-algorithms)
+    - [Supported DID Methods](#supported-did-methods)
   - [DIDComm Message Envelopes](#didcomm-message-envelopes)
     - [Combining Different Envelope Types](#combining-different-envelope-types)
     - [Security Features of Envelope Type Combinations](#security-features-of-envelope-type-combinations)
@@ -58,15 +60,45 @@ The DIDComm for Dart package utilises existing open standards and cryptographic 
 
 - Implements the DIDComm Message v2.0 protocol.
 
-- Support for multiple DID methods like `did:peer` and `did:web` to prove control of user's digital identity.
+- Support for DIDComm Messaging Envelope types. Refer to the [DIDComm Message Envelopes](#didcomm-message-envelopes) section to learn more.
 
 - Support for digital wallets under [Affinidi Dart SSI](https://pub.dev/packages/ssi) to manage cryptographic keys.
 
-- Support key types like `P256`, `ED25519` and `SECP256K1` to encrypt and sign messages.
-
-- Support for DIDComm Messaging Envelope types.
-
 - Connect and authenticate with different mediator services that follow the DIDComm Message v2.0 protocol.
+
+### Supported Curves and Algorithms
+
+The DIDComm package supports the following curves and algorithms for signing and encrypting content.
+
+#### Curves and Signing Algorithms
+| Curve                   | Signing Algorithm           | Used in Content Encryption           | Notes                  |
+|-------------------------|-----------------------------|-----------------------------|------------------------|
+| Ed25519                 | EdDSA                       | ✅ Yes*                     | Ed25519 is for signing only; **X25519** is used for encryption/key exchange through [Ed25519/X25519 key derivation](#ed25519x25519-key-derivation) |
+| P-384                   | _ES384_                     | ✅ Yes                      | _ES384_ support for signing is not listed in the [DIDComm spec](https://identity.foundation/didcomm-messaging/spec/#algorithms)   |
+| P-521                   | _ES521_                     | ✅ Yes                      | _ES521_ support for signing is not listed in the [DIDComm spec](https://identity.foundation/didcomm-messaging/spec/#algorithms)   |
+| _secp256k1_              | ES256K                     | ✅ Yes                      | _secp256k1_ support for encryption is not listed in the [DIDComm spec](https://identity.foundation/didcomm-messaging/spec/#curves-and-content-encryption-algorithms) |
+| P-256                   | ES256                       | ✅ Yes                      | Deprecated in DIDComm v2 in favor of P-384  |
+
+
+#### Content Encryption Algorithms
+
+| Encryption Algorithm       | Notes                       |
+|----------------------------|-----------------------------|
+| A256CBC-HS512              | Used for Authcrypt/Anoncrypt|
+| A256GCM                    | Used for Anoncrypt          |
+| XC20P                      | Not supported yet           |
+
+> Note: **XC20P** is part of the DIDComm spec, but not yet supported by the Affinidi SSI.
+
+### Supported DID Methods
+
+The DIDComm package supports the following DID methods to represent the identity of each entity.
+
+| DID Method                         | Note                                                                  |
+|------------------------------------|-----------------------------------------------------------------------|
+| did:key                            | Fully supported by Affinidi Dart SSI's DID Manager          |
+| did:peer                           | Fully supported by Affinidi Dart SSI's DID Manager          |
+| did:web                            | Only DID resolution is supported   |
 
 ## DIDComm Message Envelopes
 

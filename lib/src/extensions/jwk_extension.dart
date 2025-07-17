@@ -35,6 +35,14 @@ extension JwkExtension on Jwk {
       return ec.getP256();
     }
 
+    if (curveType == CurveType.p384) {
+      return ec.getP384();
+    }
+
+    if (curveType == CurveType.p521) {
+      return ec.getP521();
+    }
+
     if (curveType == CurveType.secp256k1) {
       return ec.getSecp256k1();
     }
