@@ -1,3 +1,7 @@
+## 1.0.0-dev.3
+
+ - **FEAT**: support p384 and p521.
+
 ## 1.0.0-dev.2
 
  - **FEAT**: add problem report message.
