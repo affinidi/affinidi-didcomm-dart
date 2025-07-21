@@ -346,10 +346,10 @@ final signed = await DidcommMessage.packIntoSignedMessage(
 
 ### packIntoSignedAndEncryptedMessages
 
-Packs a plain text message into a signed message and then encrypts it. Use this for both non-repudiation and confidentiality in a single step. Encryption can be anonymous (anoncrypt) or authenticated (authcrypt), depending on the provided parameters. `anoncrypt(singed(plaintext))` should be preferred over `authcrypt(singed(plaintext))` (see [here](https://identity.foundation/didcomm-messaging/spec/#iana-media-types))
+Packs a plain text message into a signed message and then encrypts it. Use this for both non-repudiation and confidentiality in a single step. Encryption can be anonymous (anoncrypt) or authenticated (authcrypt), depending on the provided parameters. `anoncrypt(sign(plaintext))` should be preferred over `authcrypt(sign(plaintext))` (see [here](https://identity.foundation/didcomm-messaging/spec/#iana-media-types))
 
 ```dart
-// Anonymous encryption - anoncrypt(singed(plaintext))
+// Anonymous encryption - anoncrypt(sign(plaintext))
 // this is a preferred way
 final signedAndAnonEncrypted = await DidcommMessage.packIntoSignedAndEncryptedMessages(
   plainTextMessage,
@@ -360,7 +360,7 @@ final signedAndAnonEncrypted = await DidcommMessage.packIntoSignedAndEncryptedMe
   signer: aliceSigner,
 );
 
-// Authenticated encryption with signed message - authcrypt(signed(plaintext)))
+// Authenticated encryption with signed message - authcrypt(sign(plaintext)))
 final signedAndEncrypted = await DidcommMessage.packIntoSignedAndEncryptedMessages(
   plainTextMessage,
   keyPair: aliceKeyPair,
