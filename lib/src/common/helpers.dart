@@ -73,7 +73,9 @@ void prettyPrint(
 String formatBytes(int bytes) {
   final units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
   final i = bytes == 0 ? 0 : (log(bytes) / log(1024)).floor();
-  final size = (bytes / pow(1024, i)).toStringAsFixed(2).replaceFirst('.00', '');
+  final size =
+      (bytes / pow(1024, i)).toStringAsFixed(2).replaceFirst('.00', '');
+
   final unit = units[i];
   return '$size$unit';
 }
