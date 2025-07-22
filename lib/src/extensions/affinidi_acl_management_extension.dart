@@ -7,9 +7,16 @@ import '../../didcomm.dart';
 import '../common/did_document_service_type.dart';
 import '../mediator_client/mediator_client_exception.dart';
 
+/// Represents a root DIDComm ACL Management Message.
 ///
-class AclManagementMessage extends PlainTextMessage {
-  ///
+/// This message is used as a parent to all ACL Management messages.
+abstract class AclManagementMessage extends PlainTextMessage {
+  /// Constructs [AclManagementMessage].
+  /// [id]: Unique message identifier.
+  /// [from]: Sender's DID.
+  /// [to]: List of recipient DIDs.
+  /// [body]: Message body.
+  /// [expiresTime]: Message expiration time (optional).
   AclManagementMessage({
     required super.id,
     required super.from,
@@ -21,11 +28,19 @@ class AclManagementMessage extends PlainTextMessage {
         );
 }
 
+/// Represents a root DIDComm ACL Management Message.
 ///
+/// This message is used to add DIDs to the mediator's ACL of the did (from).
 class AccessListAddMessage extends AclManagementMessage {
+  /// Lists of DIDs which shall be added to ACL.
   final List<String> theirDids;
 
-  ///
+  /// Constructs [AccessListAddMessage].
+  /// [id]: Unique message identifier.
+  /// [from]: Sender's DID.
+  /// [to]: List of recipient DIDs .
+  /// [theirDids]: Lists of DIDs which shall be added to ACL.
+  /// [expiresTime]: Message expiration time (optional).
   AccessListAddMessage({
     required super.id,
     required super.from,
@@ -43,8 +58,11 @@ class AccessListAddMessage extends AclManagementMessage {
           },
         );
 
+  /// Creates a [AccessListAddMessage] from a JSON map.
+  ///
+  /// [json]: The JSON map representing the message.
   factory AccessListAddMessage.fromJson(Map<String, dynamic> json) {
-    final plainTextMessage = PlainTextMessage.fromJson(json);
+    final plainTextMessage = AccessListAddMessage.fromJson(json);
     return AccessListAddMessage(
       id: plainTextMessage.id,
       from: plainTextMessage.from,
@@ -56,10 +74,10 @@ class AccessListAddMessage extends AclManagementMessage {
 }
 
 // TODO: should be eventually moved to TDK
-/// Extension for [MediatorClient] to support Affinidi-specific authentication.
+/// Extension for [MediatorClient] to support Affinidi-specific ACL management.
 ///
-/// Authentication by mediators is not covered by the DIDComm standard.
-/// This extension provides a method to authenticate with an Affinidi mediator.
+/// ACL management is not covered by the DIDComm standard.
+/// This extension provides a method to configure ACLs with an Affinidi mediator.
 extension AffinidiAclManagementExtension on MediatorClient {
   /// Sends a [AclManagementMessage] to the mediator.
   ///
