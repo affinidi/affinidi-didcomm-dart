@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
+import 'package:meta/meta.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/io.dart';
@@ -29,7 +30,7 @@ class MediatorClient {
   final DidSigner signer;
 
   /// Options for [PlainTextMessage] messages, sent to the mediator.
-  final PlainTextMessageOptions plainTextMessageOptions;
+  final ForwardMessageOptions forwardMessageOptions;
 
   /// Options for WebSocket connections.
   final WebSocketOptions webSocketOptions;
@@ -43,14 +44,14 @@ class MediatorClient {
   /// [keyPair] - The key pair for encryption/signing.
   /// [didKeyId] - The key ID for encryption.
   /// [signer] - The signer for signing messages.
-  /// [plainTextMessageOptions] - Options for sent messages (default: const PlainTextMessageOptions()).
+  /// [forwardMessageOptions] - Options for sent messages (default: const PlainTextMessageOptions()).
   /// [webSocketOptions] - Options for WebSocket/live delivery (default: const WebSocketOptions()).
   MediatorClient({
     required this.mediatorDidDocument,
     required this.keyPair,
     required this.didKeyId,
     required this.signer,
-    this.plainTextMessageOptions = const PlainTextMessageOptions(),
+    this.forwardMessageOptions = const ForwardMessageOptions(),
     this.webSocketOptions = const WebSocketOptions(),
   }) : _dio = mediatorDidDocument.toDio(
           mediatorServiceType: DidDocumentServiceType.didCommMessaging,
@@ -78,19 +79,19 @@ class MediatorClient {
     );
   }
 
-  /// Sends a [PlainTextMessage] to the mediator.
+  /// Sends a [ForwardMessage] to the mediator.
   ///
   /// [message] - The message to send.
   /// [accessToken] - Optional bearer token for authentication.
   ///
   /// Returns the packed [DidcommMessage] that was sent.
   Future<DidcommMessage> sendMessage(
-    PlainTextMessage message, {
+    ForwardMessage message, {
     String? accessToken,
   }) async {
-    final messageToSend = await _packMessage(
+    final messageToSend = await packMessage(
       message,
-      messageOptions: plainTextMessageOptions,
+      messageOptions: forwardMessageOptions,
     );
 
     final headers =
@@ -218,7 +219,7 @@ class MediatorClient {
       );
 
       _sendMessageToChannel(
-        await _packMessage(
+        await packMessage(
           setupRequestMessage,
           messageOptions: webSocketOptions.statusRequestMessageOptions,
         ),
@@ -234,7 +235,7 @@ class MediatorClient {
       );
 
       _sendMessageToChannel(
-        await _packMessage(
+        await packMessage(
           liveDeliveryChangeMessage,
           messageOptions: webSocketOptions.liveDeliveryChangeMessageOptions,
         ),
@@ -251,7 +252,9 @@ class MediatorClient {
     }
   }
 
-  Future<DidcommMessage> _packMessage(
+  ///
+  @internal
+  Future<DidcommMessage> packMessage(
     PlainTextMessage message, {
     required MessageOptions messageOptions,
   }) async {
