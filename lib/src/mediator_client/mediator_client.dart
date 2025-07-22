@@ -252,7 +252,7 @@ class MediatorClient {
     }
   }
 
-  ///
+  /// Packs message, which then can be sent to mediator.
   @internal
   Future<DidcommMessage> packMessage(
     PlainTextMessage message, {
