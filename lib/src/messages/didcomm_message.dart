@@ -329,8 +329,6 @@ abstract class DidcommMessage {
           .toSet();
 
       if (!actualSignerSet.containsAll(expectedSigners)) {
-        prettyPrint('actualSignerSet', object: actualSignerSet.toString());
-        prettyPrint('expectedSigners', object: expectedSigners.toString());
         throw ArgumentError(
           'Can not match expected signers: ${expectedSignerSet.difference(actualSignerSet)}',
           'message',
