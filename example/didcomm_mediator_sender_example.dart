@@ -156,7 +156,7 @@ void main() async {
     didKeyId: senderMatchedDidKeyIds.first,
     signer: senderSigner,
     // optional. if omitted defaults will be used
-    plainTextMessageOptions: const PlainTextMessageOptions(
+    forwardMessageOptions: const ForwardMessageOptions(
       shouldSign: true,
       shouldEncrypt: true,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
