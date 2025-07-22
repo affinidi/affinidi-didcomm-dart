@@ -5,8 +5,6 @@ import 'package:convert/convert.dart';
 import 'package:didcomm/didcomm.dart';
 import 'package:ssi/ssi.dart';
 
-import 'helpers.dart';
-
 void main() async {
   final aliceSeed = hex.decode(
     'a1772b144344781f2a55fc4d5e49f3767bb0967205ad08454a09c76d96fd2ccd',

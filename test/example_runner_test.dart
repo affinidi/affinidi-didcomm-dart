@@ -1,8 +1,7 @@
 import 'dart:io';
+import 'package:didcomm/didcomm.dart';
 import 'package:path/path.dart';
 import 'package:test/test.dart';
-
-import '../example/helpers.dart';
 
 void main() async {
   // Run commands below in your terminal to generate keys for Alice and Bob:

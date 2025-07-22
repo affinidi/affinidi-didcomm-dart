@@ -3,13 +3,9 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/authentication_tokens/authentication_tokens.dart';
-import 'package:didcomm/src/common/encoding.dart';
-import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:ssi/ssi.dart';
 import 'package:test/test.dart';
 import 'package:uuid/uuid.dart';
-
-import '../example/helpers.dart';
 
 // sometimes websockets connection is dropped
 // it is better to delegate connection restoration strategy for the application, that uses this library

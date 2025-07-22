@@ -1,10 +1,6 @@
 import 'package:didcomm/didcomm.dart';
-import 'package:didcomm/src/common/encoding.dart';
-import 'package:didcomm/src/extensions/extensions.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
-
-import 'helpers.dart';
 
 void main() async {
   // Run commands below in your terminal to generate keys for Alice and Bob:

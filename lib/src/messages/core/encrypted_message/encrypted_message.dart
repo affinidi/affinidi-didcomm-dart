@@ -14,7 +14,6 @@ import '../../../ecdh/ecdh.dart';
 import '../../../errors/missing_authentication_tag_error.dart';
 import '../../../errors/missing_initialization_vector_error.dart';
 import '../../../errors/missing_key_agreement_error.dart';
-import '../../../extensions/extensions.dart';
 import '../../../jwks/jwk.dart';
 import '../../jwm.dart';
 
