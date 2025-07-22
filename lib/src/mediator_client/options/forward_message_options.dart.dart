@@ -1,8 +1,8 @@
-import '../../../didcomm.dart';
+import 'message_options.dart';
 
-/// Options for sending a [ForwardMessageOptions] message over a DIDComm mediator or next hop.
+/// Options for sending a forward message over a DIDComm mediator or next hop.
 ///
-/// Allows configuration of how the message should be protected (signing, encryption, etc).
+/// Allows configuration of how the forward message should be protected (signing, encryption, etc).
 class ForwardMessageOptions extends MessageOptions {
   /// Constructs [ForwardMessageOptions].
   ///

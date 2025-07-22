@@ -29,7 +29,7 @@ class MediatorClient {
   /// The signer used for signing messages.
   final DidSigner signer;
 
-  /// Options for [PlainTextMessage] messages, sent to the mediator.
+  /// Options for forwarding messages to the mediator.
   final ForwardMessageOptions forwardMessageOptions;
 
   /// Options for WebSocket connections.
@@ -44,7 +44,7 @@ class MediatorClient {
   /// [keyPair] - The key pair for encryption/signing.
   /// [didKeyId] - The key ID for encryption.
   /// [signer] - The signer for signing messages.
-  /// [forwardMessageOptions] - Options for sent messages (default: const PlainTextMessageOptions()).
+  /// [forwardMessageOptions] - Options for forwarding messages (default: const ForwardMessageOptions()).
   /// [webSocketOptions] - Options for WebSocket/live delivery (default: const WebSocketOptions()).
   MediatorClient({
     required this.mediatorDidDocument,
