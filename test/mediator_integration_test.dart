@@ -155,7 +155,7 @@ void main() async {
             signer: await aliceDidManager.getSigner(
               aliceDidDocument.authentication.first.id,
             ),
-            forwardMessageOptions: const ForwardMessageOptions(
+            plainTextMessageOptions: const PlainTextMessageOptions(
               shouldSign: true,
               shouldEncrypt: true,
               keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,

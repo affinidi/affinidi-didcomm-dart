@@ -135,7 +135,7 @@ void main() async {
     ),
     didKeyId: aliceMatchedKeyIds.first,
     signer: aliceSigner,
-    forwardMessageOptions: const ForwardMessageOptions(
+    plainTextMessageOptions: const PlainTextMessageOptions(
       shouldSign: true,
       shouldEncrypt: true,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
