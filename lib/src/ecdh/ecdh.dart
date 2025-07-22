@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:ssi/ssi.dart' show DidManager, KeyPair;
 
 import '../../didcomm.dart';
-import '../extensions/extensions.dart';
 import '../jwks/jwk.dart';
 import '../messages/jwm.dart';
 import 'ecdh_1pu/ecdh_1pu_for_secp256_and_p.dart';
