@@ -151,7 +151,7 @@ void main() async {
       signer: aliceSigner,
 
       // optional. if omitted defaults will be used
-      forwardMessageOptions: const ForwardMessageOptions(
+      plainTextMessageOptions: const PlainTextMessageOptions(
         shouldSign: true,
         shouldEncrypt: true,
         keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,

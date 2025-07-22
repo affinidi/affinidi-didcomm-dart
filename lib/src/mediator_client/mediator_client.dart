@@ -28,8 +28,8 @@ class MediatorClient {
   /// The signer used for signing messages.
   final DidSigner signer;
 
-  /// Options for forwarding messages to the mediator.
-  final ForwardMessageOptions forwardMessageOptions;
+  /// Options for [PlainTextMessage] messages, sent to the mediator.
+  final PlainTextMessageOptions plainTextMessageOptions;
 
   /// Options for WebSocket connections.
   final WebSocketOptions webSocketOptions;
@@ -43,14 +43,14 @@ class MediatorClient {
   /// [keyPair] - The key pair for encryption/signing.
   /// [didKeyId] - The key ID for encryption.
   /// [signer] - The signer for signing messages.
-  /// [forwardMessageOptions] - Options for forwarding messages (default: const ForwardMessageOptions()).
+  /// [plainTextMessageOptions] - Options for sent messages (default: const PlainTextMessageOptions()).
   /// [webSocketOptions] - Options for WebSocket/live delivery (default: const WebSocketOptions()).
   MediatorClient({
     required this.mediatorDidDocument,
     required this.keyPair,
     required this.didKeyId,
     required this.signer,
-    this.forwardMessageOptions = const ForwardMessageOptions(),
+    this.plainTextMessageOptions = const PlainTextMessageOptions(),
     this.webSocketOptions = const WebSocketOptions(),
   }) : _dio = mediatorDidDocument.toDio(
           mediatorServiceType: DidDocumentServiceType.didCommMessaging,
@@ -78,19 +78,19 @@ class MediatorClient {
     );
   }
 
-  /// Sends a [ForwardMessage] to the mediator.
+  /// Sends a [PlainTextMessage] to the mediator.
   ///
   /// [message] - The message to send.
   /// [accessToken] - Optional bearer token for authentication.
   ///
   /// Returns the packed [DidcommMessage] that was sent.
   Future<DidcommMessage> sendMessage(
-    ForwardMessage message, {
+    PlainTextMessage message, {
     String? accessToken,
   }) async {
     final messageToSend = await _packMessage(
       message,
-      messageOptions: forwardMessageOptions,
+      messageOptions: plainTextMessageOptions,
     );
 
     final headers =
