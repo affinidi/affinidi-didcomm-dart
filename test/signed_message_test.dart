@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/extensions/did_signer_extension.dart';
-import 'package:didcomm/src/extensions/object_extension.dart';
 import 'package:ssi/ssi.dart';
 import 'package:test/test.dart';
 

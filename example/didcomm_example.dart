@@ -3,8 +3,6 @@ import 'dart:convert';
 import 'package:didcomm/didcomm.dart';
 import 'package:ssi/ssi.dart';
 
-import 'helpers.dart';
-
 void main() async {
   final aliceKeyStore = InMemoryKeyStore();
   final aliceWallet = PersistentWallet(aliceKeyStore);

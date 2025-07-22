@@ -1,8 +1,6 @@
 import 'package:didcomm/didcomm.dart';
 import 'package:ssi/ssi.dart';
 
-import 'helpers.dart';
-
 void main() async {
   // Run commands below in your terminal to generate keys for Receiver:
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/bob_private_key.pem

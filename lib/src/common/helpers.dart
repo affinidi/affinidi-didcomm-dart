@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:pointycastle/asn1/asn1_parser.dart';
@@ -9,6 +10,10 @@ import 'package:pointycastle/asn1/primitives/asn1_octet_string.dart';
 import 'package:pointycastle/asn1/primitives/asn1_sequence.dart';
 import 'package:ssi/ssi.dart';
 
+/// Extracts pem into bytes.
+///
+/// [pemPath]: path to pem file
+/// Returns pem as bytes.
 Future<Uint8List> extractPrivateKeyBytes(String pemPath) async {
   final pem = await File(pemPath).readAsString();
 
@@ -26,15 +31,27 @@ Future<Uint8List> extractPrivateKeyBytes(String pemPath) async {
   return privateKeyOctetString.valueBytes!;
 }
 
+/// Reads DID document.
+/// 
+/// [didDocumentPath]: a path to DID document.
+/// Returns the DID document.
 Future<DidDocument> readDidDocument(String didDocumentPath) async {
   final json = await File(didDocumentPath).readAsString();
   return DidDocument.fromJson(jsonDecode(json));
 }
 
+/// Reads DID from a file.
+/// 
+/// [didPath]: a path to DID file.
+/// Returns the DID.
 Future<String> readDid(String didPath) async {
   return await File(didPath).readAsString();
 }
 
+/// Pretty prints the object prefixed with its name.
+///
+/// [name]: The bytes to encode.
+/// [object]: The bytes to encode.
 void prettyPrint(
   String name, {
   Object? object,
@@ -49,11 +66,24 @@ void prettyPrint(
   }
 }
 
+/// Converts bytes int human readable version.
+/// 
+/// [bytes]: bytes to convert.
+/// Returns human readable version for bytes.
 String formatBytes(int bytes) {
-  final kbs = bytes / 1024;
-  return '${kbs.toStringAsFixed(2)}kb';
+  final units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+  final i = bytes == 0 ? 0 : (log(bytes) / log(1024)).round();
+  final size = pow(bytes / 1024, i).toStringAsFixed(2);
+  final unit = units[i];
+
+  return '$size$unit';
 }
 
+/// Writes environment variable into file, if it was not written there already.
+///
+/// [environmentVariableName]: 
+/// [filePath]: 
+/// [decodeBase64]: 
 Future<void> writeEnvironmentVariableToFileIfNeed(
   String? environmentVariableName,
   String filePath, {

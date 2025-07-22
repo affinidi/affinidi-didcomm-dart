@@ -6,6 +6,8 @@
 
 library;
 
+export 'src/common/encoding.dart';
+export 'src/common/helpers.dart';
 export 'src/converters/jwe_header_converter.dart';
 export 'src/converters/jws_header_converter.dart';
 export 'src/converters/problem_code_converter.dart';
@@ -13,6 +15,7 @@ export 'src/errors/errors.dart';
 export 'src/extensions/affinidi_authenticator_extension.dart';
 export 'src/extensions/did_document_extension.dart';
 export 'src/extensions/did_manager_extension.dart';
+export 'src/extensions/extensions.dart';
 export 'src/extensions/verification_method_extention.dart';
 export 'src/mediator_client.dart';
 export 'src/messages/algorithm_types/algorithms_types.dart';
