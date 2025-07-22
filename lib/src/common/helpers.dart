@@ -32,7 +32,7 @@ Future<Uint8List> extractPrivateKeyBytes(String pemPath) async {
 }
 
 /// Reads DID document.
-/// 
+///
 /// [didDocumentPath]: a path to DID document.
 /// Returns the DID document.
 Future<DidDocument> readDidDocument(String didDocumentPath) async {
@@ -41,7 +41,7 @@ Future<DidDocument> readDidDocument(String didDocumentPath) async {
 }
 
 /// Reads DID from a file.
-/// 
+///
 /// [didPath]: a path to DID file.
 /// Returns the DID.
 Future<String> readDid(String didPath) async {
@@ -67,23 +67,22 @@ void prettyPrint(
 }
 
 /// Converts bytes int human readable version.
-/// 
+///
 /// [bytes]: bytes to convert.
 /// Returns human readable version for bytes.
 String formatBytes(int bytes) {
   final units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-  final i = bytes == 0 ? 0 : (log(bytes) / log(1024)).round();
-  final size = pow(bytes / 1024, i).toStringAsFixed(2);
+  final i = bytes == 0 ? 0 : (log(bytes) / log(1024)).floor();
+  final size = (bytes / pow(1024, i)).toStringAsFixed(2).replaceFirst('.00', '');
   final unit = units[i];
-
   return '$size$unit';
 }
 
 /// Writes environment variable into file, if it was not written there already.
 ///
-/// [environmentVariableName]: 
-/// [filePath]: 
-/// [decodeBase64]: 
+/// [environmentVariableName]:
+/// [filePath]:
+/// [decodeBase64]:
 Future<void> writeEnvironmentVariableToFileIfNeed(
   String? environmentVariableName,
   String filePath, {
