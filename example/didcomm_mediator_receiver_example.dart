@@ -1,6 +1,8 @@
 import 'package:didcomm/didcomm.dart';
 import 'package:ssi/ssi.dart';
 
+import '../test/example_configs.dart';
+
 void main() async {
   // Run commands below in your terminal to generate keys for Receiver:
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/bob_private_key.pem
@@ -33,7 +35,7 @@ void main() async {
   );
 
   final receiverMediatorDocument = await UniversalDIDResolver.resolve(
-    await readDid('./example/mediator/mediator_did.txt'),
+    await readDid(mediatorDidPath),
   );
 
   final receiverSigner = await receiverDidManager.getSigner(

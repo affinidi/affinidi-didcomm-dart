@@ -2,6 +2,8 @@ import 'package:didcomm/didcomm.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 
+import '../test/example_configs.dart';
+
 void main() async {
   // Run commands below in your terminal to generate keys for Alice and Bob:
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/alice_private_key.pem
@@ -28,7 +30,7 @@ void main() async {
 
   final aliceKeyId = 'alice-key-1';
   final alicePrivateKeyBytes = await extractPrivateKeyBytes(
-    './example/keys/alice_private_key.pem',
+    alicePrivateKeyPath,
   );
 
   await aliceKeyStore.set(
@@ -53,7 +55,7 @@ void main() async {
 
   final bobKeyId = 'bob-key-1';
   final bobPrivateKeyBytes =
-      await extractPrivateKeyBytes('./example/keys/bob_private_key.pem');
+      await extractPrivateKeyBytes(bobPrivateKeyPath);
 
   await bobKeyStore.set(
     bobKeyId,
@@ -73,7 +75,7 @@ void main() async {
   );
 
   final bobMediatorDocument = await UniversalDIDResolver.resolve(
-    await readDid('./example/mediator/mediator_did.txt'),
+    await readDid(mediatorDidPath),
   );
 
   final bobSigner = await bobDidManager.getSigner(
