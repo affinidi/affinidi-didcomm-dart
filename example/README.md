@@ -29,3 +29,7 @@ Fetch DIDComm messages from the Mediator addressed to the DID of the recipient -
 ### 4. Forward message through Mediator using WebSocket
 
 Forward DIDComm message from Alice to Bob using a Mediator service in WebSocket mode - [view example](https://github.com/affinidi/affinidi-didcomm-dart/blob/main/example/didcomm_mediator_web_sockets_example.dart).
+
+### 5. Forward the message through the Mediator with ACL enabled
+
+Authenticate and forward a DIDComm message from Alice to Bob using a Mediator (with ACL enabled) service - [view example](https://github.com/affinidi/affinidi-didcomm-dart/blob/main/example/didcomm_mediator_with_acl_example.dart).
