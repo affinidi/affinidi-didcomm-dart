@@ -720,7 +720,7 @@ The `feature-type` field in Query and Disclose messages indicates the type of fe
 
 `FeatureType.unknown` is a special value that ensures robust deserialization. If a message contains a `feature-type` value that is not recognized (e.g., a future extension or typo), it will be mapped to `FeatureType.unknown` instead of causing an error. This allows your code to handle unknown feature types gracefully and remain compatible with future versions of the protocol.
 
-**Query Message** (`https://didcomm.org/discover-features/2.0/queries`):
+### Query Message
 - Sent by an agent to request information about supported features (protocols, goal-codes, etc.) from another agent.
 - The message body contains a list of queries, each specifying a `feature-type` and a `match` pattern (such as a protocol URI or wildcard).
 
@@ -749,7 +749,7 @@ The `feature-type` field in Query and Disclose messages indicates the type of fe
 }
 ```
 
-**Disclose Message** (`https://didcomm.org/discover-features/2.0/disclose`):
+### Disclose Message
 - Sent in response to a Query Message, listing the features supported by the agent.
 - The message body contains a list of disclosures, each specifying a `feature-type`, an `id` (such as a protocol URI or goal-code), and optionally a list of `roles` supported for that feature.
 
