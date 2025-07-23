@@ -1,6 +1,5 @@
 ## 1.0.0-dev.4
 
- - **FIX**: a256gcp should be used only for ecdh-es.
  - **FIX**: use a256gcm only for anoncrypt.
 
 ## 1.0.0-dev.3
