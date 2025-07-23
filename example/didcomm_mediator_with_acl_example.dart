@@ -3,6 +3,8 @@ import 'package:didcomm/src/mediator_client/mediator_client_exception.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 
+import '../test/example_configs.dart';
+
 void main() async {
   // Run commands below in your terminal to generate keys for Alice and Bob:
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/alice_private_key.pem
@@ -45,7 +47,7 @@ void main() async {
   prettyPrint('Bob DID Document', object: bobDidDocument);
 
   final bobMediatorDocument = await UniversalDIDResolver.resolve(
-    await readDid('./example/mediator/mediator_with_acl_did.txt'),
+    await readDid(mediatorWithAclDidPath),
   );
 
   prettyPrint('Bob Mediator Document', object: bobMediatorDocument);
