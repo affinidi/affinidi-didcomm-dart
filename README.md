@@ -33,7 +33,6 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
     - [Message Wrapping Verification](#message-wrapping-verification)
     - [Signers Verification](#signers-verification)
     - [Custom Message Verification and Processing](#custom-message-verification-and-processing)
-
   - [Problem Report Messages](#problem-report-messages)
     - [Structure of a Problem Report](#structure-of-a-problem-report)
     - [Usage in Dart](#usage-in-dart)
@@ -707,14 +706,23 @@ final message = ProblemReportMessage(
 
 This approach ensures your problem reports are fully compatible with the DIDComm v2 spec.
 
-
 ## Discovery Features
 
-DIDComm v2 supports a protocol for feature discovery between agents, using two main message types: **Query Message** and **Disclose Message** .
+DIDComm v2 supports a protocol for feature discovery between agents, using two main message types: **Query Message** and **Disclose Message**.
+
+The `feature-type` field in Query and Disclose messages indicates the type of feature being described or requested. This library provides the `FeatureType` enum for this purpose:
+
+| FeatureType value     | JSON value      | Description                                      |
+|-----------------------|-----------------|--------------------------------------------------|
+| FeatureType.protocol  | "protocol"      | DIDComm protocol supported by the agent          |
+| FeatureType.goalCode  | "goal-code"     | Goal code supported by the agent                 |
+| FeatureType.unknown   | (any other)     | Used for unknown or unrecognized feature types   |
+
+`FeatureType.unknown` is a special value that ensures robust deserialization. If a message contains a `feature-type` value that is not recognized (e.g., a future extension or typo), it will be mapped to `FeatureType.unknown` instead of causing an error. This allows your code to handle unknown feature types gracefully and remain compatible with future versions of the protocol.
 
 **Query Message** (`https://didcomm.org/discover-features/2.0/queries`):
 - Sent by an agent to request information about supported features (protocols, goal-codes, etc.) from another agent.
-- The message body contains a list of queries, each specifying a `feature-type` (such as `protocol` or `goal-code`) and a `match` pattern (such as a protocol URI or wildcard).
+- The message body contains a list of queries, each specifying a `feature-type` and a `match` pattern (such as a protocol URI or wildcard).
 
 **Example:**
 
@@ -731,6 +739,10 @@ DIDComm v2 supports a protocol for feature discovery between agents, using two m
       {
         "feature-type": "goal-code",
         "match": "org.didcomm.*"
+      },
+      {
+        "feature-type": "custom-type",
+        "match": "*"
       }
     ]
   }
@@ -756,6 +768,10 @@ DIDComm v2 supports a protocol for feature discovery between agents, using two m
       {
         "feature-type": "goal-code",
         "id": "org.didcomm.sell.goods.consumer"
+      },
+      {
+        "feature-type": "custom-type",
+        "id": "org.didcomm.future.feature"
       }
     ]
   }
