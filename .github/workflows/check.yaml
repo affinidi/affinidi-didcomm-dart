@@ -3,6 +3,7 @@ on:
   pull_request:
 env:
   TEST_MEDIATOR_DID: ${{ vars.TEST_MEDIATOR_DID }}
+  TEST_MEDIATOR_WITH_ACL_DID: ${{ vars.TEST_MEDIATOR_WITH_ACL_DID }}
   TEST_ALICE_PRIVATE_KEY_PEM: ${{ vars.TEST_ALICE_PRIVATE_KEY_PEM }}
   TEST_BOB_PRIVATE_KEY_PEM: ${{ vars.TEST_BOB_PRIVATE_KEY_PEM }}
 jobs:
@@ -33,4 +34,3 @@ jobs:
       - uses: romeovs/lcov-reporter-action@v0.3.1
         with:
           lcov-file: ./coverage/lcov.info
-

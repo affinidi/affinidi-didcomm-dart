@@ -8,9 +8,6 @@ void main() async {
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/alice_private_key.pem
   // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/bob_private_key.pem
 
-  // Create and run a DIDComm mediator, for instance https://github.com/affinidi/affinidi-tdk-rs/tree/main/crates/affinidi-messaging/affinidi-messaging-mediator or with https://portal.affinidi.com.
-  // Copy its DID Document URL into example/mediator/mediator_did.txt.
-
   final aliceKeyStore = InMemoryKeyStore();
   final aliceWallet = PersistentWallet(aliceKeyStore);
 
@@ -48,7 +45,7 @@ void main() async {
   prettyPrint('Bob DID Document', object: bobDidDocument);
 
   final bobMediatorDocument = await UniversalDIDResolver.resolve(
-    await readDid('./example/mediator/mediator_did.txt'),
+    await readDid('./example/mediator/mediator_with_acl_did.txt'),
   );
 
   prettyPrint('Bob Mediator Document', object: bobMediatorDocument);
