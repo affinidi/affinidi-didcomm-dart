@@ -54,8 +54,7 @@ void main() async {
   );
 
   final bobKeyId = 'bob-key-1';
-  final bobPrivateKeyBytes =
-      await extractPrivateKeyBytes(bobPrivateKeyPath);
+  final bobPrivateKeyBytes = await extractPrivateKeyBytes(bobPrivateKeyPath);
 
   await bobKeyStore.set(
     bobKeyId,
