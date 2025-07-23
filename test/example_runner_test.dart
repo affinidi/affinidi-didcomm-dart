@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:test/test.dart';
 
-import 'example_envs.dart';
+import 'example_configs.dart';
 
 void main() async {
   configureTestFiles();

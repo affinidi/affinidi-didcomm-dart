@@ -7,7 +7,7 @@ import 'package:ssi/ssi.dart';
 import 'package:test/test.dart';
 import 'package:uuid/uuid.dart';
 
-import 'example_envs.dart';
+import 'example_configs.dart';
 
 // sometimes websockets connection is dropped
 // it is better to delegate connection restoration strategy for the application, that uses this library
