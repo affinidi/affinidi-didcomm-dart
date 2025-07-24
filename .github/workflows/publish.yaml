@@ -20,3 +20,5 @@ jobs:
           fetch-depth: 0
       - uses: flutter-actions/setup-pubdev-credentials@v1
       - uses: bluefireteam/melos-action@v3
+        with:
+          publish: true
