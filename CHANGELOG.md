@@ -1,3 +1,19 @@
+## 1.0.0-dev.7
+
+ - **FIX**: formatted.
+ - **FIX**: doc added.
+ - **FIX**: reverted #2.
+ - **FIX**: reverted #1.
+ - **FIX**: moved acl mgmt to extensions.
+ - **FIX**: logs removed.
+ - **FEAT**: test/examples constants updated.
+ - **FEAT**: config file renamed.
+ - **FEAT**: config file renamed.
+ - **FEAT**: test evns vars updated.
+ - **FEAT**: TEST_MEDIATOR_WITH_ACL_DID added.
+ - **FEAT**: acl example added.
+ - **FEAT**: forward message abstracted in mediator client.
+
 ## 1.0.0-dev.6
 
  - **FIX**: package publish.
