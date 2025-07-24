@@ -1,3 +1,7 @@
+## 1.0.0-dev.6
+
+ - **FIX**: package publish.
+
 ## 1.0.0-dev.5
 
  - **FIX**: a256gcp should be used only for ecdh-es.
