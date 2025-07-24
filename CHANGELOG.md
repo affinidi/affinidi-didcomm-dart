@@ -1,3 +1,9 @@
+## 1.0.0-dev.5
+
+ - **FIX**: a256gcp should be used only for ecdh-es.
+ - **FEAT**: add disclose message.
+ - **FEAT**: add query message.
+
 ## 1.0.0-dev.4
 
  - **FIX**: use a256gcm only for anoncrypt.
