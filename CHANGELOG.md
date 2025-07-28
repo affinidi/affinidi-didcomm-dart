@@ -1,3 +1,7 @@
+## 1.0.0-dev.8
+
+ - **FIX**: analyzer issues.
+
 ## 1.0.0-dev.7
 
  - **FIX**: formatted.
