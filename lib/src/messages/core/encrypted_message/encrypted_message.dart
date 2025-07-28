@@ -273,7 +273,8 @@ class EncryptedMessage extends DidcommMessage {
 
   Future<Jwk> _getSenderJwk(String subjectKeyId) async {
     final senderDid = getDidFromId(subjectKeyId);
-    final senderDidDocument = await UniversalDIDResolver.resolve(senderDid);
+    final senderDidDocument =
+        await UniversalDIDResolver.defaultResolver.resolveDid(senderDid);
 
     final keyAgreement = senderDidDocument.keyAgreement.firstWhere(
       (keyAgreement) => keyAgreement.didKeyId == subjectKeyId,

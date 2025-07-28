@@ -49,7 +49,8 @@ void main() async {
 
   prettyPrint('Bob DID Document', object: bobDidDocument);
 
-  final bobMediatorDocument = await UniversalDIDResolver.resolve(
+  final bobMediatorDocument =
+      await UniversalDIDResolver.defaultResolver.resolveDid(
     await readDid(mediatorWithAclDidPath),
   );
 

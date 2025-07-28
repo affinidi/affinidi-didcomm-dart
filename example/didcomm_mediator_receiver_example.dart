@@ -34,7 +34,8 @@ void main() async {
     object: receiverDidDocument,
   );
 
-  final receiverMediatorDocument = await UniversalDIDResolver.resolve(
+  final receiverMediatorDocument =
+      await UniversalDIDResolver.defaultResolver.resolveDid(
     await readDid(mediatorDidPath),
   );
 

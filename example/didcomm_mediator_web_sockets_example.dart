@@ -73,7 +73,8 @@ void main() async {
     object: bobDidDocument,
   );
 
-  final bobMediatorDocument = await UniversalDIDResolver.resolve(
+  final bobMediatorDocument =
+      await UniversalDIDResolver.defaultResolver.resolveDid(
     await readDid(mediatorDidPath),
   );
 
