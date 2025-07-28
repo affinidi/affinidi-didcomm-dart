@@ -17,23 +17,23 @@ const bobPrivateKeyPath = './example/keys/bob_private_key.pem';
 
 /// Configures files based on ENV vars.
 void configureTestFiles() async {
-  await writeEnvironmentVariableToFileIfNeed(
+  await writeEnvironmentVariableToFileIfNeeded(
     'TEST_MEDIATOR_DID',
     mediatorDidPath,
   );
 
-  await writeEnvironmentVariableToFileIfNeed(
+  await writeEnvironmentVariableToFileIfNeeded(
     'TEST_MEDIATOR_WITH_ACL_DID',
     mediatorWithAclDidPath,
   );
 
-  await writeEnvironmentVariableToFileIfNeed(
+  await writeEnvironmentVariableToFileIfNeeded(
     'TEST_ALICE_PRIVATE_KEY_PEM',
     alicePrivateKeyPath,
     decodeBase64: true,
   );
 
-  await writeEnvironmentVariableToFileIfNeed(
+  await writeEnvironmentVariableToFileIfNeeded(
     'TEST_BOB_PRIVATE_KEY_PEM',
     bobPrivateKeyPath,
     decodeBase64: true,
