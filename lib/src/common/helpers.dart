@@ -85,7 +85,7 @@ String formatBytes(int bytes) {
 /// [environmentVariableName]:
 /// [filePath]:
 /// [decodeBase64]:
-Future<void> writeEnvironmentVariableToFileIfNeed(
+Future<void> writeEnvironmentVariableToFileIfNeeded(
   String? environmentVariableName,
   String filePath, {
   bool decodeBase64 = false,
@@ -96,7 +96,7 @@ Future<void> writeEnvironmentVariableToFileIfNeed(
   if ((environmentVariable == null || environmentVariable.isEmpty) &&
       !(await file.exists())) {
     throw ArgumentError(
-      'Environment variable $environmentVariableName can not be null if file was not created yet',
+      'Environment variable $environmentVariableName or file $filePath are empty. Set one or another to proceed.',
       'environmentVariableName',
     );
   }

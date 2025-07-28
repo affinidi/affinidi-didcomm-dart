@@ -63,12 +63,14 @@ class AccessListAddMessage extends AclManagementMessage {
   /// [json]: The JSON map representing the message.
   factory AccessListAddMessage.fromJson(Map<String, dynamic> json) {
     final plainTextMessage = AccessListAddMessage.fromJson(json);
+    final accessList =
+        plainTextMessage.body?['access_list_add'] as Map<String, dynamic>?;
+
     return AccessListAddMessage(
       id: plainTextMessage.id,
       from: plainTextMessage.from,
       to: plainTextMessage.to,
-      theirDids:
-          plainTextMessage.body?['access_list_add']?['hashes'] as List<String>,
+      theirDids: accessList?['hashes'] as List<String>,
     );
   }
 }
