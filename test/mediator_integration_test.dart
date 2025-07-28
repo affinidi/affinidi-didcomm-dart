@@ -101,7 +101,8 @@ void main() async {
           await bobDidManager.addVerificationMethod(bobKeyId);
           bobDidDocument = await bobDidManager.getDidDocument();
 
-          bobMediatorDocument = await UniversalDIDResolver.resolve(
+          bobMediatorDocument =
+              await UniversalDIDResolver.defaultResolver.resolveDid(
             await readDid(mediatorDidPath),
           );
 

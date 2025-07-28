@@ -70,7 +70,8 @@ class MediatorClient {
     required DidSigner signer,
   }) async {
     return MediatorClient(
-      mediatorDidDocument: await UniversalDIDResolver.resolve(
+      mediatorDidDocument:
+          await UniversalDIDResolver.defaultResolver.resolveDid(
         didDocumentUrl.toString(),
       ),
       keyPair: keyPair,

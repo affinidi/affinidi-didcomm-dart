@@ -81,7 +81,8 @@ void main() async {
     senderDidDocument.assertionMethod.first.id,
   );
 
-  final receiverMediatorDidDocument = await UniversalDIDResolver.resolve(
+  final receiverMediatorDidDocument =
+      await UniversalDIDResolver.defaultResolver.resolveDid(
     await readDid(mediatorDidPath),
   );
 
