@@ -1,3 +1,7 @@
+## 1.0.0-dev.9
+
+ - **FIX**: update to latest dart ssi.
+
 ## 1.0.0-dev.8
 
  - **FIX**: analyzer issues.
