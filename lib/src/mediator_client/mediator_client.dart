@@ -209,6 +209,32 @@ class MediatorClient {
     }
   }
 
+  /// Deletes messages from the mediator by message IDs.
+  ///
+  /// [messageHashes] - The list of message IDs to delete.
+  /// [accessToken] - Optional bearer token for authentication.
+  ///
+  /// Returns list of errors.
+  Future<dynamic> deleteMessages({
+    required List<String> messageHashes,
+    Function? onError,
+    String? accessToken,
+  }) async {
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+
+    try {
+      final response = await _dio.delete<Map<String, dynamic>>(
+        '/delete',
+        data: {'message_ids': messageHashes},
+        options: Options(headers: headers),
+      );
+
+      return response.data!['data']['errors'].map((error) => error[1]).toList();
+    } on DioException catch (error) {
+      throw MediatorClientException(innerException: error);
+    }
+  }
   /// Listens for incoming messages from the mediator via WebSocket.
   ///
   /// [onMessage] - Callback for each received message.
