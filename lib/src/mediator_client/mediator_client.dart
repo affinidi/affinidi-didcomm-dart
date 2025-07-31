@@ -235,6 +235,40 @@ class MediatorClient {
       throw MediatorClientException(innerException: error);
     }
   }
+
+  Future<List<Map<String, dynamic>>> fetchMessages({
+    String? startId,
+    int? batchSize = 25,
+    bool deleteOnRetrieve = false,
+    String? accessToken,
+  }) async {
+    // TODO: create exception to wrap errors
+
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/fetch',
+        data: {
+          'start_id': startId?.isEmpty ?? true ? null : startId,
+          'limit': batchSize,
+          'delete_policy': deleteOnRetrieve ? 'Optimistic' : 'DoNotDelete'
+        },
+        options: Options(headers: headers),
+      );
+      return (response.data!['data']['success'] as List<dynamic>)
+          .map(
+            (item) => jsonDecode(
+              (item as Map<String, dynamic>)['msg'] as String,
+            ) as Map<String, dynamic>,
+          )
+          .toList();
+    } on DioException catch (error) {
+      throw MediatorClientException(innerException: error);
+    }
+  }
+
   /// Listens for incoming messages from the mediator via WebSocket.
   ///
   /// [onMessage] - Callback for each received message.
