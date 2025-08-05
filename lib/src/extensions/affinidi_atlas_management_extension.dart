@@ -21,25 +21,44 @@ class AffinidiDidcommGatewayClient {
   final MediatorClient mediatorClient;
   final DidDocument didcommGatewayDidDocument;
   final DidSigner signer;
+  final KeyPair keyPair;
+  final String didKeyId;
 
-  AffinidiDidcommGatewayClient({
-    required this.mediatorClient,
-    required this.didcommGatewayDidDocument,
-    required this.signer,
-  });
+  AffinidiDidcommGatewayClient(
+      {required this.mediatorClient,
+      required this.didcommGatewayDidDocument,
+      required this.signer,
+      required this.keyPair,
+      required this.didKeyId});
 
-  Future<DidcommMessage> sendMessage(
-    PlainTextMessage message, {
-    String? accessToken,
+  Future<DidcommMessage> getMediators({
+    required String accessToken,
   }) async {
+    final getMediatorsMessage = GetMediatorInstancesListMessage(
+      id: const Uuid().v4(),
+      from: signer.did,
+      to: [didcommGatewayDidDocument.id],
+      createdTime: DateTime.now().toUtc(),
+      expiresTime: DateTime.now().add(const Duration(minutes: 5)).toUtc(),
+    );
+
+    prettyPrint(
+      'GetMediatorInstancesListMessage for DIDComm Gateway',
+      object: getMediatorsMessage,
+    );
+
     final messageForGateway =
         await DidcommMessage.packIntoSignedAndEncryptedMessages(
-      message,
-      recipientDidDocuments: [didcommGatewayDidDocument],
-      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+      getMediatorsMessage,
+      // FIXME
+      recipientDidDocuments: [
+        didcommGatewayDidDocument,
+      ],
+      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
       encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
       // TODO: resolve the key type from didcommGatewayDidDocument
-      keyType: KeyType.p256,
+      keyPair: keyPair,
+      didKeyId: didKeyId,
       signer: signer,
     );
 

@@ -1,7 +1,6 @@
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/extensions/affinidi_atlas_management_extension.dart';
 import 'package:ssi/ssi.dart';
-import 'package:uuid/uuid.dart';
 
 import '../test/example_configs.dart';
 
@@ -21,7 +20,7 @@ void main() async {
   final senderKeyStore = InMemoryKeyStore();
   final senderWallet = PersistentWallet(senderKeyStore);
 
-  final senderDidManager = DidKeyManager(
+  final senderDidManager = DidPeerManager(
     wallet: senderWallet,
     store: InMemoryDidStore(),
   );
@@ -42,28 +41,17 @@ void main() async {
   final senderDidDocument = await senderDidManager.getDidDocument();
 
   prettyPrint(
-    'Sender DID',
-    object: senderDidDocument.id,
+    'Sender DID Document',
+    object: senderDidDocument,
   );
 
   final senderSigner = await senderDidManager.getSigner(
-    senderDidDocument.assertionMethod.first.id,
+    senderDidDocument.authentication.first.id,
   );
 
   final mediatorDidDocument =
       await UniversalDIDResolver.defaultResolver.resolveDid(
     await readDid(mediatorDidPath),
-  );
-
-  final getMediatorsMessage = GetMediatorInstancesListMessage(
-    id: const Uuid().v4(),
-    from: senderDidDocument.id,
-    to: [gatewayDidDocument.id],
-  );
-
-  prettyPrint(
-    'GetMediatorInstancesListMessage for DIDComm Gateway',
-    object: getMediatorsMessage,
   );
 
   // find keys whose curve is common in other DID Documents
@@ -84,7 +72,7 @@ void main() async {
     forwardMessageOptions: const ForwardMessageOptions(
       shouldSign: true,
       shouldEncrypt: true,
-      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
       encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     ),
     webSocketOptions: const WebSocketOptions(
@@ -109,6 +97,10 @@ void main() async {
     mediatorClient: mediatorClient,
     didcommGatewayDidDocument: gatewayDidDocument,
     signer: senderSigner,
+    keyPair: await senderDidManager.getKeyPairByDidKeyId(
+      senderMatchedDidKeyIds.first,
+    ),
+    didKeyId: senderMatchedDidKeyIds.first,
   );
 
   await mediatorClient.listenForIncomingMessages(
@@ -145,8 +137,7 @@ void main() async {
     cancelOnError: false,
   );
 
-  await gatewayClient.sendMessage(
-    getMediatorsMessage,
+  await gatewayClient.getMediators(
     accessToken: authTokes.accessToken,
   );
 
