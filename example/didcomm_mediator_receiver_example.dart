@@ -20,9 +20,16 @@ void main() async {
 
   final receiverKeyId = 'receiver-key-1';
 
-  await receiverWallet.generateKey(
-    keyId: receiverKeyId,
-    keyType: KeyType.p256,
+  final receiverPrivateKeyBytes = await extractPrivateKeyBytes(
+    alicePrivateKeyPath,
+  );
+
+  await receiverKeyStore.set(
+    receiverKeyId,
+    StoredKey(
+      keyType: KeyType.p256,
+      privateKeyBytes: receiverPrivateKeyBytes,
+    ),
   );
 
   await receiverDidManager.addVerificationMethod(receiverKeyId);

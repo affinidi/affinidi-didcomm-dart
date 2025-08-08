@@ -10,6 +10,7 @@ class GetMediatorInstancesListMessage extends PlainTextMessage {
     required super.to,
     super.createdTime,
     super.expiresTime,
+    super.body = const {},
   }) : super(
           type: Uri.parse(
             'affinidi.io/operations/ama/getMediatorInstancesList',
