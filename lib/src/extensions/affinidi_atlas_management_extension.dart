@@ -92,6 +92,10 @@ class AffinidiDidcommGatewayClient {
 
     await mediatorClient.listenForIncomingMessages(
       (message) async {
+        if (completer.isCompleted) {
+          return;
+        }
+
         final unpackedMessage = await DidcommMessage.unpackToPlainTextMessage(
           message: message,
           recipientDidManager: didManager,
@@ -103,11 +107,18 @@ class AffinidiDidcommGatewayClient {
 
         if (unpackedMessage.type.toString() ==
             '${getMediatorsMessage.type.toString()}/response') {
-          await mediatorClient.disconnect();
           completer.complete(unpackedMessage);
+          await mediatorClient.disconnect();
         }
       },
       onError: completer.completeError,
+      onDone: () {
+        if (!completer.isCompleted) {
+          completer.completeError(
+            Exception('Connection has been dropped'),
+          );
+        }
+      },
       accessToken: accessToken,
       cancelOnError: false,
     );
@@ -117,6 +128,6 @@ class AffinidiDidcommGatewayClient {
       accessToken: accessToken,
     );
 
-    return completer.future;
+    return completer.future.timeout(const Duration(seconds: 20));
   }
 }
