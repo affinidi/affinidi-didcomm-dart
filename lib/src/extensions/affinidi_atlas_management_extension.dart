@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 
@@ -20,19 +22,22 @@ class GetMediatorInstancesListMessage extends PlainTextMessage {
 
 class AffinidiDidcommGatewayClient {
   final MediatorClient mediatorClient;
+  final DidManager didManager;
   final DidDocument didcommGatewayDidDocument;
   final DidSigner signer;
   final KeyPair keyPair;
   final String didKeyId;
 
-  AffinidiDidcommGatewayClient(
-      {required this.mediatorClient,
-      required this.didcommGatewayDidDocument,
-      required this.signer,
-      required this.keyPair,
-      required this.didKeyId});
+  AffinidiDidcommGatewayClient({
+    required this.mediatorClient,
+    required this.didManager,
+    required this.didcommGatewayDidDocument,
+    required this.signer,
+    required this.keyPair,
+    required this.didKeyId,
+  });
 
-  Future<DidcommMessage> getMediators({
+  Future<PlainTextMessage> getMediators({
     required String accessToken,
   }) async {
     final getMediatorsMessage = GetMediatorInstancesListMessage(
@@ -83,27 +88,35 @@ class AffinidiDidcommGatewayClient {
       ],
     );
 
-    prettyPrint('forwardMessage', object: forwardMessage);
+    final completer = Completer<PlainTextMessage>();
 
-    return await mediatorClient.sendMessage(
+    await mediatorClient.listenForIncomingMessages(
+      (message) async {
+        final unpackedMessage = await DidcommMessage.unpackToPlainTextMessage(
+          message: message,
+          recipientDidManager: didManager,
+          expectedMessageWrappingTypes: [
+            MessageWrappingType.authcryptSignPlaintext,
+            MessageWrappingType.anoncryptSignPlaintext,
+          ],
+        );
+
+        if (unpackedMessage.type.toString() ==
+            '${getMediatorsMessage.type.toString()}/response') {
+          await mediatorClient.disconnect();
+          completer.complete(unpackedMessage);
+        }
+      },
+      onError: completer.completeError,
+      accessToken: accessToken,
+      cancelOnError: false,
+    );
+
+    await mediatorClient.sendMessage(
       forwardMessage,
       accessToken: accessToken,
     );
+
+    return completer.future;
   }
 }
-
-// {
-//   ---- "id": "f800c315-8c75-4efc-9b01-26e1022dbf3b",
-//   "typ": "application/didcomm-plain+json",
-//   ----  "type": "affinidi.io/operations/ama/getMediatorInstancesList",
-//   "body": {},
-//   --- "from": "did:peer:2.Vz6Mkpun7xEJWBqwtaiHSqfjLe1ejqQ4PAUEas1gjH7VVNxjs.EzQ3shoprXELvJw9ou4VbfrFRx5FZQsP9EB1LMUJaPacDKtiZ8",
-//   --- "to": [
-//     "did:web:did.dev.affinidi.io:ama"
-//   ],
-//   "query_params": {},
-//   "headers": {},
-//   "path_params": {},
-//   --- "created_time": 1754387479,
-//   --- "expires_time": 1754387489
-// }

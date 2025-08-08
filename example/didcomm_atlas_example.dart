@@ -95,6 +95,7 @@ void main() async {
 
   final gatewayClient = AffinidiDidcommGatewayClient(
     mediatorClient: mediatorClient,
+    didManager: senderDidManager,
     didcommGatewayDidDocument: gatewayDidDocument,
     signer: senderSigner,
     keyPair: await senderDidManager.getKeyPairByDidKeyId(
@@ -103,43 +104,14 @@ void main() async {
     didKeyId: senderMatchedDidKeyIds.first,
   );
 
-  await mediatorClient.listenForIncomingMessages(
-    (message) async {
-      final encryptedMessage = EncryptedMessage.fromJson(message);
-      final senderDid = const JweHeaderConverter()
-          .fromJson(encryptedMessage.protected)
-          .subjectKeyId;
+  prettyPrint('Sending the message...');
 
-      final isMediatorTelemetryMessage =
-          senderDid?.contains('.affinidi.io') == true;
-
-      final unpackedMessageByBob =
-          await DidcommMessage.unpackToPlainTextMessage(
-        message: message,
-        recipientDidManager: senderDidManager,
-        expectedMessageWrappingTypes: [
-          isMediatorTelemetryMessage
-              ? MessageWrappingType.authcryptSignPlaintext
-              : MessageWrappingType.anoncryptSignPlaintext,
-        ],
-      );
-
-      prettyPrint(
-        'Unpacked Plain Text Message received by Bob via Mediator',
-        object: unpackedMessageByBob,
-      );
-
-//      await mediatorClient.disconnect();
-    },
-    onError: (dynamic error) => prettyPrint('error', object: error),
-    onDone: () => prettyPrint('done'),
-    accessToken: authTokes.accessToken,
-    cancelOnError: false,
-  );
-
-  await gatewayClient.getMediators(
+  final responseMessage = await gatewayClient.getMediators(
     accessToken: authTokes.accessToken,
   );
 
-  prettyPrint('The message has been sent');
+  prettyPrint(
+    'Response message',
+    object: responseMessage,
+  );
 }
