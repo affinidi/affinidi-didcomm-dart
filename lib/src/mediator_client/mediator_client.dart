@@ -215,7 +215,7 @@ class MediatorClient {
   /// [accessToken] - Optional bearer token for authentication.
   ///
   /// Returns list of errors.
-  Future<dynamic> deleteMessages({
+  Future<List<dynamic>> deleteMessages({
     required List<String> messageHashes,
     Function? onError,
     String? accessToken,
@@ -230,7 +230,9 @@ class MediatorClient {
         options: Options(headers: headers),
       );
 
-      return response.data!['data']['errors'].map((error) => error[1]).toList();
+      // ignore: inference_failure_on_untyped_parameter, avoid_dynamic_calls
+      return response.data!['data']['errors'].map((error) => error[1]).toList()
+          as List<dynamic>;
     } on DioException catch (error) {
       throw MediatorClientException(innerException: error);
     }
