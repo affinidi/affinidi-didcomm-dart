@@ -161,14 +161,42 @@ class MediatorClient {
       );
 
       final data = response.data!['data'] as Map<String, dynamic>;
+      return _mapResponseDataToMessages(data);
+    } on DioException catch (error) {
+      throw MediatorClientException(innerException: error);
+    }
+  }
 
-      return (data['success'] as List<dynamic>)
-          .map(
-            (item) => jsonDecode(
-              (item as Map<String, dynamic>)['msg'] as String,
-            ) as Map<String, dynamic>,
-          )
-          .toList();
+  /// Fetches messages from the mediator.
+  ///
+  /// [startId] - The message id to start fetching from
+  /// [batchSize] - The maximum number of messages to fetch
+  /// [deleteOnMediator] - Whether to delete messages from the mediator after fetching (default: true).
+  /// [accessToken] - Optional bearer token for authentication.
+  ///
+  /// Returns a list of message.
+  Future<List<Map<String, dynamic>>> fetchMessages({
+    String? startId,
+    int? batchSize = 25,
+    bool deleteOnMediator = true,
+    String? accessToken,
+  }) async {
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/fetch',
+        data: {
+          'start_id': startId,
+          'limit': batchSize,
+          'delete_policy': deleteOnMediator ? 'Optimistic' : 'DoNotDelete'
+        },
+        options: Options(headers: headers),
+      );
+
+      final data = response.data!['data'] as Map<String, dynamic>;
+      return _mapResponseDataToMessages(data);
     } on DioException catch (error) {
       throw MediatorClientException(innerException: error);
     }
@@ -293,5 +321,16 @@ class MediatorClient {
     _channel!.sink.add(
       jsonEncode(message),
     );
+  }
+
+  List<Map<String, dynamic>> _mapResponseDataToMessages(
+      Map<String, dynamic> data) {
+    return (data['success'] as List<dynamic>)
+        .map(
+          (item) => jsonDecode(
+            (item as Map<String, dynamic>)['msg'] as String,
+          ) as Map<String, dynamic>,
+        )
+        .toList();
   }
 }

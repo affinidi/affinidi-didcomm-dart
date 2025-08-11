@@ -217,9 +217,16 @@ void main() async {
             accessToken: aliceTokens.accessToken,
           );
 
+          final fetchedMessages = await bobMediatorClient.fetchMessages(
+            deleteOnMediator: false,
+            accessToken: bobTokens.accessToken,
+          );
+
           final messageIds = await bobMediatorClient.listInboxMessageIds(
             accessToken: bobTokens.accessToken,
           );
+
+          expect(fetchedMessages.length, equals(messageIds.length));
 
           final messages = await bobMediatorClient.receiveMessages(
             messageIds: messageIds,
