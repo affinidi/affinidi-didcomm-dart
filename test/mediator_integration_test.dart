@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
+import 'package:crypto/crypto.dart';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/authentication_tokens/authentication_tokens.dart';
 import 'package:ssi/ssi.dart';
@@ -234,6 +235,7 @@ void main() async {
 
           final messages = await bobMediatorClient.receiveMessages(
             messageIds: messageIds,
+            deleteOnMediator: false,
             accessToken: bobTokens.accessToken,
           );
 
@@ -266,6 +268,24 @@ void main() async {
             ),
             isNotNull,
           );
+
+          final messageHashes = messages
+              .map(
+                (message) => sha256.convert(message.toJsonBytes()).toString(),
+              )
+              .toList();
+
+          await bobMediatorClient.deleteMessages(
+            messageHashes: messageHashes,
+            accessToken: bobTokens.accessToken,
+          );
+
+          final remainingMessages = await bobMediatorClient.fetchMessages(
+            deleteOnMediator: false,
+            accessToken: bobTokens.accessToken,
+          );
+
+          expect(remainingMessages, isEmpty);
         });
 
         test(
