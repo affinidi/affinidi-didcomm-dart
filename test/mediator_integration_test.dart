@@ -15,7 +15,7 @@ import 'example_configs.dart';
 const webSocketsTestRetries = 2;
 
 void main() async {
-  configureTestFiles();
+  await configureTestFiles();
 
   group('Mediator Integration Test', () {
     late PersistentWallet aliceWallet;
