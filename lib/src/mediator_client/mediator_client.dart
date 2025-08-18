@@ -9,6 +9,7 @@ import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
 
 import '../../didcomm.dart';
+import 'mediator_client_response_format_exception.dart';
 
 /// Client for interacting with a DIDComm mediator, supporting message sending, inbox management,
 /// and real-time message delivery via WebSockets.
@@ -184,8 +185,9 @@ class MediatorClient {
     final headers =
         accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
 
+    Response<Map<String, dynamic>> response;
     try {
-      final response = await _dio.post<Map<String, dynamic>>(
+      response = await _dio.post<Map<String, dynamic>>(
         '/fetch',
         data: {
           'start_id': startId,
@@ -194,11 +196,15 @@ class MediatorClient {
         },
         options: Options(headers: headers),
       );
-
-      final data = response.data!['data'] as Map<String, dynamic>;
-      return _mapResponseDataToMessages(data);
     } on DioException catch (error) {
       throw MediatorClientException(innerException: error);
+    }
+
+    try {
+      final data = response.data!['data'] as Map<String, dynamic>;
+      return _mapResponseDataToMessages(data);
+    } catch (e) {
+      throw MediatorClientResponseFormatException(jsonEncode(response.data));
     }
   }
 
@@ -277,7 +283,7 @@ class MediatorClient {
 
   /// Deletes messages from the mediator by message IDs.
   ///
-  /// [messageHashes] - The list of message IDs to delete.
+  /// [messageHashes] - The list of message hashes to delete.
   /// [accessToken] - Optional bearer token for authentication.
   ///
   /// Returns list of errors.
