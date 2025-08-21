@@ -62,7 +62,7 @@ class SignedMessage extends DidcommMessage {
       Signature(
         signature: await signer.sign(signingInput),
         protected: encodedHeader,
-        header: SignatureHeader(keyId: signer.didKeyId),
+        header: SignatureHeader(keyId: signer.keyId),
       ),
     ];
 
