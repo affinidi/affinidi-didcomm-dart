@@ -8,6 +8,7 @@ library;
 
 export 'src/common/encoding.dart';
 export 'src/common/helpers.dart';
+export 'src/converters/epoch_seconds_converter.dart';
 export 'src/converters/jwe_header_converter.dart';
 export 'src/converters/jws_header_converter.dart';
 export 'src/converters/problem_code_converter.dart';

@@ -13,6 +13,7 @@ import '../../didcomm.dart';
 import '../common/did.dart';
 import '../common/did_document_service_type.dart';
 import 'mediator_client_exception.dart';
+import 'mediator_client_response_format_exception.dart';
 
 /// Client for interacting with a DIDComm mediator, supporting message sending, inbox management,
 /// and real-time message delivery via WebSockets.
@@ -111,6 +112,33 @@ class MediatorClient {
     }
   }
 
+  /// Creates OOB invittation on the mediator instance.
+  ///
+  /// [message] - the invitation message included in the OOB
+  /// [accessToken] - Optional bearer token for authentication.
+  ///
+  /// Returns OOB id.
+  Future<String> createOob(
+    PlainTextMessage message,
+    String? accessToken,
+  ) async {
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/oob',
+        data: message,
+        options: Options(headers: headers),
+      );
+
+      return (response.data!['data'] as Map<String, dynamic>)['_oobid']
+          as String;
+    } on DioException catch (error) {
+      throw MediatorClientException(innerException: error);
+    }
+  }
+
   /// Lists message IDs in the inbox for the current actor.
   ///
   /// [accessToken] - Optional bearer token for authentication.
@@ -165,16 +193,49 @@ class MediatorClient {
       );
 
       final data = response.data!['data'] as Map<String, dynamic>;
-
-      return (data['success'] as List<dynamic>)
-          .map(
-            (item) => jsonDecode(
-              (item as Map<String, dynamic>)['msg'] as String,
-            ) as Map<String, dynamic>,
-          )
-          .toList();
+      return _mapResponseDataToMessages(data);
     } on DioException catch (error) {
       throw MediatorClientException(innerException: error);
+    }
+  }
+
+  /// Fetches messages from the mediator.
+  ///
+  /// [startId] - The message id to start fetching from
+  /// [batchSize] - The maximum number of messages to fetch
+  /// [deleteOnMediator] - Whether to delete messages from the mediator after fetching (default: true).
+  /// [accessToken] - Optional bearer token for authentication.
+  ///
+  /// Returns a list of message.
+  Future<List<Map<String, dynamic>>> fetchMessages({
+    String? startId,
+    int? batchSize = 25,
+    bool deleteOnMediator = true,
+    String? accessToken,
+  }) async {
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+
+    Response<Map<String, dynamic>> response;
+    try {
+      response = await _dio.post<Map<String, dynamic>>(
+        '/fetch',
+        data: {
+          'start_id': startId,
+          'limit': batchSize,
+          'delete_policy': deleteOnMediator ? 'Optimistic' : 'DoNotDelete'
+        },
+        options: Options(headers: headers),
+      );
+    } on DioException catch (error) {
+      throw MediatorClientException(innerException: error);
+    }
+
+    try {
+      final data = response.data!['data'] as Map<String, dynamic>;
+      return _mapResponseDataToMessages(data);
+    } catch (e) {
+      throw MediatorClientResponseFormatException(jsonEncode(response.data));
     }
   }
 
@@ -246,6 +307,35 @@ class MediatorClient {
     return subscription;
   }
 
+  /// Deletes messages from the mediator by message IDs.
+  ///
+  /// [messageHashes] - The list of message hashes to delete.
+  /// [accessToken] - Optional bearer token for authentication.
+  ///
+  /// Returns list of errors.
+  Future<List<String>> deleteMessages({
+    required List<String> messageHashes,
+    String? accessToken,
+  }) async {
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+
+    try {
+      final response = await _dio.delete<Map<String, dynamic>>(
+        '/delete',
+        data: {'message_ids': messageHashes},
+        options: Options(headers: headers),
+      );
+
+      return ((response.data!['data'] as Map<String, dynamic>)['errors']
+              as List<dynamic>)
+          .map((error) => (error as List<String>)[1])
+          .toList();
+    } on DioException catch (error) {
+      throw MediatorClientException(innerException: error);
+    }
+  }
+
   /// Disconnects the WebSocket channel if connected.
   Future<void> disconnect() async {
     if (_channel != null) {
@@ -293,5 +383,16 @@ class MediatorClient {
     _channel.sink.add(
       jsonEncode(message),
     );
+  }
+
+  List<Map<String, dynamic>> _mapResponseDataToMessages(
+      Map<String, dynamic> data) {
+    return (data['success'] as List<dynamic>)
+        .map(
+          (item) => jsonDecode(
+            (item as Map<String, dynamic>)['msg'] as String,
+          ) as Map<String, dynamic>,
+        )
+        .toList();
   }
 }

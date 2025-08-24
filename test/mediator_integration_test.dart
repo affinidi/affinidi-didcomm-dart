@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
+import 'package:crypto/crypto.dart';
 import 'package:didcomm/didcomm.dart';
 import 'package:didcomm/src/common/authentication_tokens/authentication_tokens.dart';
 import 'package:ssi/ssi.dart';
@@ -14,7 +15,7 @@ import 'example_configs.dart';
 const webSocketsTestRetries = 2;
 
 void main() async {
-  configureTestFiles();
+  await configureTestFiles();
 
   group('Mediator Integration Test', () {
     late PersistentWallet aliceWallet;
@@ -170,6 +171,25 @@ void main() async {
           bobTokens = await bobMediatorClient.authenticate();
         });
 
+        test('REST OOB API works correctly', () async {
+          final message = OutOfBandMessage(
+            id: const Uuid().v4(),
+            from: aliceDidDocument.id,
+            body: {
+              'goal_code': 'connect',
+              'goal': 'Start relationship',
+              'accept': ['didcomm/v2'],
+            },
+          );
+
+          final oobId = await aliceMediatorClient.createOob(
+            message,
+            aliceTokens.accessToken,
+          );
+
+          expect(oobId, isNotEmpty);
+        });
+
         test('REST API works correctly', () async {
           final expectedBodyContent = const Uuid().v4();
 
@@ -221,12 +241,20 @@ void main() async {
             accessToken: aliceTokens.accessToken,
           );
 
+          final fetchedMessages = await bobMediatorClient.fetchMessages(
+            deleteOnMediator: false,
+            accessToken: bobTokens.accessToken,
+          );
+
           final messageIds = await bobMediatorClient.listInboxMessageIds(
             accessToken: bobTokens.accessToken,
           );
 
+          expect(fetchedMessages.length, equals(messageIds.length));
+
           final messages = await bobMediatorClient.receiveMessages(
             messageIds: messageIds,
+            deleteOnMediator: false,
             accessToken: bobTokens.accessToken,
           );
 
@@ -259,6 +287,24 @@ void main() async {
             ),
             isNotNull,
           );
+
+          final messageHashes = messages
+              .map(
+                (message) => sha256.convert(message.toJsonBytes()).toString(),
+              )
+              .toList();
+
+          await bobMediatorClient.deleteMessages(
+            messageHashes: messageHashes,
+            accessToken: bobTokens.accessToken,
+          );
+
+          final remainingMessages = await bobMediatorClient.fetchMessages(
+            deleteOnMediator: false,
+            accessToken: bobTokens.accessToken,
+          );
+
+          expect(remainingMessages, isEmpty);
         });
 
         test(
