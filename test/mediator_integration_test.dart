@@ -167,6 +167,25 @@ void main() async {
           bobTokens = await bobMediatorClient.authenticate();
         });
 
+        test('REST OOB API works correctly', () async {
+          final message = OutOfBandMessage(
+            id: const Uuid().v4(),
+            from: aliceDidDocument.id,
+            body: {
+              'goal_code': 'connect',
+              'goal': 'Start relationship',
+              'accept': ['didcomm/v2'],
+            },
+          );
+
+          final oobId = await aliceMediatorClient.createOob(
+            message,
+            aliceTokens.accessToken,
+          );
+
+          expect(oobId, isNotEmpty);
+        });
+
         test('REST API works correctly', () async {
           final expectedBodyContent = const Uuid().v4();
 

@@ -108,6 +108,33 @@ class MediatorClient {
     }
   }
 
+  /// Creates OOB invittation on the mediator instance.
+  ///
+  /// [message] - the invitation message included in the OOB
+  /// [accessToken] - Optional bearer token for authentication.
+  ///
+  /// Returns OOB id.
+  Future<String> createOob(
+    PlainTextMessage message,
+    String? accessToken,
+  ) async {
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/oob',
+        data: message,
+        options: Options(headers: headers),
+      );
+
+      return (response.data!['data'] as Map<String, dynamic>)['_oobid']
+          as String;
+    } on DioException catch (error) {
+      throw MediatorClientException(innerException: error);
+    }
+  }
+
   /// Lists message IDs in the inbox for the current actor.
   ///
   /// [accessToken] - Optional bearer token for authentication.
