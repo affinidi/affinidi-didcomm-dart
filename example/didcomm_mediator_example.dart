@@ -140,7 +140,6 @@ void main() async {
     signer: aliceSigner,
     forwardMessageOptions: const ForwardMessageOptions(
       shouldSign: true,
-      shouldEncrypt: true,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
       encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     ),

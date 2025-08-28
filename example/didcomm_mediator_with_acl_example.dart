@@ -1,5 +1,4 @@
 import 'package:didcomm/didcomm.dart';
-import 'package:didcomm/src/mediator_client/mediator_client_exception.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 
@@ -127,7 +126,6 @@ void main() async {
     signer: aliceSigner,
     forwardMessageOptions: const ForwardMessageOptions(
       shouldSign: true,
-      shouldEncrypt: true,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
       encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     ),
@@ -171,7 +169,6 @@ void main() async {
     signer: bobSigner,
     forwardMessageOptions: const ForwardMessageOptions(
       shouldSign: true,
-      shouldEncrypt: true,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
       encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     ),

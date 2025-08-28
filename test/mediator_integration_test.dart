@@ -14,7 +14,7 @@ import 'example_configs.dart';
 const webSocketsTestRetries = 2;
 
 void main() async {
-  configureTestFiles();
+  await configureTestFiles();
 
   group('Mediator Integration Test', () {
     late PersistentWallet aliceWallet;
@@ -132,7 +132,6 @@ void main() async {
             ),
             forwardMessageOptions: const ForwardMessageOptions(
               shouldSign: true,
-              shouldEncrypt: true,
               keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
               encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
             ),
@@ -152,14 +151,12 @@ void main() async {
                   LiveDeliveryChangeMessageOptions(
                 shouldSend: true,
                 shouldSign: true,
-                shouldEncrypt: true,
                 keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
                 encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
               ),
               statusRequestMessageOptions: StatusRequestMessageOptions(
                 shouldSend: true,
                 shouldSign: true,
-                shouldEncrypt: true,
                 keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
                 encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
               ),

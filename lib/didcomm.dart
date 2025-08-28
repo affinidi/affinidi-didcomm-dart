@@ -6,8 +6,10 @@
 
 library;
 
+export 'src/common/did_document_service_type.dart';
 export 'src/common/encoding.dart';
 export 'src/common/helpers.dart';
+export 'src/converters/epoch_seconds_converter.dart';
 export 'src/converters/jwe_header_converter.dart';
 export 'src/converters/jws_header_converter.dart';
 export 'src/converters/problem_code_converter.dart';
@@ -21,6 +23,7 @@ export 'src/extensions/extensions.dart';
 export 'src/extensions/verification_method_extention.dart';
 export 'src/jwks/jwk.dart';
 export 'src/mediator_client.dart';
+export 'src/mediator_client/mediator_client_exception.dart';
 export 'src/messages/algorithm_types/algorithms_types.dart';
 export 'src/messages/attachments.dart';
 export 'src/messages/core.dart';

@@ -94,7 +94,7 @@ abstract class Ecdh {
       throw UnsupportedCurveError(curveType);
     }
 
-    final recipientKeyId = await recipientDidManager.getWalletKeyIdUniversally(
+    final recipientKeyId = await recipientDidManager.getWalletKeyId(
       self.header.keyId,
     );
 
