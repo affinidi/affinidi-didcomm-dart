@@ -9,7 +9,6 @@ import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
 
 import '../../didcomm.dart';
-import '../common/did.dart';
 
 /// Client for interacting with a DIDComm mediator, supporting message sending, inbox management,
 /// and real-time message delivery via WebSockets.

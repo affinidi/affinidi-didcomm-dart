@@ -6,6 +6,8 @@
 
 library;
 
+export 'src/common/authentication_tokens/authentication_tokens.dart';
+export 'src/common/did.dart';
 export 'src/common/did_document_service_type.dart';
 export 'src/common/encoding.dart';
 export 'src/common/helpers.dart';

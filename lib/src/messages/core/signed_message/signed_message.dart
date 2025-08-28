@@ -5,7 +5,6 @@ import 'package:ssi/ssi.dart';
 
 import '../../../../didcomm.dart';
 import '../../../annotations/own_json_properties.dart';
-import '../../../common/did.dart';
 
 part 'signed_message.g.dart';
 part 'signed_message.own_json_props.g.dart';
