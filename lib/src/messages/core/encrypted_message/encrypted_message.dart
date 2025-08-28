@@ -8,7 +8,6 @@ import 'package:ssi/ssi.dart' hide Jwk;
 import '../../../../didcomm.dart';
 import '../../../annotations/own_json_properties.dart';
 import '../../../common/crypto.dart';
-import '../../../common/did.dart';
 import '../../../converters/base64_url_converter.dart';
 import '../../../ecdh/ecdh.dart';
 import '../../../errors/missing_authentication_tag_error.dart';
