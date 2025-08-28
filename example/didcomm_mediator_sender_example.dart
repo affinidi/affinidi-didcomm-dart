@@ -160,7 +160,6 @@ void main() async {
     // optional. if omitted defaults will be used
     forwardMessageOptions: const ForwardMessageOptions(
       shouldSign: true,
-      shouldEncrypt: true,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
       encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
     ),

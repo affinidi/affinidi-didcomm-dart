@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
-import 'package:meta/meta.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/io.dart';
@@ -11,8 +10,6 @@ import 'package:web_socket_channel/status.dart' as status;
 
 import '../../didcomm.dart';
 import '../common/did.dart';
-import '../common/did_document_service_type.dart';
-import 'mediator_client_exception.dart';
 
 /// Client for interacting with a DIDComm mediator, supporting message sending, inbox management,
 /// and real-time message delivery via WebSockets.
@@ -36,7 +33,7 @@ class MediatorClient {
   final WebSocketOptions webSocketOptions;
 
   final Dio _dio;
-  late final IOWebSocketChannel? _channel;
+  IOWebSocketChannel? _channel;
 
   /// Creates a [MediatorClient] instance.
   ///
@@ -194,13 +191,17 @@ class MediatorClient {
     bool? cancelOnError,
     String? accessToken,
   }) async {
+    if (_channel != null) {
+      await disconnect();
+    }
+
     _channel = mediatorDidDocument.toWebSocketChannel(
       accessToken: accessToken,
     );
 
     await _channel!.ready;
 
-    final subscription = _channel.stream.listen(
+    final subscription = _channel!.stream.listen(
       (data) => onMessage(
         jsonDecode(data as String) as Map<String, dynamic>,
       ),
@@ -249,12 +250,11 @@ class MediatorClient {
   /// Disconnects the WebSocket channel if connected.
   Future<void> disconnect() async {
     if (_channel != null) {
-      await _channel.sink.close(status.normalClosure);
+      await _channel!.sink.close(status.normalClosure);
     }
   }
 
   /// Packs message, which then can be sent to mediator.
-  @internal
   Future<DidcommMessage> packMessage(
     PlainTextMessage message, {
     required MessageOptions messageOptions,
@@ -290,7 +290,7 @@ class MediatorClient {
       );
     }
 
-    _channel.sink.add(
+    _channel!.sink.add(
       jsonEncode(message),
     );
   }

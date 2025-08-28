@@ -6,7 +6,6 @@ import 'package:ssi/ssi.dart';
 import '../../../../didcomm.dart';
 import '../../../annotations/own_json_properties.dart';
 import '../../../common/did.dart';
-import '../../../extensions/did_signer_extension.dart';
 
 part 'signed_message.g.dart';
 part 'signed_message.own_json_props.g.dart';
@@ -101,10 +100,7 @@ class SignedMessage extends DidcommMessage {
       final verifier = await DidVerifier.create(
         algorithm: signatureScheme,
         issuerDid: getDidFromId(signature.header.keyId),
-        // TODO: remove did:peer check when Dart SSI is fixed
-        kid: signature.header.keyId.startsWith('did:peer')
-            ? getKeyIdFromId(signature.header.keyId)
-            : signature.header.keyId,
+        kid: signature.header.keyId,
       );
 
       final isValid = verifier.verify(

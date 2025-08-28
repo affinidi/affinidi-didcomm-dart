@@ -4,8 +4,6 @@ import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 
 import '../../didcomm.dart';
-import '../common/did_document_service_type.dart';
-import '../mediator_client/mediator_client_exception.dart';
 
 /// Represents a root DIDComm ACL Management Message.
 ///

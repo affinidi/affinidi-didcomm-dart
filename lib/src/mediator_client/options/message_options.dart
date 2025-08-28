@@ -27,12 +27,12 @@ class MessageOptions {
   /// Constructs [MessageOptions].
   ///
   /// [shouldSign]: Whether the message should be signed (default: false).
-  /// [shouldEncrypt]: Whether the message should be encrypted (default: false).
+  /// [shouldEncrypt]: Whether the message should be encrypted (default: true).
   /// [keyWrappingAlgorithm]: The key wrapping algorithm to use (default: [KeyWrappingAlgorithm.ecdhEs]).
   /// [encryptionAlgorithm]: The encryption algorithm to use (default: [EncryptionAlgorithm.a256cbc]).
   const MessageOptions({
     this.shouldSign = false,
-    this.shouldEncrypt = false,
+    this.shouldEncrypt = true,
     this.keyWrappingAlgorithm = KeyWrappingAlgorithm.ecdhEs,
     this.encryptionAlgorithm = EncryptionAlgorithm.a256cbc,
   });

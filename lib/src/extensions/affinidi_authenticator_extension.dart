@@ -4,8 +4,6 @@ import 'package:uuid/uuid.dart';
 import '../../didcomm.dart';
 import '../common/authentication_tokens/authentication_tokens.dart';
 import '../common/did.dart';
-import '../common/did_document_service_type.dart';
-import '../mediator_client/mediator_client_exception.dart';
 
 // TODO: should be eventually moved to TDK
 /// Extension for [MediatorClient] to support Affinidi-specific authentication.
