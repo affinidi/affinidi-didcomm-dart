@@ -1,3 +1,7 @@
+## 1.0.0-dev.10
+
+ - **FEAT**: organzie package exports.
+
 ## 1.0.0-dev.9
 
  - **FIX**: update to latest dart ssi.
