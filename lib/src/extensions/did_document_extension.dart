@@ -45,8 +45,7 @@ extension DidDocumentExtension on DidDocument {
   /// Creates a [IOWebSocketChannel] for the `didcomm-messaging` service endpoint in this DID Document.
   ///
   /// [accessToken]: Optional access token to include in the WebSocket headers.
-  /// [pingIntervalInSeconds]: Optional interval (in seconds) at which ping
-  /// messages are sent to keep the WebSocket connection alive.
+  /// [webSocketOptions]: Options for WebSocket connections.
   ///
   /// Throws [ArgumentError] if no matching service or WSS endpoint is found.
   IOWebSocketChannel toWebSocketChannel({
