@@ -181,8 +181,6 @@ class MediatorClient {
   /// [onDone] - Optional callback when the stream is closed.
   /// [cancelOnError] - Whether to cancel on error.
   /// [accessToken] - Optional bearer token for authentication.
-  /// [pingIntervalInSeconds] - Optional interval (in seconds) at which ping
-  /// messages are sent to keep the WebSocket connection alive.
   ///
   /// Returns a [StreamSubscription] for the WebSocket stream.
   Future<StreamSubscription> listenForIncomingMessages(
@@ -191,7 +189,6 @@ class MediatorClient {
     void Function()? onDone,
     bool? cancelOnError,
     String? accessToken,
-    int? pingIntervalInSeconds,
   }) async {
     if (_channel != null) {
       await disconnect();
@@ -199,7 +196,7 @@ class MediatorClient {
 
     _channel = mediatorDidDocument.toWebSocketChannel(
       accessToken: accessToken,
-      pingIntervalInSeconds: pingIntervalInSeconds,
+      pingIntervalInSeconds: webSocketOptions.pingIntervalInSeconds,
     );
 
     await _channel!.ready;
