@@ -196,7 +196,7 @@ class MediatorClient {
 
     _channel = mediatorDidDocument.toWebSocketChannel(
       accessToken: accessToken,
-      pingIntervalInSeconds: webSocketOptions.pingIntervalInSeconds,
+      webSocketOptions: webSocketOptions,
     );
 
     await _channel!.ready;
