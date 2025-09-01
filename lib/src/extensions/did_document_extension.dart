@@ -78,7 +78,7 @@ extension DidDocumentExtension on DidDocument {
         if (accessToken != null) 'Authorization': 'Bearer $accessToken',
       },
       pingInterval: webSocketOptions?.pingIntervalInSeconds != null
-          ? Duration(seconds: webSocketOptions!.pingIntervalInSeconds!)
+          ? Duration(seconds: webSocketOptions!.pingIntervalInSeconds)
           : null,
     );
   }

@@ -14,7 +14,7 @@ class WebSocketOptions {
 
   /// Interval (in seconds) at which ping messages are sent to keep the
   /// WebSocket connection alive.
-  final int? pingIntervalInSeconds;
+  final int pingIntervalInSeconds;
 
   /// Constructs [WebSocketOptions].
   ///
