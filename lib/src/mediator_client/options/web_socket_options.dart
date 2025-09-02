@@ -12,6 +12,10 @@ class WebSocketOptions {
   /// Options for the live delivery change message sent over WebSocket.
   final LiveDeliveryChangeMessageOptions liveDeliveryChangeMessageOptions;
 
+  /// Interval (in seconds) at which ping messages are sent to keep the
+  /// WebSocket connection alive.
+  final int pingIntervalInSeconds;
+
   /// Constructs [WebSocketOptions].
   ///
   /// [statusRequestMessageOptions]: Options for status request messages (default: const StatusRequestMessageOptions()).
@@ -20,5 +24,6 @@ class WebSocketOptions {
     this.statusRequestMessageOptions = const StatusRequestMessageOptions(),
     this.liveDeliveryChangeMessageOptions =
         const LiveDeliveryChangeMessageOptions(),
+    this.pingIntervalInSeconds = 30,
   });
 }

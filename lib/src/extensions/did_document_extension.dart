@@ -6,6 +6,7 @@ import 'package:web_socket_channel/io.dart';
 import '../common/did_document_service_type.dart';
 import '../curves/curve_type.dart';
 import '../jwks/jwk.dart';
+import '../mediator_client.dart';
 import 'extensions.dart';
 import 'service_endpoint_extension.dart';
 
@@ -44,8 +45,13 @@ extension DidDocumentExtension on DidDocument {
   /// Creates a [IOWebSocketChannel] for the `didcomm-messaging` service endpoint in this DID Document.
   ///
   /// [accessToken]: Optional access token to include in the WebSocket headers.
+  /// [webSocketOptions]: Options for WebSocket connections.
+  ///
   /// Throws [ArgumentError] if no matching service or WSS endpoint is found.
-  IOWebSocketChannel toWebSocketChannel({String? accessToken}) {
+  IOWebSocketChannel toWebSocketChannel({
+    String? accessToken,
+    WebSocketOptions? webSocketOptions,
+  }) {
     final serviceType = DidDocumentServiceType.didCommMessaging.value;
 
     final service = this.service.firstWhere(
@@ -70,6 +76,9 @@ extension DidDocumentExtension on DidDocument {
         'Content-Type': 'application/json',
         if (accessToken != null) 'Authorization': 'Bearer $accessToken',
       },
+      pingInterval: webSocketOptions?.pingIntervalInSeconds != null
+          ? Duration(seconds: webSocketOptions!.pingIntervalInSeconds)
+          : null,
     );
   }
 
