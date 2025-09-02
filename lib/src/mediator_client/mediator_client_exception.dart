@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 import '../../didcomm.dart';
@@ -36,9 +38,6 @@ class MediatorClientException extends DioException {
       return data;
     }
 
-    return (data as Map<String, dynamic>)
-        .entries
-        .map((entry) => '${entry.key}: ${entry.value}')
-        .join('. ');
+    return jsonEncode(data);
   }
 }

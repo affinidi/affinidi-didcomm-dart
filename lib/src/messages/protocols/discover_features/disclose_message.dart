@@ -12,6 +12,12 @@ part 'disclose_message.own_json_props.g.dart';
 @OwnJsonProperties()
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class DiscloseMessage extends PlainTextMessage {
+  /// The URI representing the message type.
+  /// This is used to identify the specific protocol message type within DIDComm.
+  static final messageType = Uri.parse(
+    'https://didcomm.org/discover-features/2.0/disclose',
+  );
+
   /// Constructs a [DiscloseMessage] with the given [id], [parentThreadId], and [body].
   ///
   /// The [body] parameter should contain the list of disclosed features to be sent.
@@ -20,7 +26,7 @@ class DiscloseMessage extends PlainTextMessage {
     required super.parentThreadId,
     required DiscloseBody body,
   }) : super(
-          type: Uri.parse('https://didcomm.org/discover-features/2.0/disclose'),
+          type: messageType,
           body: body.toJson(),
         );
 

@@ -6,6 +6,12 @@ import '../../core.dart';
 /// The Forward message is used to instruct a mediator to forward an attached message
 /// to the next recipient in the routing chain.
 class ForwardMessage extends PlainTextMessage {
+  /// The URI representing the message type.
+  /// This is used to identify the specific protocol message type within DIDComm.
+  static final messageType = Uri.parse(
+    'https://didcomm.org/routing/2.0/forward',
+  );
+
   /// The DID of the next recipient to which the attached message should be forwarded.
   ///
   /// See [DIDComm Routing Protocol 2.0](https://identity.foundation/didcomm-messaging/spec/#routing-protocol-20)
@@ -28,7 +34,7 @@ class ForwardMessage extends PlainTextMessage {
     super.expiresTime,
     super.from,
   }) : super(
-          type: Uri.parse('https://didcomm.org/routing/2.0/forward'),
+          type: messageType,
           body: {'next': next},
         );
 

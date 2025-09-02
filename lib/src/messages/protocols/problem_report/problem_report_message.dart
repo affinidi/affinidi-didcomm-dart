@@ -11,6 +11,12 @@ part 'problem_report_message.own_json_props.g.dart';
 @OwnJsonProperties()
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class ProblemReportMessage extends PlainTextMessage {
+  /// The URI representing the message type.
+  /// This is used to identify the specific protocol message type within DIDComm.
+  static final messageType = Uri.parse(
+    'https://didcomm.org/report-problem/2.0/problem-report',
+  );
+
   /// Creates a [ProblemReportMessage] with the given [id], [parentThreadId], optional [acknowledged], and [body].
   ///
   /// The [body] parameter is a [ProblemReportBody] containing the problem details.
@@ -20,9 +26,7 @@ class ProblemReportMessage extends PlainTextMessage {
     super.acknowledged,
     required ProblemReportBody body,
   }) : super(
-          type: Uri.parse(
-            'https://didcomm.org/report-problem/2.0/problem-report',
-          ),
+          type: messageType,
           body: body.toJson(),
         );
 

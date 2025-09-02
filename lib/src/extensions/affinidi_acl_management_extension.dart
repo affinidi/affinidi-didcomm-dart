@@ -9,6 +9,12 @@ import '../../didcomm.dart';
 ///
 /// This message is used as a parent to all ACL Management messages.
 abstract class AclManagementMessage extends PlainTextMessage {
+  /// The URI representing the message type.
+  /// This is used to identify the specific protocol message type within DIDComm.
+  static final messageType = Uri.parse(
+    'https://didcomm.org/mediator/1.0/acl-management',
+  );
+
   /// Constructs [AclManagementMessage].
   /// [id]: Unique message identifier.
   /// [from]: Sender's DID.
@@ -22,7 +28,7 @@ abstract class AclManagementMessage extends PlainTextMessage {
     required super.body,
     super.expiresTime,
   }) : super(
-          type: Uri.parse('https://didcomm.org/mediator/1.0/acl-management'),
+          type: messageType,
         );
 }
 

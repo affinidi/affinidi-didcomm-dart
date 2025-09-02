@@ -4,6 +4,12 @@ import '../../core/plain_text_message/plain_text_message.dart';
 ///
 /// See: https://identity.foundation/didcomm-messaging/spec/#trust-ping-protocol-20
 class PingMessage extends PlainTextMessage {
+  /// The URI representing the message type.
+  /// This is used to identify the specific protocol message type within DIDComm.
+  static final messageType = Uri.parse(
+    'https://didcomm.org/trust-ping/2.0/ping',
+  );
+
   /// Indicates whether a response is requested from the recipient.
   final bool responseRequested;
 
@@ -19,7 +25,7 @@ class PingMessage extends PlainTextMessage {
     super.to,
     this.responseRequested = true,
   }) : super(
-          type: Uri.parse('https://didcomm.org/trust-ping/2.0/ping'),
+          type: messageType,
           body: {'response_requested': responseRequested},
         );
 

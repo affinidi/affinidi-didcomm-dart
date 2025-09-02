@@ -11,6 +11,12 @@ part 'ping_response_message.own_json_props.g.dart';
 @OwnJsonProperties()
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class PingResponseMessage extends PlainTextMessage {
+  /// The URI representing the message type.
+  /// This is used to identify the specific protocol message type within DIDComm.
+  static final messageType = Uri.parse(
+    'https://didcomm.org/trust-ping/2.0/ping-response',
+  );
+
   /// Constructs a [PingResponseMessage].
   ///
   /// [id]: Unique message identifier.
@@ -23,7 +29,7 @@ class PingResponseMessage extends PlainTextMessage {
     super.to,
     super.from,
   }) : super(
-          type: Uri.parse('https://didcomm.org/trust-ping/2.0/ping-response'),
+          type: messageType,
         );
 
   /// Creates a [PingResponseMessage] from a JSON map.
