@@ -58,8 +58,9 @@ void main() async {
   );
 
   final senderKeyId = 'alice-key-1';
-  final senderPrivateKeyBytes =
-      await extractPrivateKeyBytes(alicePrivateKeyPath);
+  final senderPrivateKeyBytes = await extractPrivateKeyBytes(
+    alicePrivateKeyPath,
+  );
 
   await senderKeyStore.set(
     senderKeyId,
