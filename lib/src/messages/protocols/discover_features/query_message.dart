@@ -12,6 +12,12 @@ part 'query_message.own_json_props.g.dart';
 @OwnJsonProperties()
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class QueryMessage extends PlainTextMessage {
+  /// The URI representing the message type.
+  /// This is used to identify the specific protocol message type within DIDComm.
+  static final messageType = Uri.parse(
+    'https://didcomm.org/discover-features/2.0/queries',
+  );
+
   /// Constructs a [QueryMessage] with the given [id] and [body].
   ///
   /// The [body] parameter should contain the list of feature queries to be sent.
@@ -19,7 +25,7 @@ class QueryMessage extends PlainTextMessage {
     required super.id,
     required QueryBody body,
   }) : super(
-          type: Uri.parse('https://didcomm.org/discover-features/2.0/queries'),
+          type: messageType,
           body: body.toJson(),
         );
 

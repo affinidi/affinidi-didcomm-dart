@@ -17,6 +17,12 @@ part 'out_of_band_message.own_json_props.g.dart';
 @OwnJsonProperties()
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class OutOfBandMessage extends PlainTextMessage {
+  /// The URI representing the message type.
+  /// This is used to identify the specific protocol message type within DIDComm.
+  static final messageType = Uri.parse(
+    'https://didcomm.org/out-of-band/2.0/invitation',
+  );
+
   /// Constructs an [OutOfBandMessage].
   ///
   /// [id]: Unique identifier for the message.
@@ -29,7 +35,7 @@ class OutOfBandMessage extends PlainTextMessage {
     super.attachments,
     super.body,
   }) : super(
-          type: Uri.parse('https://didcomm.org/out-of-band/2.0/invitation'),
+          type: messageType,
         );
 
   /// The maximum allowed length for the generated OOB URL.

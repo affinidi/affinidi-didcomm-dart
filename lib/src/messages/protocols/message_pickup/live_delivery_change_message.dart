@@ -5,6 +5,12 @@ import 'message_pickup_message/message_pickup_message.dart';
 ///
 /// This message is used to request or change the live delivery mode for message pickup.
 class LiveDeliveryChangeMessage extends MessagePickupMessage {
+  /// The URI representing the message type.
+  /// This is used to identify the specific protocol message type within DIDComm.
+  static final messageType = Uri.parse(
+    'https://didcomm.org/messagepickup/3.0/live-delivery-change',
+  );
+
   /// Indicates whether live delivery is requested (true) or not (false).
   ///
   /// See [DIDComm Message Pickup Protocol 3.0](https://didcomm.org/messagepickup/3.0)
@@ -27,9 +33,7 @@ class LiveDeliveryChangeMessage extends MessagePickupMessage {
     super.expiresTime,
     super.returnRoute,
   }) : super(
-          type: Uri.parse(
-            'https://didcomm.org/messagepickup/3.0/live-delivery-change',
-          ),
+          type: messageType,
           body: {'live_delivery': liveDelivery},
         );
 
