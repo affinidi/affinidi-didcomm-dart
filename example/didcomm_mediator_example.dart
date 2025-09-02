@@ -29,9 +29,16 @@ void main() async {
   );
 
   final aliceKeyId = 'alice-key-1';
-  await aliceWallet.generateKey(
-    keyId: aliceKeyId,
-    keyType: KeyType.p256,
+  final alicePrivateKeyBytes = await extractPrivateKeyBytes(
+    alicePrivateKeyPath,
+  );
+
+  await aliceKeyStore.set(
+    aliceKeyId,
+    StoredKey(
+      keyType: KeyType.p256,
+      privateKeyBytes: alicePrivateKeyBytes,
+    ),
   );
 
   await aliceDidManager.addVerificationMethod(aliceKeyId);
@@ -47,9 +54,16 @@ void main() async {
   );
 
   final bobKeyId = 'bob-key-1';
-  await bobWallet.generateKey(
-    keyId: bobKeyId,
-    keyType: KeyType.p256,
+  final bobPrivateKeyBytes = await extractPrivateKeyBytes(
+    bobPrivateKeyPath,
+  );
+
+  await bobKeyStore.set(
+    bobKeyId,
+    StoredKey(
+      keyType: KeyType.p256,
+      privateKeyBytes: bobPrivateKeyBytes,
+    ),
   );
 
   await bobDidManager.addVerificationMethod(bobKeyId);
