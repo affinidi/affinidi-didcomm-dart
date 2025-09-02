@@ -261,9 +261,24 @@ void main() async {
             accessToken: bobTokens.accessToken,
           );
 
-          expect(messagesFetchedByIds.isNotEmpty, isTrue);
-          expect(messagesAfterDeletion.isEmpty, isTrue);
-          expect(messagesFetchedByIds.length, messagesFetchedByCursor.length);
+          expect(
+            messagesFetchedByIds.isNotEmpty,
+            isTrue,
+            reason: 'No messages fetched',
+          );
+
+          expect(
+            messagesAfterDeletion.isEmpty,
+            isTrue,
+            reason: 'Messages were not deleted',
+          );
+
+          expect(
+            messagesFetchedByIds.length,
+            messagesFetchedByCursor.length,
+            reason:
+                'Messages fetched by IDs and by cursor have different lengths',
+          );
 
           final actualBodyContents = actualUnpackedMessages
               .map<String?>((message) => message.body?['content'] as String)
@@ -274,6 +289,7 @@ void main() async {
               (content) => content == expectedBodyContent,
             ),
             isNotNull,
+            reason: 'Sent message not found',
           );
         });
 
@@ -384,8 +400,17 @@ void main() async {
 
             await completer.future;
 
-            expect(actualBodyContent, expectedBodyContent);
-            expect(telemetryMessageReceived, isTrue);
+            expect(
+              actualBodyContent,
+              expectedBodyContent,
+              reason: 'Sent message not found',
+            );
+
+            expect(
+              telemetryMessageReceived,
+              isTrue,
+              reason: 'No telemetry message',
+            );
           },
           retry: webSocketsTestRetries,
         );
