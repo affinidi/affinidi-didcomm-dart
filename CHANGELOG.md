@@ -1,3 +1,18 @@
+## 1.0.0-dev.12
+
+ - **FEAT**: add ping interval option to listenForIncomingMessages method (#59).
+
+    * feat: add ping interval option to listenForIncomingMessages method
+    
+    * refactor: move ping interval to web socket options
+    
+    * refactor: use web socket options in toWebSocketChannel
+    
+    * refactor: remove nullable from pingIntervalInSeconds
+    
+    * docs: parameter description webSocketOptions
+
+
 ## 1.0.0-dev.11
 
  - **FEAT**: organize exports.
