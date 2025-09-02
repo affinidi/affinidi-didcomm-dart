@@ -221,15 +221,14 @@ void main() async {
             accessToken: bobTokens.accessToken,
           );
 
-          final messages = await bobMediatorClient.receiveMessages(
+          final messagesFetchedByIds = await bobMediatorClient.fetchMessages(
             messageIds: messageIds,
             accessToken: bobTokens.accessToken,
+            deleteOnMediator: false,
           );
 
-          expect(messages.isNotEmpty, isTrue);
-
           final actualUnpackedMessages = await Future.wait(
-            messages.map(
+            messagesFetchedByIds.map(
               (message) => DidcommMessage.unpackToPlainTextMessage(
                 message: message,
                 recipientDidManager: bobDidManager,
@@ -244,6 +243,27 @@ void main() async {
               ),
             ),
           );
+
+          final messagesFetchedByCursor =
+              await bobMediatorClient.fetchMessagesStartingFrom(
+            startFrom: actualUnpackedMessages.first.createdTime,
+            accessToken: bobTokens.accessToken,
+            deleteOnMediator: false,
+          );
+
+          await bobMediatorClient.deleteMessages(
+            messageIds: messageIds,
+            accessToken: bobTokens.accessToken,
+          );
+
+          final messagesAfterDeletion =
+              await bobMediatorClient.listInboxMessageIds(
+            accessToken: bobTokens.accessToken,
+          );
+
+          expect(messagesFetchedByIds.isNotEmpty, isTrue);
+          expect(messagesAfterDeletion.isEmpty, isTrue);
+          expect(messagesFetchedByIds.length, messagesFetchedByCursor.length);
 
           final actualBodyContents = actualUnpackedMessages
               .map<String?>((message) => message.body?['content'] as String)
