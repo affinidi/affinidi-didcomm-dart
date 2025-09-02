@@ -136,20 +136,18 @@ class MediatorClient {
     }
   }
 
-  /// Receives messages from the mediator by message IDs.
+  /// Fetches outbound messages from the mediator by message IDs.
   ///
   /// [messageIds] - The list of message IDs to fetch.
   /// [deleteOnMediator] - Whether to delete messages from the mediator after fetching (default: true).
   /// [accessToken] - Optional bearer token for authentication.
   ///
-  /// Returns a list of message.
-  Future<List<Map<String, dynamic>>> receiveMessages({
+  /// Returns a list of messages.
+  Future<List<Map<String, dynamic>>> fetchMessages({
     required List<String> messageIds,
     bool deleteOnMediator = true,
     String? accessToken,
   }) async {
-    // TODO: create exception to wrap errors
-
     final headers =
         accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
 
@@ -160,15 +158,66 @@ class MediatorClient {
         options: Options(headers: headers),
       );
 
-      final data = response.data!['data'] as Map<String, dynamic>;
+      return _responseToMessages(response);
+    } on DioException catch (error) {
+      throw MediatorClientException(innerException: error);
+    }
+  }
 
-      return (data['success'] as List<dynamic>)
-          .map(
-            (item) => jsonDecode(
-              (item as Map<String, dynamic>)['msg'] as String,
-            ) as Map<String, dynamic>,
-          )
-          .toList();
+  /// Fetches outbound messages from the mediator pointing the starting message ID.
+  ///
+  /// [startFrom] - The starting point to fetch messages from (inclusive). If null, fetches from the beginning.
+  /// [batchSize] - Number of messages to fetch at once (default: 25).
+  /// [deleteOnMediator] - Whether to delete messages from the mediator after fetching (default: true).
+  /// [accessToken] - Optional bearer token for authentication.
+  ///
+  /// Returns a list of messages.
+  Future<List<Map<String, dynamic>>> fetchMessagesStartingFrom({
+    DateTime? startFrom,
+    int? batchSize = 25,
+    bool deleteOnMediator = true,
+    String? accessToken,
+  }) async {
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/fetch',
+        data: {
+          'start_id': startFrom?.microsecondsSinceEpoch,
+          'limit': batchSize,
+          'delete_policy': deleteOnMediator ? 'Optimistic' : 'DoNotDelete'
+        },
+        options: Options(headers: headers),
+      );
+
+      return _responseToMessages(response);
+    } on DioException catch (error) {
+      throw MediatorClientException(innerException: error);
+    }
+  }
+
+  /// Deletes messages from the mediator by message IDs.
+  ///
+  /// [messageIds] - The list of message IDs to fetch.
+  /// [accessToken] - Optional bearer token for authentication.
+  ///
+  /// Returns a list of messages.
+  Future<void> deleteMessages({
+    required List<String> messageIds,
+    String? accessToken,
+  }) async {
+    final headers =
+        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
+
+    try {
+      await _dio.delete<Map<String, dynamic>>(
+        '/delete',
+        data: {'message_ids': messageIds},
+        options: Options(headers: headers),
+      );
+      // TODO: return response to indicate which messages were deleted successfully
     } on DioException catch (error) {
       throw MediatorClientException(innerException: error);
     }
@@ -281,6 +330,20 @@ class MediatorClient {
     }
 
     return messageToSend;
+  }
+
+  List<Map<String, dynamic>> _responseToMessages(
+    Response<Map<String, dynamic>> response,
+  ) {
+    final data = response.data!['data'] as Map<String, dynamic>;
+
+    return (data['success'] as List<dynamic>)
+        .map(
+          (item) => jsonDecode(
+            (item as Map<String, dynamic>)['msg'] as String,
+          ) as Map<String, dynamic>,
+        )
+        .toList();
   }
 
   void _sendMessageToChannel(DidcommMessage message) {

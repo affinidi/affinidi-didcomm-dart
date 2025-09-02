@@ -208,7 +208,7 @@ void main() async {
     accessToken: bobTokens.accessToken,
   );
 
-  final messages = await bobMediatorClient.receiveMessages(
+  final messages = await bobMediatorClient.fetchMessages(
     messageIds: messageIds,
     deleteOnMediator: true,
     accessToken: bobTokens.accessToken,
