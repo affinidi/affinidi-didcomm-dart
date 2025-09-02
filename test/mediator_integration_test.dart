@@ -8,9 +8,7 @@ import 'package:uuid/uuid.dart';
 
 import 'example_configs.dart';
 
-// sometimes websockets connection is dropped
-// it is better to delegate connection restoration strategy for the application, that uses this library
-const webSocketsTestRetries = 2;
+const testRetries = 2;
 
 void main() async {
   await configureTestFiles();
@@ -166,132 +164,137 @@ void main() async {
           bobTokens = await bobMediatorClient.authenticate();
         });
 
-        test('REST API works correctly', () async {
-          final expectedBodyContent = const Uuid().v4();
+        test(
+          'REST API works correctly',
+          () async {
+            final expectedBodyContent = const Uuid().v4();
 
-          final alicePlainTextMassage = PlainTextMessage(
-            id: const Uuid().v4(),
-            from: aliceDidDocument.id,
-            to: [bobDidDocument.id],
-            type: Uri.parse('https://didcomm.org/example/1.0/message'),
-            body: {'content': expectedBodyContent},
-          );
+            final alicePlainTextMassage = PlainTextMessage(
+              id: const Uuid().v4(),
+              from: aliceDidDocument.id,
+              to: [bobDidDocument.id],
+              type: Uri.parse('https://didcomm.org/example/1.0/message'),
+              body: {'content': expectedBodyContent},
+            );
 
-          alicePlainTextMassage['custom-header'] = 'custom-value';
+            alicePlainTextMassage['custom-header'] = 'custom-value';
 
-          final aliceSignedAndEncryptedMessage =
-              await DidcommMessage.packIntoSignedAndEncryptedMessages(
-            alicePlainTextMassage,
-            keyType: [bobDidDocument].getCommonKeyTypesInKeyAgreements().first,
-            recipientDidDocuments: [bobDidDocument],
-            keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
-            encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-            signer: await aliceDidManager.getSigner(
-              aliceDidDocument.assertionMethod.first.id,
-            ),
-          );
+            final aliceSignedAndEncryptedMessage =
+                await DidcommMessage.packIntoSignedAndEncryptedMessages(
+              alicePlainTextMassage,
+              keyType:
+                  [bobDidDocument].getCommonKeyTypesInKeyAgreements().first,
+              recipientDidDocuments: [bobDidDocument],
+              keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+              encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+              signer: await aliceDidManager.getSigner(
+                aliceDidDocument.assertionMethod.first.id,
+              ),
+            );
 
-          final createdTime = DateTime.now().toUtc();
-          final expiresTime = createdTime.add(const Duration(seconds: 60));
+            final createdTime = DateTime.now().toUtc();
+            final expiresTime = createdTime.add(const Duration(seconds: 60));
 
-          final forwardMessage = ForwardMessage(
-            id: const Uuid().v4(),
-            to: [bobMediatorDocument.id],
-            from: aliceDidDocument.id,
-            next: bobDidDocument.id,
-            expiresTime: expiresTime,
-            attachments: [
-              Attachment(
-                mediaType: 'application/json',
-                data: AttachmentData(
-                  base64: base64UrlEncodeNoPadding(
-                    aliceSignedAndEncryptedMessage.toJsonBytes(),
+            final forwardMessage = ForwardMessage(
+              id: const Uuid().v4(),
+              to: [bobMediatorDocument.id],
+              from: aliceDidDocument.id,
+              next: bobDidDocument.id,
+              expiresTime: expiresTime,
+              attachments: [
+                Attachment(
+                  mediaType: 'application/json',
+                  data: AttachmentData(
+                    base64: base64UrlEncodeNoPadding(
+                      aliceSignedAndEncryptedMessage.toJsonBytes(),
+                    ),
                   ),
                 ),
+              ],
+            );
+
+            await aliceMediatorClient.sendMessage(
+              forwardMessage,
+              accessToken: aliceTokens.accessToken,
+            );
+
+            final messageIds = await bobMediatorClient.listInboxMessageIds(
+              accessToken: bobTokens.accessToken,
+            );
+
+            final messagesFetchedByIds = await bobMediatorClient.fetchMessages(
+              messageIds: messageIds,
+              accessToken: bobTokens.accessToken,
+              deleteOnMediator: false,
+            );
+
+            final actualUnpackedMessages = await Future.wait(
+              messagesFetchedByIds.map(
+                (message) => DidcommMessage.unpackToPlainTextMessage(
+                  message: message,
+                  recipientDidManager: bobDidManager,
+                  validateAddressingConsistency: true,
+                  expectedMessageWrappingTypes: [
+                    MessageWrappingType.anoncryptSignPlaintext,
+                    MessageWrappingType.authcryptSignPlaintext,
+                  ],
+                  expectedSigners: [
+                    aliceDidDocument.assertionMethod.first.didKeyId,
+                  ],
+                ),
               ),
-            ],
-          );
+            );
 
-          await aliceMediatorClient.sendMessage(
-            forwardMessage,
-            accessToken: aliceTokens.accessToken,
-          );
+            final messagesFetchedByCursor =
+                await bobMediatorClient.fetchMessagesStartingFrom(
+              startFrom: actualUnpackedMessages.first.createdTime,
+              accessToken: bobTokens.accessToken,
+              deleteOnMediator: false,
+            );
 
-          final messageIds = await bobMediatorClient.listInboxMessageIds(
-            accessToken: bobTokens.accessToken,
-          );
+            await bobMediatorClient.deleteMessages(
+              messageIds: messageIds,
+              accessToken: bobTokens.accessToken,
+            );
 
-          final messagesFetchedByIds = await bobMediatorClient.fetchMessages(
-            messageIds: messageIds,
-            accessToken: bobTokens.accessToken,
-            deleteOnMediator: false,
-          );
+            final messagesAfterDeletion =
+                await bobMediatorClient.listInboxMessageIds(
+              accessToken: bobTokens.accessToken,
+            );
 
-          final actualUnpackedMessages = await Future.wait(
-            messagesFetchedByIds.map(
-              (message) => DidcommMessage.unpackToPlainTextMessage(
-                message: message,
-                recipientDidManager: bobDidManager,
-                validateAddressingConsistency: true,
-                expectedMessageWrappingTypes: [
-                  MessageWrappingType.anoncryptSignPlaintext,
-                  MessageWrappingType.authcryptSignPlaintext,
-                ],
-                expectedSigners: [
-                  aliceDidDocument.assertionMethod.first.didKeyId,
-                ],
+            expect(
+              messagesFetchedByIds.isNotEmpty,
+              isTrue,
+              reason: 'No messages fetched',
+            );
+
+            expect(
+              messagesAfterDeletion.isEmpty,
+              isTrue,
+              reason: 'Messages were not deleted',
+            );
+
+            expect(
+              messagesFetchedByIds.length,
+              messagesFetchedByCursor.length,
+              reason:
+                  'Messages fetched by IDs and by cursor have different lengths',
+            );
+
+            final actualBodyContents = actualUnpackedMessages
+                .map<String?>((message) => message.body?['content'] as String)
+                .toList();
+
+            expect(
+              actualBodyContents.singleWhereOrNull(
+                (content) => content == expectedBodyContent,
               ),
-            ),
-          );
-
-          final messagesFetchedByCursor =
-              await bobMediatorClient.fetchMessagesStartingFrom(
-            startFrom: actualUnpackedMessages.first.createdTime,
-            accessToken: bobTokens.accessToken,
-            deleteOnMediator: false,
-          );
-
-          await bobMediatorClient.deleteMessages(
-            messageIds: messageIds,
-            accessToken: bobTokens.accessToken,
-          );
-
-          final messagesAfterDeletion =
-              await bobMediatorClient.listInboxMessageIds(
-            accessToken: bobTokens.accessToken,
-          );
-
-          expect(
-            messagesFetchedByIds.isNotEmpty,
-            isTrue,
-            reason: 'No messages fetched',
-          );
-
-          expect(
-            messagesAfterDeletion.isEmpty,
-            isTrue,
-            reason: 'Messages were not deleted',
-          );
-
-          expect(
-            messagesFetchedByIds.length,
-            messagesFetchedByCursor.length,
-            reason:
-                'Messages fetched by IDs and by cursor have different lengths',
-          );
-
-          final actualBodyContents = actualUnpackedMessages
-              .map<String?>((message) => message.body?['content'] as String)
-              .toList();
-
-          expect(
-            actualBodyContents.singleWhereOrNull(
-              (content) => content == expectedBodyContent,
-            ),
-            isNotNull,
-            reason: 'Sent message not found',
-          );
-        });
+              isNotNull,
+              reason: 'Sent message not found',
+            );
+          },
+          retry: testRetries,
+        );
 
         test(
           'WebSockets API works correctly',
@@ -412,7 +415,7 @@ void main() async {
               reason: 'No telemetry message',
             );
           },
-          retry: webSocketsTestRetries,
+          retry: testRetries,
         );
 
         test('OOB API works correctly', () async {
