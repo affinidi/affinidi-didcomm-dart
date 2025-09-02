@@ -19,6 +19,7 @@ export 'src/curves/curve_type.dart';
 export 'src/errors/errors.dart';
 export 'src/extensions/affinidi_acl_management_extension.dart';
 export 'src/extensions/affinidi_authenticator_extension.dart';
+export 'src/extensions/affinidi_oob_extension.dart';
 export 'src/extensions/did_document_extension.dart';
 export 'src/extensions/did_manager_extension.dart';
 export 'src/extensions/extensions.dart';

@@ -389,6 +389,25 @@ void main() async {
           },
           retry: webSocketsTestRetries,
         );
+
+        test('OOB API works correctly', () async {
+          final message = OutOfBandMessage(
+            id: const Uuid().v4(),
+            from: aliceDidDocument.id,
+            body: {
+              'goal_code': 'connect',
+              'goal': 'Start relationship',
+              'accept': ['didcomm/v2'],
+            },
+          );
+
+          final oobId = await aliceMediatorClient.createOob(
+            message,
+            accessToken: aliceTokens.accessToken,
+          );
+
+          expect(oobId, isNotEmpty);
+        });
       });
     }
   });
