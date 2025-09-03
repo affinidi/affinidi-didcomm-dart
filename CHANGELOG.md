@@ -1,3 +1,8 @@
+## 1.0.0-dev.13
+
+ - **FEAT**: add oob on mediator.
+ - **FEAT**: fetch and delete messages.
+
 ## 1.0.0-dev.12
 
  - **FEAT**: add ping interval option to listenForIncomingMessages method (#59).
