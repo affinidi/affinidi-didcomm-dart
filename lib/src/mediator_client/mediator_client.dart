@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:ssi/ssi.dart';
@@ -9,6 +10,7 @@ import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
 
 import '../../didcomm.dart';
+import '../common/crypto.dart';
 
 /// Client for interacting with a DIDComm mediator, supporting message sending, inbox management,
 /// and real-time message delivery via WebSockets.
@@ -251,9 +253,21 @@ class MediatorClient {
     await _channel!.ready;
 
     final subscription = _channel!.stream.listen(
-      (data) => onMessage(
-        jsonDecode(data as String) as Map<String, dynamic>,
-      ),
+      (data) async {
+        final json = data as String;
+
+        // TODO: come back to this after the mediator bypass message queue on Live Delivery
+        if (webSocketOptions.deleteOnMediator) {
+          final messageIdOnMediator = hex.encode(sha256Hash(utf8.encode(json)));
+          await deleteMessages(
+            messageIds: [messageIdOnMediator],
+            accessToken: accessToken,
+          );
+        }
+        onMessage(
+          jsonDecode(json) as Map<String, dynamic>,
+        );
+      },
       onError: onError,
       onDone: onDone,
       cancelOnError: cancelOnError,
