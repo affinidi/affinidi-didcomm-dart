@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart' show sha256;
 import 'package:crypto_keys_plus/crypto_keys.dart' as ck;
 import 'package:elliptic/elliptic.dart' as ec;
 import 'package:ssi/ssi.dart' show KeyType;
@@ -81,4 +82,10 @@ ck.Encrypter createSymmetricEncrypter(
   }
 
   throw UnsupportedEncryptionAlgorithmError(encryptionAlgorithm);
+}
+
+/// Creates a hash of the given [data] using SHA-256.
+Uint8List sha256Hash(Uint8List data) {
+  final digest = sha256.convert(data);
+  return Uint8List.fromList(digest.bytes);
 }
