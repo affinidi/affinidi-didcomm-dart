@@ -256,7 +256,7 @@ class MediatorClient {
       (data) async {
         final json = data as String;
 
-        // TODO: come back to this after the mediator bypass message queue on Live Delivery
+        // TODO: come back to this after the mediator will bypass message queue on Live Delivery
         if (webSocketOptions.deleteOnMediator) {
           final messageIdOnMediator = hex.encode(sha256Hash(utf8.encode(json)));
           await deleteMessages(
