@@ -265,6 +265,16 @@ abstract class DidcommMessage {
     required bool validateAddressingConsistency,
   }) {
     if (validateAddressingConsistency && messages.length > 1) {
+      final messageWrappingType =
+          MessageWrappingType.findFromMessages(messages);
+
+      if (messageWrappingType == null) {
+        throw ArgumentError(
+          'MessageWrappingType type can not be recognized',
+          'message',
+        );
+      }
+
       final iterator = messages.reversed.iterator;
 
       // the 1st message is always Plain Text Message
@@ -277,15 +287,14 @@ abstract class DidcommMessage {
       if (iterator.current is EncryptedMessage) {
         plainTextMessage.validateConsistencyWithEncryptedMessage(
           iterator.current as EncryptedMessage,
+          messageWrappingType: messageWrappingType,
         );
-
-        // encrypted message can't be signed
-        return;
       }
 
       if (iterator.current is SignedMessage) {
         plainTextMessage.validateConsistencyWithSignedMessage(
           iterator.current as SignedMessage,
+          messageWrappingType: messageWrappingType,
         );
       }
 
@@ -293,6 +302,7 @@ abstract class DidcommMessage {
       if (iterator.moveNext()) {
         plainTextMessage.validateConsistencyWithEncryptedMessage(
           iterator.current as EncryptedMessage,
+          messageWrappingType: messageWrappingType,
         );
       }
     }
