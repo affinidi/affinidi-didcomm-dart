@@ -3,7 +3,7 @@ import 'package:didcomm/didcomm.dart';
 class MessageAssertionService {
   static PlainTextMessage createPlainTextMessageAssertion(
     String message, {
-    required String from,
+    String? from,
     required List<String> to,
   }) {
     final plainTextMessage = PlainTextMessage(

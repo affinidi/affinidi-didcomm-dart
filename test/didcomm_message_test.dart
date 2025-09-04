@@ -138,7 +138,6 @@ void main() async {
           final plainTextMessage =
               MessageAssertionService.createPlainTextMessageAssertion(
             content,
-            from: aliceDidDocument.id,
             to: [bobDidDocument.id],
           );
 
@@ -424,7 +423,58 @@ void main() async {
 
           expect(
             () async => await actualPlainTextMessageFuture,
-            throwsArgumentError,
+            throwsA(
+              isA<ArgumentError>().having(
+                (e) => e.message,
+                'message',
+                'MessageWrappingType.plaintext in not in expected list: [MessageWrappingType.signedPlaintext]',
+              ),
+            ),
+          );
+        },
+      );
+
+      test(
+        'should fail to unpack an anoncrypt message with a from != null',
+        () async {
+          const content = 'Hello, Bob!';
+          final plainTextMessage =
+              MessageAssertionService.createPlainTextMessageAssertion(
+            content,
+            from: aliceDidDocument.id,
+            to: [bobDidDocument.id],
+          );
+
+          final sut = await DidcommMessage.packIntoEncryptedMessage(
+            plainTextMessage,
+            keyType: aliceKeyPair.publicKey.type,
+            recipientDidDocuments: [bobDidDocument],
+            encryptionAlgorithm: encryptionAlgorithm,
+            keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+          );
+
+          final sharedMessageToBobInJson = jsonEncode(sut);
+
+          final actualPlainTextMessageFuture =
+              DidcommMessage.unpackToPlainTextMessage(
+            message: jsonDecode(
+              sharedMessageToBobInJson,
+            ) as Map<String, dynamic>,
+            recipientDidManager: bobDidManager,
+            expectedMessageWrappingTypes: [
+              MessageWrappingType.anoncryptPlaintext
+            ],
+          );
+
+          expect(
+            () async => await actualPlainTextMessageFuture,
+            throwsA(
+              isA<ArgumentError>().having(
+                (e) => e.message,
+                'message',
+                'from header in a Plain Text Message must be null if an outer message is anoncrypt',
+              ),
+            ),
           );
         },
       );

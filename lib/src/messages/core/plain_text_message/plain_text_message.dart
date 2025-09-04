@@ -113,10 +113,13 @@ class PlainTextMessage extends DidcommMessage {
   /// Throws [ArgumentError] if the addressing is inconsistent.
   ///
   /// See: https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
-  void validateConsistencyWithEncryptedMessage(EncryptedMessage message) {
+  void validateConsistencyWithEncryptedMessage(
+    EncryptedMessage message, {
+    required MessageWrappingType messageWrappingType,
+  }) {
     _validateFromHeader(
-      encryptionKeyId:
-          _jweHeaderConverter.fromJson(message.protected).subjectKeyId,
+      jweHeader: _jweHeaderConverter.fromJson(message.protected),
+      messageWrappingType: messageWrappingType,
     );
 
     _validateToHeader(
@@ -129,13 +132,13 @@ class PlainTextMessage extends DidcommMessage {
   /// Throws [ArgumentError] if the addressing is inconsistent.
   ///
   /// See: https://identity.foundation/didcomm-messaging/spec/#message-layer-addressing-consistency
-  void validateConsistencyWithSignedMessage(SignedMessage message) {
+  void validateConsistencyWithSignedMessage(
+    SignedMessage message, {
+    required MessageWrappingType messageWrappingType,
+  }) {
     _validateFromHeader(
-      signatureKeyIds: message.signatures
-          .map(
-            (signature) => signature.header.keyId,
-          )
-          .toList(),
+      signatures: message.signatures,
+      messageWrappingType: messageWrappingType,
     );
   }
 
@@ -169,15 +172,15 @@ class PlainTextMessage extends DidcommMessage {
   }
 
   void _validateFromHeader({
-    String? encryptionKeyId,
-    List<String>? signatureKeyIds,
+    required MessageWrappingType messageWrappingType,
+    JweHeader? jweHeader,
+    List<Signature>? signatures,
   }) {
-    final senderDid =
-        encryptionKeyId == null ? null : getDidFromId(encryptionKeyId);
-
-    final signerDids = signatureKeyIds?.map(
-      getDidFromId,
-    );
+    final signerDids = signatures
+        ?.map(
+          (signature) => getDidFromId(signature.header.keyId),
+        )
+        .toList();
 
     if (signerDids != null && !signerDids.contains(from)) {
       throw ArgumentError(
@@ -186,9 +189,23 @@ class PlainTextMessage extends DidcommMessage {
       );
     }
 
-    if (senderDid != null && from != senderDid) {
+    if (jweHeader != null) {
+      final senderDid = jweHeader.subjectKeyId == null
+          ? null
+          : getDidFromId(jweHeader.subjectKeyId!);
+
+      if (senderDid != null && from != senderDid) {
+        throw ArgumentError(
+          'from header in a Plain Text Message does not match skid header in an Encrypted Message',
+          'message',
+        );
+      }
+    }
+
+    if (messageWrappingType == MessageWrappingType.anoncryptPlaintext &&
+        from != null) {
       throw ArgumentError(
-        'from header in a Plain Text Message does not match skid header in an Encrypted Message',
+        'from header in a Plain Text Message must be null if an outer message is anoncrypt',
         'message',
       );
     }
