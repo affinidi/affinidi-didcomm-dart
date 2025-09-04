@@ -1,3 +1,7 @@
+## 1.0.0-dev.14
+
+ - **FEAT**: delete messages on websockets.
+
 ## 1.0.0-dev.13
 
  - **FEAT**: add oob on mediator.
