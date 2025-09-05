@@ -25,6 +25,7 @@ The DIDComm for Dart package provides the tools and libraries to enable your app
     - [packIntoEncryptedMessage](#packintoencryptedmessage)
     - [packIntoSignedMessage](#packintosignedmessage)
     - [packIntoSignedAndEncryptedMessages](#packintosignedandencryptedmessages)
+    - [packIntoAnoncryptAndAuthcryptMessages](#packintoanoncryptandauthcryptmessages)
     - [unpackToPlainTextMessage](#unpacktoplaintextmessage)
   - [More Usage Examples](#more-usage-examples)
   - [Key Type Selection for Authcrypt and Anoncrypt](#key-type-selection-for-authcrypt-and-anoncrypt)
@@ -404,6 +405,23 @@ final signedAndEncrypted = await DidcommMessage.packIntoSignedAndEncryptedMessag
   keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
   encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
   signer: aliceSigner,
+);
+```
+
+### packIntoAnoncryptAndAuthcryptMessages
+
+Packs a plain text message into two encrypted messages using both authenticated (authcrypt) and anonymous (anoncrypt) encryption layers. This method first wraps the message with authenticated encryption (authcrypt, ECDH-1PU), then wraps the resulting message with anonymous encryption (anoncrypt, ECDH-ES).
+
+Use this when you want to provide both sender authenticity (authcrypt) and sender anonymity from intermediaries (anoncrypt). Only the final recipient can verify the sender's identity. The result is a message with the envelope type `anoncrypt(authcrypt(plaintext))`.
+
+```dart
+final doublyEncrypted = await DidcommMessage.packIntoAnoncryptAndAuthcryptMessages(
+  plainTextMessage,
+  keyPair: aliceKeyPair,
+  didKeyId: aliceDidDocument.keyAgreement[0].id,
+  recipientDidDocuments: [bobDidDocument],
+  // algorithm for content encryption of the outer anoncrypt layer
+  encryptionAlgorithm: EncryptionAlgorithm.a256cbc, 
 );
 ```
 

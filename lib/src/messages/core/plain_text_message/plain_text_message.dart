@@ -205,7 +205,7 @@ class PlainTextMessage extends DidcommMessage {
     if (messageWrappingType == MessageWrappingType.anoncryptPlaintext &&
         from != null) {
       throw ArgumentError(
-        'from header in a Plain Text Message must be null if an outer message is anoncrypt',
+        'from header in a Plain Text Message must be null for ${MessageWrappingType.anoncryptPlaintext.name}',
         'message',
       );
     }
