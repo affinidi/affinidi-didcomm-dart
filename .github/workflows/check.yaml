@@ -31,6 +31,7 @@ jobs:
       - run: melos format --output=none --set-exit-if-changed .
       - run: melos analyze
       - run: melos test
-      - uses: romeovs/lcov-reporter-action@v0.4.0
-        with:
-          lcov-file: ./coverage/lcov.info
+      # temporary disabled due to "Resource not accessible by integration" error
+      # - uses: romeovs/lcov-reporter-action@v0.4.0
+      #   with:
+      #     lcov-file: ./coverage/lcov.info
