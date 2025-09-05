@@ -410,9 +410,9 @@ final signedAndEncrypted = await DidcommMessage.packIntoSignedAndEncryptedMessag
 
 ### packIntoAnoncryptAndAuthcryptMessages
 
-Packs a plain text message into two encrypted messages using both authenticated (authcrypt) and anonymous (anoncrypt) encryption layers. This method first wraps the message with authenticated encryption (authcrypt, ECDH-1PU), then wraps the resulting message with anonymous encryption (anoncrypt, ECDH-ES).
+Packs a plain text message into two [envelopes](#didcomm-message-envelopes) using authenticated (authcrypt) and anonymous (anoncrypt) encryption layers. This method first wraps the message with authenticated encryption (authcrypt, ECDH-1PU) and then the resulting message is wrapped with anonymous encryption (anoncrypt, ECDH-ES).
 
-Use this when you want to provide both sender authenticity (authcrypt) and sender anonymity from intermediaries (anoncrypt). Only the final recipient can verify the sender's identity. The result is a message with the envelope type `anoncrypt(authcrypt(plaintext))`.
+Use this when you want to provide sender authenticity (authcrypt) and sender anonymity from intermediaries (anoncrypt). Only the final recipient can verify the sender's identity. The result is a message with the envelope type anoncrypt(authcrypt(plaintext)).
 
 ```dart
 final doublyEncrypted = await DidcommMessage.packIntoAnoncryptAndAuthcryptMessages(
