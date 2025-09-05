@@ -235,6 +235,23 @@ class EncryptedMessage extends DidcommMessage {
       if (subjectKeyId == null) {
         throw ArgumentError(
           'skid is required for ${KeyWrappingAlgorithm.ecdh1Pu.value}',
+          'skid',
+        );
+      }
+    }
+
+    if (jweHeader.keyWrappingAlgorithm == KeyWrappingAlgorithm.ecdhEs) {
+      if (subjectKeyId != null) {
+        throw ArgumentError(
+          'skid must be null for ${KeyWrappingAlgorithm.ecdhEs.value}',
+          'skid',
+        );
+      }
+
+      if (jweHeader.agreementPartyUInfo != null) {
+        throw ArgumentError(
+          'apu must be null for ${KeyWrappingAlgorithm.ecdhEs.value}',
+          'apu',
         );
       }
     }

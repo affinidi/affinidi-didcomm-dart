@@ -6,6 +6,8 @@ import 'package:test/test.dart';
 import 'utils/create_message_assertion.dart';
 
 void main() async {
+  final jweHeaderConverter = const JweHeaderConverter();
+
   group('Encrypted message', () {
     final aliceKeyStore = InMemoryKeyStore();
     final aliceWallet = PersistentWallet(aliceKeyStore);
@@ -164,9 +166,26 @@ void main() async {
             expectedMessageWrappingTypes: [expectedMessageWrappingType],
           );
 
+          final actualJweHeader = jweHeaderConverter.fromJson(sut.protected);
+
           expect(
             actualPlainTextMessage.body?['content'],
             expectedBodyContent,
+          );
+
+          expect(
+            actualPlainTextMessage.from,
+            isNull,
+          );
+
+          expect(
+            actualJweHeader.subjectKeyId,
+            isNull,
+          );
+
+          expect(
+            actualJweHeader.agreementPartyUInfo,
+            isNull,
           );
         },
       );
@@ -252,9 +271,21 @@ void main() async {
             expectedSigners: [expectedSigner],
           );
 
+          final actualJweHeader = jweHeaderConverter.fromJson(sut.protected);
+
           expect(
             actualPlainTextMessage.body?['content'],
             expectedBodyContent,
+          );
+
+          expect(
+            actualJweHeader.subjectKeyId,
+            isNull,
+          );
+
+          expect(
+            actualJweHeader.agreementPartyUInfo,
+            isNull,
           );
         },
       );
@@ -317,17 +348,11 @@ void main() async {
             to: [bobDidDocument.id],
           );
 
-          final authcryptMessage =
-              await EncryptedMessage.packWithAuthentication(
+          final sut =
+              await DidcommMessage.packIntoAnoncryptAndAuthcryptMessages(
             plainTextMessage,
             keyPair: aliceKeyPair,
             didKeyId: aliceDidDocument.keyAgreement.first.id,
-            recipientDidDocuments: [bobDidDocument],
-          );
-
-          final sut = await EncryptedMessage.packAnonymously(
-            authcryptMessage,
-            keyType: aliceKeyPair.publicKey.type,
             recipientDidDocuments: [bobDidDocument],
             encryptionAlgorithm: encryptionAlgorithm,
           );
@@ -347,9 +372,21 @@ void main() async {
             expectedMessageWrappingTypes: [expectedMessageWrappingType],
           );
 
+          final actualJweHeader = jweHeaderConverter.fromJson(sut.protected);
+
           expect(
             actualPlainTextMessage.body?['content'],
             expectedBodyContent,
+          );
+
+          expect(
+            actualJweHeader.subjectKeyId,
+            isNull,
+          );
+
+          expect(
+            actualJweHeader.agreementPartyUInfo,
+            isNull,
           );
         },
       );
@@ -435,7 +472,7 @@ void main() async {
       );
 
       test(
-        'should fail to unpack an anoncrypt message with a from != null',
+        'should fail to unpack an ${MessageWrappingType.anoncryptPlaintext.name} message with a from != null',
         () async {
           const content = 'Hello, Bob!';
           final plainTextMessage =
@@ -472,10 +509,130 @@ void main() async {
               isA<ArgumentError>().having(
                 (e) => e.message,
                 'message',
-                'from header in a Plain Text Message must be null if an outer message is anoncrypt',
+                'from header in a Plain Text Message must be null for ${MessageWrappingType.anoncryptPlaintext.name}',
               ),
             ),
           );
+        },
+      );
+
+      test(
+        [
+          'should fail to unpack',
+          '${MessageWrappingType.anoncryptPlaintext.name}, ${MessageWrappingType.anoncryptSignPlaintext.name},',
+          'and ${MessageWrappingType.anoncryptAuthcryptPlaintext.name} messages',
+          'if skid or apu is non null'
+        ].join(' '),
+        () async {
+          const content = 'Hello, Bob!';
+          final plainTextMessage =
+              MessageAssertionService.createPlainTextMessageAssertion(
+            content,
+            to: [bobDidDocument.id],
+          );
+
+          final messages = [
+            await DidcommMessage.packIntoEncryptedMessage(
+              plainTextMessage,
+              keyType: aliceKeyPair.publicKey.type,
+              recipientDidDocuments: [bobDidDocument],
+              encryptionAlgorithm: encryptionAlgorithm,
+              keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+            ),
+            await DidcommMessage.packIntoSignedAndEncryptedMessages(
+              plainTextMessage,
+              keyType: aliceKeyPair.publicKey.type,
+              signer: aliceSigner,
+              recipientDidDocuments: [bobDidDocument],
+              encryptionAlgorithm: encryptionAlgorithm,
+              keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+            ),
+            await DidcommMessage.packIntoAnoncryptAndAuthcryptMessages(
+              plainTextMessage,
+              keyPair: aliceKeyPair,
+              didKeyId: aliceDidDocument.keyAgreement.first.id,
+              recipientDidDocuments: [bobDidDocument],
+              encryptionAlgorithm: encryptionAlgorithm,
+            ),
+          ].map((message) => message.toJson()).toList();
+
+          for (final message in messages) {
+            final jweHeader = jweHeaderConverter
+                .fromJson(
+                  message['protected'] as String,
+                )
+                .toJson();
+
+            // simulate a malicious intermediary that tampers with the message
+            // by adding skid to the JWE header
+            jweHeader['skid'] = 'some-skid';
+            message['protected'] =
+                jweHeaderConverter.toJson(JweHeader.fromJson(jweHeader));
+
+            final sharedMessageToBobInJson = jsonEncode(message);
+
+            final actualPlainTextMessageFuture =
+                DidcommMessage.unpackToPlainTextMessage(
+              message: jsonDecode(
+                sharedMessageToBobInJson,
+              ) as Map<String, dynamic>,
+              recipientDidManager: bobDidManager,
+              expectedMessageWrappingTypes: [
+                MessageWrappingType.anoncryptPlaintext
+              ],
+            );
+
+            expect(
+              () async => await actualPlainTextMessageFuture,
+              throwsA(
+                isA<ArgumentError>().having(
+                  (e) => e.message,
+                  'skid',
+                  'skid must be null for ${KeyWrappingAlgorithm.ecdhEs.value}',
+                ),
+              ),
+            );
+          }
+
+          for (final message in messages) {
+            final jweHeader = jweHeaderConverter
+                .fromJson(
+                  message['protected'] as String,
+                )
+                .toJson();
+
+            jweHeader['skid'] = null;
+
+            // simulate a malicious intermediary that tampers with the message
+            // by adding apu to the JWE header
+            jweHeader['apu'] = 'some-apu';
+            message['protected'] =
+                jweHeaderConverter.toJson(JweHeader.fromJson(jweHeader));
+
+            final sharedMessageToBobInJson = jsonEncode(message);
+
+            final actualPlainTextMessageFuture =
+                DidcommMessage.unpackToPlainTextMessage(
+              message: jsonDecode(
+                sharedMessageToBobInJson,
+              ) as Map<String, dynamic>,
+              recipientDidManager: bobDidManager,
+              expectedMessageWrappingTypes: [
+                MessageWrappingType.anoncryptPlaintext
+              ],
+            );
+
+            expect(
+              () async => await actualPlainTextMessageFuture,
+              throwsA(
+                isA<ArgumentError>().having(
+                  (e) => e.message,
+                  'apu',
+                  'apu must be null for ${KeyWrappingAlgorithm.ecdhEs.value}',
+                ),
+              ),
+            );
+          }
         },
       );
     });
