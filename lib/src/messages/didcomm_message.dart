@@ -117,6 +117,46 @@ abstract class DidcommMessage {
     );
   }
 
+  /// Packs a [PlainTextMessage] into two [EncryptedMessage]s using both authenticated (authcrypt) and anonymous (anoncrypt) encryption layers.
+  ///
+  /// This method first wraps the message with authenticated encryption (authcrypt, ECDH-1PU),
+  /// then wraps the resulting message with anonymous encryption (anoncrypt, ECDH-ES).
+  ///
+  /// Use this when you want to provide both sender authenticity (authcrypt)
+  /// and sender anonymity from intermediaries (anoncrypt).
+  /// Only the final recipient can verify the sender's identity.
+  ///
+  /// [keyPair]: The sender's key pair.
+  /// [didKeyId]: The sender's key ID.
+  /// [recipientDidDocuments]: List of recipient DID Documents.
+  /// [encryptionAlgorithm]: Algorithm for content encryption of the outer anoncrypt layer.
+  ///
+  /// Returns an [EncryptedMessage] with both authcrypt and anoncrypt layers applied.
+  static Future<EncryptedMessage> packIntoAnoncryptAndAuthcryptMessages(
+    PlainTextMessage message, {
+    required KeyPair keyPair,
+    required String didKeyId,
+    required List<DidDocument> recipientDidDocuments,
+    required EncryptionAlgorithm encryptionAlgorithm,
+  }) async {
+    final authcryptMessage = await EncryptedMessage.pack(
+      message,
+      keyPair: keyPair,
+      didKeyId: didKeyId,
+      recipientDidDocuments: recipientDidDocuments,
+      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
+      encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+    );
+
+    return await EncryptedMessage.pack(
+      authcryptMessage,
+      keyType: keyPair.publicKey.type,
+      recipientDidDocuments: recipientDidDocuments,
+      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+      encryptionAlgorithm: encryptionAlgorithm,
+    );
+  }
+
   /// Unpacks a [PlainTextMessage], recursively decrypting and verifying signatures
   /// of intermediary [EncryptedMessage] and [SignedMessage].
   /// Verifies addressing consistency by default.
@@ -265,6 +305,16 @@ abstract class DidcommMessage {
     required bool validateAddressingConsistency,
   }) {
     if (validateAddressingConsistency && messages.length > 1) {
+      final messageWrappingType =
+          MessageWrappingType.findFromMessages(messages);
+
+      if (messageWrappingType == null) {
+        throw ArgumentError(
+          'MessageWrappingType type can not be recognized',
+          'message',
+        );
+      }
+
       final iterator = messages.reversed.iterator;
 
       // the 1st message is always Plain Text Message
@@ -277,15 +327,14 @@ abstract class DidcommMessage {
       if (iterator.current is EncryptedMessage) {
         plainTextMessage.validateConsistencyWithEncryptedMessage(
           iterator.current as EncryptedMessage,
+          messageWrappingType: messageWrappingType,
         );
-
-        // encrypted message can't be signed
-        return;
       }
 
       if (iterator.current is SignedMessage) {
         plainTextMessage.validateConsistencyWithSignedMessage(
           iterator.current as SignedMessage,
+          messageWrappingType: messageWrappingType,
         );
       }
 
@@ -293,6 +342,7 @@ abstract class DidcommMessage {
       if (iterator.moveNext()) {
         plainTextMessage.validateConsistencyWithEncryptedMessage(
           iterator.current as EncryptedMessage,
+          messageWrappingType: messageWrappingType,
         );
       }
     }

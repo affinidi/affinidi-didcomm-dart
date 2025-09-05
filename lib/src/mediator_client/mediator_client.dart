@@ -228,6 +228,10 @@ class MediatorClient {
   /// Listens for incoming messages from the mediator via WebSocket.
   ///
   /// [onMessage] - Callback for each received message.
+  ///   **Important:**
+  ///   Consider implementing rate limiting, message validation, or other mechanisms
+  ///   in your callback to prevent potential denial-of-service (DDoS) attacks,
+  ///   as this handler may be invoked for every message received from the network.
   /// [onError] - Optional callback for errors.
   /// [onDone] - Optional callback when the stream is closed.
   /// [cancelOnError] - Whether to cancel on error.
