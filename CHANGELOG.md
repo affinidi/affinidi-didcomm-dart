@@ -1,3 +1,8 @@
+## 1.0.0-dev.15
+
+ - **FIX**: prevent from header  to be non null for anoncrypt.
+ - **FEAT**: add packIntoAnoncryptAndAuthcryptMessages. check skid and apu to be null for anoncrypt.
+
 ## 1.0.0-dev.14
 
  - **FEAT**: delete messages on websockets.
