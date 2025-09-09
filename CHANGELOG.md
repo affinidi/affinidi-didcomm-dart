@@ -1,3 +1,7 @@
+## 1.0.1
+
+ - **FIX**: release version.
+
 ## 1.0.0-dev.15
 
  - **FIX**: prevent from header  to be non null for anoncrypt.
