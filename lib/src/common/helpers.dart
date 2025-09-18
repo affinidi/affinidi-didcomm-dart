@@ -17,7 +17,7 @@ import 'package:ssi/ssi.dart';
 Future<Uint8List> extractPrivateKeyBytes(String pemPath) async {
   final pem = await File(pemPath).readAsString();
 
-  final lines = pem.split('\n');
+  final lines = pem.replaceAll('\r\n', '\n').split('\n');
   final base64Str = lines
       .where((line) => !line.startsWith('-----') && line.trim().isNotEmpty)
       .join('');
