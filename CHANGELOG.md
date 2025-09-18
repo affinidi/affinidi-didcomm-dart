@@ -1,3 +1,7 @@
+## 1.0.2
+
+ - **FIX**: running tests on windows.
+
 ## 1.0.1
 
  - **FIX**: release version.
