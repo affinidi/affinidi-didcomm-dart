@@ -1,36 +1,41 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import '../../core/plain_text_message/plain_text_message.dart';
+import '../../../didcomm.dart';
 import '../../annotations/own_json_properties.dart';
 
 @OwnJsonProperties()
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class VdipMessage extends PlainTextMessage {
-
-  static const requestIssuanceMessageUri = Uri.parse('https://affinidi.com/didcomm/protocols/vdip/1.0/request-issuance');
-  static const identificationRequestMessageUri = Uri.parse('https://affinidi.com/didcomm/protocols/vdip/1.0/identification-request');
-  static const problemReportMessageUri = Uri.parse('https://didcomm.org/report-problem/2.0/problem-report');
-  static const issuedCredentialMessageUri = Uri.parse('https://affinidi.com/didcomm/protocols/vdip/1.0/issued-credential');
-  static const acceptedCredentialMessageUri = Uri.parse('https://affinidi.com/didcomm/protocols/vdip/1.0/credential-accepted');
+  static final requestIssuanceMessageUri = Uri.parse(
+      'https://affinidi.com/didcomm/protocols/vdip/1.0/request-issuance');
+  static final identificationRequestMessageUri = Uri.parse(
+      'https://affinidi.com/didcomm/protocols/vdip/1.0/identification-request');
+  static final problemReportMessageUri =
+      Uri.parse('https://didcomm.org/report-problem/2.0/problem-report');
+  static final issuedCredentialMessageUri = Uri.parse(
+      'https://affinidi.com/didcomm/protocols/vdip/1.0/issued-credential');
+  static final acceptedCredentialMessageUri = Uri.parse(
+      'https://affinidi.com/didcomm/protocols/vdip/1.0/credential-accepted');
 
   VdipMessage({
     required super.id,
     required super.from,
-    super.to,
-    super.createdTime,
-    super.expiresTime,
-    super.body,
+    required super.to,
+    required super.createdTime,
+    required super.expiresTime,
+    required super.body,
     required super.type,
   });
 
   factory VdipMessage.requestIssuanceMessage({
     required String id,
     required String? from,
-    String? to,
-    DateTime? createdTime,
-    DateTime? expiresTime,
-    Map<String, dynamic>? body,
-  }) => VdipMessage(
+    required List<String> to,
+    required DateTime? createdTime,
+    required DateTime? expiresTime,
+    required Map<String, dynamic>? body,
+  }) =>
+      VdipMessage(
         id: id,
         from: from,
         to: to,
@@ -43,11 +48,12 @@ class VdipMessage extends PlainTextMessage {
   factory VdipMessage.identificationRequestMessage({
     required String id,
     required String? from,
-    String? to,
-    DateTime? createdTime,
-    DateTime? expiresTime,
-    Map<String, dynamic>? body,
-  }) => VdipMessage(
+    required List<String> to,
+    required DateTime? createdTime,
+    required DateTime? expiresTime,
+    required Map<String, dynamic>? body,
+  }) =>
+      VdipMessage(
         id: id,
         from: from,
         to: to,
@@ -60,11 +66,12 @@ class VdipMessage extends PlainTextMessage {
   factory VdipMessage.problemReportMessage({
     required String id,
     required String? from,
-    String? to,
-    DateTime? createdTime,
-    DateTime? expiresTime,
-    Map<String, dynamic>? body,
-  }) => VdipMessage(
+    required List<String> to,
+    required DateTime? createdTime,
+    required DateTime? expiresTime,
+    required Map<String, dynamic>? body,
+  }) =>
+      VdipMessage(
         id: id,
         from: from,
         to: to,
@@ -77,11 +84,12 @@ class VdipMessage extends PlainTextMessage {
   factory VdipMessage.issuedCredentialMessage({
     required String id,
     required String? from,
-    String? to,
-    DateTime? createdTime,
-    DateTime? expiresTime,
-    Map<String, dynamic>? body,
-  }) => VdipMessage(
+    required List<String> to,
+    required DateTime? createdTime,
+    required DateTime? expiresTime,
+    required Map<String, dynamic>? body,
+  }) =>
+      VdipMessage(
         id: id,
         from: from,
         to: to,
@@ -94,11 +102,12 @@ class VdipMessage extends PlainTextMessage {
   factory VdipMessage.acceptedCredentialMessage({
     required String id,
     required String? from,
-    String? to,
-    DateTime? createdTime,
-    DateTime? expiresTime,
-    Map<String, dynamic>? body,
-  }) => VdipMessage(
+    required List<String> to,
+    required DateTime? createdTime,
+    required DateTime? expiresTime,
+    required Map<String, dynamic>? body,
+  }) =>
+      VdipMessage(
         id: id,
         from: from,
         to: to,
