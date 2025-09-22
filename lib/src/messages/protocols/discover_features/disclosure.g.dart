@@ -8,7 +8,7 @@ part of 'disclosure.dart';
 
 Disclosure _$DisclosureFromJson(Map<String, dynamic> json) => Disclosure(
       id: json['id'] as String,
-      featureType: json['featureType'] as String,
+      featureType: json['feature-type'] as String,
       roles:
           (json['roles'] as List<dynamic>?)?.map((e) => e as String).toList(),
     );
@@ -16,6 +16,6 @@ Disclosure _$DisclosureFromJson(Map<String, dynamic> json) => Disclosure(
 Map<String, dynamic> _$DisclosureToJson(Disclosure instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'featureType': instance.featureType,
+      'feature-type': instance.featureType,
       if (instance.roles case final value?) 'roles': value,
     };
