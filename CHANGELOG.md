@@ -1,3 +1,7 @@
+## 1.0.3
+
+ - **FIX**: qeuery message.
+
 ## 1.0.2
 
  - **FIX**: running tests on windows.
