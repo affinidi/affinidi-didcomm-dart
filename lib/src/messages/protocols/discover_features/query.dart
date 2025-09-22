@@ -1,15 +1,12 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import 'feature_type.dart';
-
 part 'query.g.dart';
 
 /// Model for a DIDComm discover features query.
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class Query {
   /// The type of feature being queried.
-  @JsonKey(name: 'feature-type', unknownEnumValue: FeatureType.unknown)
-  final FeatureType featureType;
+  final String featureType;
 
   /// The match pattern for the feature query (e.g., protocol URI or wildcard).
   final String match;

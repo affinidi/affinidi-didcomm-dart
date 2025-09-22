@@ -23,8 +23,16 @@ class DiscloseMessage extends PlainTextMessage {
   /// The [body] parameter should contain the list of disclosed features to be sent.
   DiscloseMessage({
     required super.id,
-    required super.parentThreadId,
     required DiscloseBody body,
+    super.from,
+    super.to,
+    super.createdTime,
+    super.expiresTime,
+    super.parentThreadId,
+    super.threadId,
+    super.acknowledged,
+    super.pleaseAcknowledge,
+    super.attachments,
   }) : super(
           type: messageType,
           body: body.toJson(),

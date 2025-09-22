@@ -1,7 +1,6 @@
 export 'protocols/discover_features/disclose_body.dart';
 export 'protocols/discover_features/disclose_message.dart';
 export 'protocols/discover_features/disclosure.dart';
-export 'protocols/discover_features/feature_type.dart';
 export 'protocols/discover_features/query.dart';
 export 'protocols/discover_features/query_body.dart';
 export 'protocols/discover_features/query_message.dart';
