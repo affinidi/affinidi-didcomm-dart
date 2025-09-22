@@ -24,6 +24,15 @@ class QueryMessage extends PlainTextMessage {
   QueryMessage({
     required super.id,
     required QueryBody body,
+    super.from,
+    super.to,
+    super.createdTime,
+    super.expiresTime,
+    super.parentThreadId,
+    super.threadId,
+    super.acknowledged,
+    super.pleaseAcknowledge,
+    super.attachments,
   }) : super(
           type: messageType,
           body: body.toJson(),

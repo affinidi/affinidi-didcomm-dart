@@ -1,7 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import 'feature_type.dart';
-
 part 'disclosure.g.dart';
 
 /// Model for a DIDComm discover features disclosure.
@@ -13,8 +11,7 @@ class Disclosure {
   final String id;
 
   /// The type of feature being disclosed.
-  @JsonKey(name: 'feature-type', unknownEnumValue: FeatureType.unknown)
-  final FeatureType featureType;
+  final String featureType;
 
   /// The roles supported for this feature, if any.
   final List<String>? roles;
