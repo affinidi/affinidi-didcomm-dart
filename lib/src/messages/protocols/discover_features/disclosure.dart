@@ -11,6 +11,7 @@ class Disclosure {
   final String id;
 
   /// The type of feature being disclosed.
+  @JsonKey(name: 'feature-type')
   final String featureType;
 
   /// The roles supported for this feature, if any.

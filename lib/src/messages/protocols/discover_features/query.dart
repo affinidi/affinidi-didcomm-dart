@@ -6,6 +6,7 @@ part 'query.g.dart';
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class Query {
   /// The type of feature being queried.
+  @JsonKey(name: 'feature-type')
   final String featureType;
 
   /// The match pattern for the feature query (e.g., protocol URI or wildcard).
