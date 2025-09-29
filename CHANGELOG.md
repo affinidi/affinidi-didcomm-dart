@@ -1,3 +1,7 @@
+## 1.1.0
+
+ - **FEAT**: pass close code and reason to channel onDone method.
+
 ## 1.0.3
 
  - **FIX**: qeuery message.
