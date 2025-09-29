@@ -227,7 +227,7 @@ void main() async {
       await bobMediatorClient.disconnect();
     },
     onError: (dynamic error) => prettyPrint('error', object: error),
-    onDone: () => prettyPrint('done'),
+    onDone: ({int? closeCode, String? closeReason}) => prettyPrint('done'),
     accessToken: bobTokens.accessToken,
     cancelOnError: false,
   );
