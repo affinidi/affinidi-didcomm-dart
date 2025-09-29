@@ -241,7 +241,7 @@ class MediatorClient {
   Future<StreamSubscription> listenForIncomingMessages(
     void Function(Map<String, dynamic>) onMessage, {
     Function? onError,
-    void Function()? onDone,
+    void Function({int? closeCode, String? closeReason})? onDone,
     bool? cancelOnError,
     String? accessToken,
   }) async {
@@ -273,7 +273,12 @@ class MediatorClient {
         );
       },
       onError: onError,
-      onDone: onDone,
+      onDone: () => onDone != null
+          ? onDone(
+              closeCode: _channel!.closeCode,
+              closeReason: _channel!.closeReason,
+            )
+          : null,
       cancelOnError: cancelOnError,
     );
 
