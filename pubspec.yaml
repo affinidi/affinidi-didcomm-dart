@@ -28,12 +28,12 @@ dependencies:
   meta: ^1.17.0
   pointycastle: ^4.0.0
   source_gen: ^2.0.0
-  # ssi:
-  #   git:
-  #     url: https://github.com/affinidi/affinidi-ssi-dart.git
-  #     ref: dp-cheqd  
   ssi:
-    path: ../affinidi-ssi-dart  
+    git:
+      url: https://github.com/affinidi/affinidi-ssi-dart.git
+      ref: dp-cheqd  
+  # ssi:
+  #   path: ../affinidi-ssi-dart  
   uuid: ^4.5.1
   web_socket_channel: ^3.0.3
   x25519: ^0.1.1
