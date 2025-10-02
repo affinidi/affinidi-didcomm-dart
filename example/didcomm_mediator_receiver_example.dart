@@ -73,15 +73,15 @@ void main() async {
     accessToken: receiverTokens.accessToken,
   );
 
-  final messages = await receiverMediatorClient.fetchMessages(
+  final mediatorMessages = await receiverMediatorClient.fetchMessages(
     messageIds: messageIds,
     accessToken: receiverTokens.accessToken,
   );
 
-  for (final message in messages) {
+  for (final mediatorMessage in mediatorMessages) {
     final originalPlainTextMessageFromSender =
         await DidcommMessage.unpackToPlainTextMessage(
-      message: message,
+      message: mediatorMessage.message,
       recipientDidManager: receiverDidManager,
       expectedMessageWrappingTypes: [
         MessageWrappingType.anoncryptSignPlaintext,
