@@ -227,8 +227,8 @@ void main() async {
 
           final actualUnpackedMessages = await Future.wait(
             messagesFetchedByIds.map(
-              (message) => DidcommMessage.unpackToPlainTextMessage(
-                message: message,
+              (mediatorMessage) => DidcommMessage.unpackToPlainTextMessage(
+                message: mediatorMessage.message,
                 recipientDidManager: bobDidManager,
                 validateAddressingConsistency: true,
                 expectedMessageWrappingTypes: [

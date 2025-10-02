@@ -11,6 +11,7 @@ import 'package:web_socket_channel/status.dart' as status;
 
 import '../../didcomm.dart';
 import '../common/crypto.dart';
+import 'mediator_message.dart';
 
 /// Client for interacting with a DIDComm mediator, supporting message sending, inbox management,
 /// and real-time message delivery via WebSockets.
@@ -144,8 +145,8 @@ class MediatorClient {
   /// [deleteOnMediator] - Whether to delete messages from the mediator after fetching (default: true).
   /// [accessToken] - Optional bearer token for authentication.
   ///
-  /// Returns a list of messages.
-  Future<List<Map<String, dynamic>>> fetchMessages({
+  /// Returns a list of [MediatorMessage]
+  Future<List<MediatorMessage>> fetchMessages({
     required List<String> messageIds,
     bool deleteOnMediator = true,
     String? accessToken,
@@ -160,7 +161,7 @@ class MediatorClient {
         options: Options(headers: headers),
       );
 
-      return _responseToMessages(response);
+      return _responseToMediatorMessage(response);
     } on DioException catch (error) {
       throw MediatorClientException(innerException: error);
     }
@@ -173,8 +174,8 @@ class MediatorClient {
   /// [deleteOnMediator] - Whether to delete messages from the mediator after fetching (default: true).
   /// [accessToken] - Optional bearer token for authentication.
   ///
-  /// Returns a list of messages.
-  Future<List<Map<String, dynamic>>> fetchMessagesStartingFrom({
+  /// Returns a list of [MediatorMessage]
+  Future<List<MediatorMessage>> fetchMessagesStartingFrom({
     DateTime? startFrom,
     int? batchSize = 25,
     bool deleteOnMediator = true,
@@ -194,7 +195,7 @@ class MediatorClient {
         options: Options(headers: headers),
       );
 
-      return _responseToMessages(response);
+      return _responseToMediatorMessage(response);
     } on DioException catch (error) {
       throw MediatorClientException(innerException: error);
     }
@@ -355,18 +356,24 @@ class MediatorClient {
     return messageToSend;
   }
 
-  List<Map<String, dynamic>> _responseToMessages(
+  List<MediatorMessage> _responseToMediatorMessage(
     Response<Map<String, dynamic>> response,
   ) {
     final data = response.data!['data'] as Map<String, dynamic>;
-
-    return (data['success'] as List<dynamic>)
-        .map(
-          (item) => jsonDecode(
-            (item as Map<String, dynamic>)['msg'] as String,
-          ) as Map<String, dynamic>,
-        )
-        .toList();
+    return (data['success'] as List<dynamic>).map(
+      (item) {
+        final responseItem = item as Map<String, dynamic>;
+        return MediatorMessage(
+            message: {
+              ...jsonDecode(
+                responseItem['msg'] as String,
+              ) as Map<String, dynamic>
+            },
+            messageId: responseItem['msg_id'] as String,
+            receiveId: responseItem['reiceive_id'] as String,
+            sendId: responseItem['send_id'] as String);
+      },
+    ).toList();
   }
 
   void _sendMessageToChannel(DidcommMessage message) {

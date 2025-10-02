@@ -78,10 +78,10 @@ void main() async {
     accessToken: receiverTokens.accessToken,
   );
 
-  for (final message in messages) {
+  for (final mediatorMessage in messages) {
     final originalPlainTextMessageFromSender =
         await DidcommMessage.unpackToPlainTextMessage(
-      message: message,
+      message: mediatorMessage.message,
       recipientDidManager: receiverDidManager,
       expectedMessageWrappingTypes: [
         MessageWrappingType.anoncryptSignPlaintext,

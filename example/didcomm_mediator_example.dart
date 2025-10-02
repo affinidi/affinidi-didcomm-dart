@@ -202,10 +202,10 @@ void main() async {
     accessToken: bobTokens.accessToken,
   );
 
-  for (final message in messages) {
+  for (final mediatorMessage in messages) {
     final originalPlainTextMessageFromAlice =
         await DidcommMessage.unpackToPlainTextMessage(
-      message: message,
+      message: mediatorMessage.message,
       recipientDidManager: bobDidManager,
       expectedMessageWrappingTypes: [
         MessageWrappingType.anoncryptSignPlaintext,
