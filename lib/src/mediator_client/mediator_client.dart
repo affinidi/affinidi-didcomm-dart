@@ -169,14 +169,14 @@ class MediatorClient {
 
   /// Fetches outbound messages from the mediator pointing the starting message ID.
   ///
-  /// [startFrom] - The starting point to fetch messages from (inclusive). If null, fetches from the beginning.
+  /// [startId] - The starting point to fetch messages from (inclusive). If null, fetches from the beginning.
   /// [batchSize] - Number of messages to fetch at once (default: 25).
   /// [deleteOnMediator] - Whether to delete messages from the mediator after fetching (default: true).
   /// [accessToken] - Optional bearer token for authentication.
   ///
-    DateTime? startFrom,
   /// Returns a list of [MediatorMessage]
   Future<List<MediatorMessage>> fetchMessagesStartingFrom({
+    String? startId,
     int? batchSize = 25,
     bool deleteOnMediator = true,
     String? accessToken,

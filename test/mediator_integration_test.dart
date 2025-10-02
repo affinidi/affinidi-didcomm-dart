@@ -244,7 +244,7 @@ void main() async {
 
           final messagesFetchedByCursor =
               await bobMediatorClient.fetchMessagesStartingFrom(
-            startId: messagesFetchedByIds.last.receiveId,
+            startId: messagesFetchedByIds.first.receiveId,
             accessToken: bobTokens.accessToken,
             deleteOnMediator: false,
           );
