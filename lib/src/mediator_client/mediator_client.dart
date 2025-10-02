@@ -169,14 +169,14 @@ class MediatorClient {
 
   /// Fetches outbound messages from the mediator pointing the starting message ID.
   ///
-  /// [startFrom] - The starting point to fetch messages from (inclusive). If null, fetches from the beginning.
+  /// [startId] - The starting point to fetch messages from (inclusive). If null, fetches from the beginning.
   /// [batchSize] - Number of messages to fetch at once (default: 25).
   /// [deleteOnMediator] - Whether to delete messages from the mediator after fetching (default: true).
   /// [accessToken] - Optional bearer token for authentication.
   ///
   /// Returns a list of [MediatorMessage]
   Future<List<MediatorMessage>> fetchMessagesStartingFrom({
-    DateTime? startFrom,
+    String? startId,
     int? batchSize = 25,
     bool deleteOnMediator = true,
     String? accessToken,
@@ -188,7 +188,7 @@ class MediatorClient {
       final response = await _dio.post<Map<String, dynamic>>(
         '/fetch',
         data: {
-          'start_id': startFrom?.microsecondsSinceEpoch,
+          'start_id': startId,
           'limit': batchSize,
           'delete_policy': deleteOnMediator ? 'Optimistic' : 'DoNotDelete'
         },
@@ -370,7 +370,7 @@ class MediatorClient {
               ) as Map<String, dynamic>
             },
             messageId: responseItem['msg_id'] as String,
-            receiveId: responseItem['reiceive_id'] as String,
+            receiveId: responseItem['receive_id'] as String,
             sendId: responseItem['send_id'] as String);
       },
     ).toList();
