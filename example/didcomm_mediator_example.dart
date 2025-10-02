@@ -197,15 +197,15 @@ void main() async {
     accessToken: bobTokens.accessToken,
   );
 
-  final messages = await bobMediatorClient.fetchMessages(
+  final mediatorMessages = await bobMediatorClient.fetchMessages(
     messageIds: messageIds,
     accessToken: bobTokens.accessToken,
   );
 
-  for (final message in messages) {
+  for (final mediatorMessage in mediatorMessages) {
     final originalPlainTextMessageFromAlice =
         await DidcommMessage.unpackToPlainTextMessage(
-      message: message,
+      message: mediatorMessage.message,
       recipientDidManager: bobDidManager,
       expectedMessageWrappingTypes: [
         MessageWrappingType.anoncryptSignPlaintext,
