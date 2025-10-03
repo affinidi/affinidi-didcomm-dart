@@ -12,6 +12,8 @@ import 'package:web_socket_channel/status.dart' as status;
 import '../../didcomm.dart';
 import '../common/crypto.dart';
 
+part 'connection_pool.dart';
+
 /// Client for interacting with a DIDComm mediator, supporting message sending, inbox management,
 /// and real-time message delivery via WebSockets.
 class MediatorClient {
@@ -37,7 +39,6 @@ class MediatorClient {
   final AuthorizationProvider? authorizationProvider;
 
   final Dio _dio;
-  IOWebSocketChannel? _channel;
 
   /// Creates a [MediatorClient] instance.
   ///
@@ -268,84 +269,18 @@ class MediatorClient {
     void Function({int? closeCode, String? closeReason})? onDone,
     bool? cancelOnError,
   }) async {
-    if (_channel != null) {
-      await disconnect();
-    }
-
-    _channel = mediatorDidDocument.toWebSocketChannel(
-      accessToken: await authorizationProvider?.getAccessToken(),
-      webSocketOptions: webSocketOptions,
-    );
-
-    await _channel!.ready;
-
-    final subscription = _channel!.stream.listen(
-      (data) async {
-        final json = data as String;
-
-        // TODO: come back to this after the mediator will bypass message queue on Live Delivery
-        if (webSocketOptions.deleteOnMediator) {
-          final messageIdOnMediator = hex.encode(sha256Hash(utf8.encode(json)));
-          await deleteMessages(
-            messageIds: [messageIdOnMediator],
-          );
-        }
-        onMessage(
-          jsonDecode(json) as Map<String, dynamic>,
-        );
-      },
+    return await ConnectionPool.instance.start(
+      mediatorClient: this,
+      onMessage: onMessage,
       onError: onError,
-      onDone: () => onDone != null
-          ? onDone(
-              closeCode: _channel!.closeCode,
-              closeReason: _channel!.closeReason,
-            )
-          : null,
+      onDone: onDone,
       cancelOnError: cancelOnError,
     );
-
-    final senderDid = getDidFromId(didKeyId);
-
-    if (webSocketOptions.statusRequestMessageOptions.shouldSend) {
-      final setupRequestMessage = StatusRequestMessage(
-        id: const Uuid().v4(),
-        to: [mediatorDidDocument.id],
-        from: senderDid,
-        recipientDid: senderDid,
-      );
-
-      _sendMessageToChannel(
-        await packMessage(
-          setupRequestMessage,
-          messageOptions: webSocketOptions.statusRequestMessageOptions,
-        ),
-      );
-    }
-
-    if (webSocketOptions.liveDeliveryChangeMessageOptions.shouldSend) {
-      final liveDeliveryChangeMessage = LiveDeliveryChangeMessage(
-        id: const Uuid().v4(),
-        to: [mediatorDidDocument.id],
-        from: senderDid,
-        liveDelivery: true,
-      );
-
-      _sendMessageToChannel(
-        await packMessage(
-          liveDeliveryChangeMessage,
-          messageOptions: webSocketOptions.liveDeliveryChangeMessageOptions,
-        ),
-      );
-    }
-
-    return subscription;
   }
 
   /// Disconnects the WebSocket channel if connected.
   Future<void> disconnect() async {
-    if (_channel != null) {
-      await _channel!.sink.close(status.normalClosure);
-    }
+    await ConnectionPool.instance.disconnect(mediatorClient: this);
   }
 
   /// Packs message, which then can be sent to mediator.
@@ -399,17 +334,5 @@ class MediatorClient {
           ) as Map<String, dynamic>,
         )
         .toList();
-  }
-
-  void _sendMessageToChannel(DidcommMessage message) {
-    if (_channel == null) {
-      throw Exception(
-        'WebSockets connection has not configured yet. Call listenForIncomingMessages first.',
-      );
-    }
-
-    _channel!.sink.add(
-      jsonEncode(message),
-    );
   }
 }
