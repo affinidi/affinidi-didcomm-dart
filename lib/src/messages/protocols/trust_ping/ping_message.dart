@@ -1,4 +1,4 @@
-import '../../core/plain_text_message/plain_text_message.dart';
+import '../../../../../didcomm.dart';
 
 /// Represents a DIDComm v2 Trust Ping message as defined in the trust-ping protocol.
 ///
@@ -24,6 +24,13 @@ class PingMessage extends PlainTextMessage {
     required super.from,
     super.to,
     this.responseRequested = true,
+    super.createdTime,
+    super.expiresTime,
+    super.threadId,
+    super.parentThreadId,
+    super.acknowledged,
+    super.pleaseAcknowledge,
+    super.attachments,
   }) : super(
           type: messageType,
           body: {'response_requested': responseRequested},

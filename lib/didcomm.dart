@@ -6,6 +6,7 @@
 
 library;
 
+export 'src/annotations/own_json_properties.dart';
 export 'src/common/authentication_tokens/authentication_tokens.dart';
 export 'src/common/did.dart';
 export 'src/common/did_document_service_type.dart';

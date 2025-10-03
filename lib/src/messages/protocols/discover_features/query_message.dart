@@ -1,6 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
 import '../../../../didcomm.dart';
-import '../../../annotations/own_json_properties.dart';
 
 part 'query_message.g.dart';
 part 'query_message.own_json_props.g.dart';

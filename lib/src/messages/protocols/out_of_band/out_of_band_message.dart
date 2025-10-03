@@ -2,9 +2,7 @@ import 'dart:convert';
 
 import 'package:json_annotation/json_annotation.dart';
 
-import '../../../annotations/own_json_properties.dart';
-import '../../attachments/attachment.dart';
-import '../../core.dart';
+import '../../../../didcomm.dart';
 
 part 'out_of_band_message.g.dart';
 part 'out_of_band_message.own_json_props.g.dart';
@@ -32,8 +30,14 @@ class OutOfBandMessage extends PlainTextMessage {
   OutOfBandMessage({
     required super.id,
     required super.from,
-    super.attachments,
     super.body,
+    super.createdTime,
+    super.expiresTime,
+    super.threadId,
+    super.parentThreadId,
+    super.acknowledged,
+    super.pleaseAcknowledge,
+    super.attachments,
   }) : super(
           type: messageType,
         );
