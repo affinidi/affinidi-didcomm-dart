@@ -4,12 +4,24 @@ import 'package:uuid/uuid.dart';
 
 import '../../../didcomm.dart';
 
+/// An [AuthorizationProvider] implementation for Affinidi mediators.
+///
+/// Handles the process of authenticating with an Affinidi mediator using DIDComm,
+/// including key agreement, challenge-response, and token retrieval.
 class AffinidiAuthorizationProvider extends AuthorizationProvider {
+  /// The mediator's DID Document used for authentication and key agreement.
   final DidDocument mediatorDidDocument;
+
+  /// The key pair used for encryption and signing.
   final KeyPair keyPair;
+
+  /// The DID key ID used for key agreement with the mediator.
   final String didKeyId;
+
+  /// The signer used for signing authentication messages.
   final DidSigner signer;
 
+  /// Creates an [AffinidiAuthorizationProvider] with the required dependencies.
   AffinidiAuthorizationProvider({
     required this.mediatorDidDocument,
     required this.keyPair,
@@ -17,6 +29,10 @@ class AffinidiAuthorizationProvider extends AuthorizationProvider {
     required this.signer,
   });
 
+  /// Initializes an [AffinidiAuthorizationProvider] by resolving the appropriate key agreement
+  /// and signer from the provided [DidManager] and [mediatorDidDocument].
+  ///
+  /// Throws an [Exception] if no suitable key is found for key agreement.
   static Future<AffinidiAuthorizationProvider> init({
     required DidDocument mediatorDidDocument,
     required DidManager didManager,
@@ -49,6 +65,12 @@ class AffinidiAuthorizationProvider extends AuthorizationProvider {
     );
   }
 
+  /// Generates new authorization tokens by performing a challenge-response authentication
+  /// with the Affinidi mediator using DIDComm messages.
+  ///
+  /// Returns a [AuthorizationTokens] object containing the access and refresh tokens.
+  ///
+  /// Throws a [MediatorClientException] if the authentication process fails.
   @override
   Future<AuthorizationTokens> generateTokens() async {
     final dio = mediatorDidDocument.toDio(
