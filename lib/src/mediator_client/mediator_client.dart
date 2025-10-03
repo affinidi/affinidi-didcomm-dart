@@ -33,6 +33,7 @@ class MediatorClient {
   /// Options for WebSocket connections.
   final WebSocketOptions webSocketOptions;
 
+  /// Optional provider for authorization tokens.
   final AuthorizationProvider? authorizationProvider;
 
   final Dio _dio;
@@ -58,10 +59,20 @@ class MediatorClient {
           mediatorServiceType: DidDocumentServiceType.didCommMessaging,
         );
 
+  /// Initializes a [MediatorClient] by resolving the appropriate key agreement and signer
+  /// from the provided [DidManager] and [mediatorDidDocument].
+  ///
+  /// Throws an [Exception] if no suitable key is found for key agreement with the mediator.
+  ///
+  /// [mediatorDidDocument] - The mediator's DID Document.
+  /// [didManager] - The DID manager for resolving keys and signers.
+  /// [authorizationProvider] - Provider for authorization tokens (optional).
+  /// [forwardMessageOptions] - Options for forwarding messages (default: const ForwardMessageOptions()).
+  /// [webSocketOptions] - Options for WebSocket/live delivery (default: const WebSocketOptions()).
   static Future<MediatorClient> init({
-    required AuthorizationProvider authorizationProvider,
     required DidDocument mediatorDidDocument,
     required DidManager didManager,
+    AuthorizationProvider? authorizationProvider,
     ForwardMessageOptions forwardMessageOptions = const ForwardMessageOptions(),
     WebSocketOptions webSocketOptions = const WebSocketOptions(),
   }) async {
@@ -366,6 +377,16 @@ class MediatorClient {
     return messageToSend;
   }
 
+  /// Returns authorization headers if an [authorizationProvider] is set, otherwise null.
+  Future<Map<String, String>?> getAuthorizationHeaders() async {
+    return authorizationProvider != null
+        ? {
+            'Authorization':
+                'Bearer ${await authorizationProvider!.getAccessToken()}'
+          }
+        : null;
+  }
+
   List<Map<String, dynamic>> _responseToMessages(
     Response<Map<String, dynamic>> response,
   ) {
@@ -390,14 +411,5 @@ class MediatorClient {
     _channel!.sink.add(
       jsonEncode(message),
     );
-  }
-
-  Future<Map<String, String>?> getAuthorizationHeaders() async {
-    return authorizationProvider != null
-        ? {
-            'Authorization':
-                'Bearer ${await authorizationProvider!.getAccessToken()}'
-          }
-        : null;
   }
 }
