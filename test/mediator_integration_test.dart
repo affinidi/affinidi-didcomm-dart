@@ -174,6 +174,7 @@ void main() async {
             type: Uri.parse('https://didcomm.org/example/1.0/message'),
             createdTime: DateTime.now().toUtc(),
             body: {'content': expectedBodyContent},
+            createdTime: DateTime.now().toUtc(),
           );
 
           alicePlainTextMassage['custom-header'] = 'custom-value';

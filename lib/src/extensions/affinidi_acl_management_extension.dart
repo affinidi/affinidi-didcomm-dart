@@ -26,7 +26,13 @@ abstract class AclManagementMessage extends PlainTextMessage {
     required super.from,
     required super.to,
     required super.body,
+    super.createdTime,
     super.expiresTime,
+    super.threadId,
+    super.parentThreadId,
+    super.acknowledged,
+    super.pleaseAcknowledge,
+    super.attachments,
   }) : super(
           type: messageType,
         );

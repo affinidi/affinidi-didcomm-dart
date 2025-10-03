@@ -1,4 +1,4 @@
-import '../../core.dart';
+import '../../../../../didcomm.dart';
 
 /// Represents a DIDComm Routing Protocol 2.0 Forward message as defined in
 /// [DIDComm Messaging Spec, Routing Protocol 2.0](https://identity.foundation/didcomm-messaging/spec/#routing-protocol-20).
@@ -31,8 +31,13 @@ class ForwardMessage extends PlainTextMessage {
     required super.to,
     required super.attachments,
     required this.next,
-    super.expiresTime,
     super.from,
+    super.createdTime,
+    super.expiresTime,
+    super.threadId,
+    super.parentThreadId,
+    super.acknowledged,
+    super.pleaseAcknowledge,
   }) : super(
           type: messageType,
           body: {'next': next},
