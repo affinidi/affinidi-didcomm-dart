@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
+
 import '../../../../didcomm.dart';
-import '../../../annotations/own_json_properties.dart';
 
 part 'problem_report_message.g.dart';
 part 'problem_report_message.own_json_props.g.dart';
@@ -23,7 +23,14 @@ class ProblemReportMessage extends PlainTextMessage {
   ProblemReportMessage({
     required super.id,
     required super.parentThreadId,
+    super.from,
+    super.to,
+    super.createdTime,
+    super.expiresTime,
+    super.threadId,
     super.acknowledged,
+    super.pleaseAcknowledge,
+    super.attachments,
     required ProblemReportBody body,
   }) : super(
           type: messageType,

@@ -1,8 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import '../../../../annotations/own_json_properties.dart';
-import '../../../../converters/epoch_seconds_converter.dart';
-import '../../../core.dart';
+import '../../../../../didcomm.dart';
 
 part 'message_pickup_message.g.dart';
 part 'message_pickup_message.own_json_props.g.dart';
@@ -33,7 +31,13 @@ class MessagePickupMessage extends PlainTextMessage {
     required super.from,
     required super.type,
     required super.body,
+    super.createdTime,
     super.expiresTime,
+    super.threadId,
+    super.parentThreadId,
+    super.acknowledged,
+    super.pleaseAcknowledge,
+    super.attachments,
     this.returnRoute = 'all',
   });
 

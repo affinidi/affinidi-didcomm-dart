@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
+
 import '../../../../didcomm.dart';
-import '../../../annotations/own_json_properties.dart';
 
 part 'ping_response_message.g.dart';
 part 'ping_response_message.own_json_props.g.dart';
@@ -28,6 +28,12 @@ class PingResponseMessage extends PlainTextMessage {
     required threadId,
     super.to,
     super.from,
+    super.createdTime,
+    super.expiresTime,
+    super.parentThreadId,
+    super.acknowledged,
+    super.pleaseAcknowledge,
+    super.attachments,
   }) : super(
           type: messageType,
         );

@@ -15,7 +15,7 @@ Disclosure _$DisclosureFromJson(Map<String, dynamic> json) => Disclosure(
 
 Map<String, dynamic> _$DisclosureToJson(Disclosure instance) =>
     <String, dynamic>{
-      'id': instance.id,
       'feature-type': instance.featureType,
+      'id': instance.id,
       if (instance.roles case final value?) 'roles': value,
     };
