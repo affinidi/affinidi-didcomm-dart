@@ -1,13 +1,13 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import '../../converters/epoch_seconds_converter.dart';
+import '../../../converters/epoch_seconds_converter.dart';
 
-part 'authentication_tokens.g.dart';
+part 'authorization_tokens.g.dart';
 
 /// Represents a set of authentication tokens, including access and refresh tokens,
 /// along with their expiration times.
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
-class AuthenticationTokens {
+class AuthorizationTokens {
   /// The access token used for authenticating API requests.
   @JsonKey(name: 'access_token')
   final String accessToken;
@@ -26,25 +26,25 @@ class AuthenticationTokens {
   @EpochSecondsConverter()
   final DateTime refreshExpiresAt;
 
-  /// Creates an [AuthenticationTokens] instance.
+  /// Creates an [AuthorizationTokens] instance.
   ///
   /// [accessToken] - The access token string.
   /// [accessExpiresAt] - The expiration time of the access token.
   /// [refreshToken] - The refresh token string.
   /// [refreshExpiresAt] - The expiration time of the refresh token.
-  AuthenticationTokens({
+  AuthorizationTokens({
     required this.accessToken,
     required this.accessExpiresAt,
     required this.refreshToken,
     required this.refreshExpiresAt,
   });
 
-  /// Creates an [AuthenticationTokens] instance from a JSON map.
+  /// Creates an [AuthorizationTokens] instance from a JSON map.
   ///
   /// [json] - The JSON map to parse.
-  factory AuthenticationTokens.fromJson(Map<String, dynamic> json) =>
+  factory AuthorizationTokens.fromJson(Map<String, dynamic> json) =>
       _$AuthenticationTokensFromJson(json);
 
-  /// Converts this [AuthenticationTokens] instance to a JSON map.
+  /// Converts this [AuthorizationTokens] instance to a JSON map.
   Map<String, dynamic> toJson() => _$AuthenticationTokensToJson(this);
 }
