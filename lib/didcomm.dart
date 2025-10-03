@@ -7,7 +7,6 @@
 library;
 
 export 'src/annotations/own_json_properties.dart';
-export 'src/common/authentication_tokens/authentication_tokens.dart';
 export 'src/common/did.dart';
 export 'src/common/did_document_service_type.dart';
 export 'src/common/encoding.dart';
@@ -19,7 +18,6 @@ export 'src/converters/problem_code_converter.dart';
 export 'src/curves/curve_type.dart';
 export 'src/errors/errors.dart';
 export 'src/extensions/affinidi_acl_management_extension.dart';
-export 'src/extensions/affinidi_authenticator_extension.dart';
 export 'src/extensions/affinidi_oob_extension.dart';
 export 'src/extensions/did_document_extension.dart';
 export 'src/extensions/did_manager_extension.dart';
@@ -35,3 +33,6 @@ export 'src/messages/didcomm_message.dart';
 export 'src/messages/jwm.dart';
 export 'src/messages/message_wrapping_type.dart';
 export 'src/messages/protocols.dart';
+export 'src/providers/auth_provider/affinidi_authorization_provider.dart';
+export 'src/providers/auth_provider/authorization_provider.dart';
+export 'src/providers/auth_provider/authorization_tokens/authorization_tokens.dart';

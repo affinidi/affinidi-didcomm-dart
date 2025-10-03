@@ -33,6 +33,8 @@ class MediatorClient {
   /// Options for WebSocket connections.
   final WebSocketOptions webSocketOptions;
 
+  final AuthorizationProvider? authorizationProvider;
+
   final Dio _dio;
   IOWebSocketChannel? _channel;
 
@@ -49,11 +51,50 @@ class MediatorClient {
     required this.keyPair,
     required this.didKeyId,
     required this.signer,
+    this.authorizationProvider,
     this.forwardMessageOptions = const ForwardMessageOptions(),
     this.webSocketOptions = const WebSocketOptions(),
   }) : _dio = mediatorDidDocument.toDio(
           mediatorServiceType: DidDocumentServiceType.didCommMessaging,
         );
+
+  static Future<MediatorClient> init({
+    required AuthorizationProvider authorizationProvider,
+    required DidDocument mediatorDidDocument,
+    required DidManager didManager,
+    ForwardMessageOptions forwardMessageOptions = const ForwardMessageOptions(),
+    WebSocketOptions webSocketOptions = const WebSocketOptions(),
+  }) async {
+    final ownDidDocument = await didManager.getDidDocument();
+
+    final bobMatchedDidKeyIds = ownDidDocument.matchKeysInKeyAgreement(
+      otherDidDocuments: [
+        mediatorDidDocument,
+      ],
+    );
+
+    if (bobMatchedDidKeyIds.isEmpty) {
+      throw Exception(
+        'No suitable key found for key agreement with the mediator.',
+      );
+    }
+
+    final didKeyId = bobMatchedDidKeyIds.first;
+
+    return MediatorClient(
+      authorizationProvider: authorizationProvider,
+      mediatorDidDocument: mediatorDidDocument,
+      keyPair: await didManager.getKeyPairByDidKeyId(
+        didKeyId,
+      ),
+      didKeyId: didKeyId,
+      signer: await didManager.getSigner(
+        ownDidDocument.authentication.first.id,
+      ),
+      forwardMessageOptions: forwardMessageOptions,
+      webSocketOptions: webSocketOptions,
+    );
+  }
 
   /// Creates a [MediatorClient] from a mediator DID Document URI.
   ///
@@ -81,26 +122,19 @@ class MediatorClient {
   /// Sends a [ForwardMessage] to the mediator.
   ///
   /// [message] - The message to send.
-  /// [accessToken] - Optional bearer token for authentication.
   ///
   /// Returns the packed [DidcommMessage] that was sent.
-  Future<DidcommMessage> sendMessage(
-    ForwardMessage message, {
-    String? accessToken,
-  }) async {
+  Future<DidcommMessage> sendMessage(ForwardMessage message) async {
     final messageToSend = await packMessage(
       message,
       messageOptions: forwardMessageOptions,
     );
 
-    final headers =
-        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
-
     try {
       await _dio.post<Map<String, dynamic>>(
         '/inbound',
         data: messageToSend,
-        options: Options(headers: headers),
+        options: Options(headers: await getAuthorizationHeaders()),
       );
 
       return messageToSend;
@@ -111,21 +145,14 @@ class MediatorClient {
 
   /// Lists message IDs in the inbox for the current actor.
   ///
-  /// [accessToken] - Optional bearer token for authentication.
-  ///
   /// Returns a list of message IDs as strings.
-  Future<List<String>> listInboxMessageIds({
-    String? accessToken,
-  }) async {
-    final headers =
-        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
-
+  Future<List<String>> listInboxMessageIds() async {
     final did = getDidFromId(didKeyId);
 
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         '/list/${sha256.convert(utf8.encode(did)).toString()}/inbox',
-        options: Options(headers: headers),
+        options: Options(headers: await getAuthorizationHeaders()),
       );
 
       return (response.data!['data'] as List<dynamic>)
@@ -142,22 +169,17 @@ class MediatorClient {
   ///
   /// [messageIds] - The list of message IDs to fetch.
   /// [deleteOnMediator] - Whether to delete messages from the mediator after fetching (default: true).
-  /// [accessToken] - Optional bearer token for authentication.
   ///
   /// Returns a list of messages.
   Future<List<Map<String, dynamic>>> fetchMessages({
     required List<String> messageIds,
     bool deleteOnMediator = true,
-    String? accessToken,
   }) async {
-    final headers =
-        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
-
     try {
       final response = await _dio.post<Map<String, dynamic>>(
         '/outbound',
         data: {'message_ids': messageIds, 'delete': deleteOnMediator},
-        options: Options(headers: headers),
+        options: Options(headers: await getAuthorizationHeaders()),
       );
 
       return _responseToMessages(response);
@@ -171,18 +193,13 @@ class MediatorClient {
   /// [startFrom] - The starting point to fetch messages from (inclusive). If null, fetches from the beginning.
   /// [batchSize] - Number of messages to fetch at once (default: 25).
   /// [deleteOnMediator] - Whether to delete messages from the mediator after fetching (default: true).
-  /// [accessToken] - Optional bearer token for authentication.
   ///
   /// Returns a list of messages.
   Future<List<Map<String, dynamic>>> fetchMessagesStartingFrom({
     DateTime? startFrom,
     int? batchSize = 25,
     bool deleteOnMediator = true,
-    String? accessToken,
   }) async {
-    final headers =
-        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
-
     try {
       final response = await _dio.post<Map<String, dynamic>>(
         '/fetch',
@@ -193,7 +210,7 @@ class MediatorClient {
           'limit': batchSize,
           'delete_policy': deleteOnMediator ? 'Optimistic' : 'DoNotDelete'
         },
-        options: Options(headers: headers),
+        options: Options(headers: await getAuthorizationHeaders()),
       );
 
       return _responseToMessages(response);
@@ -205,21 +222,16 @@ class MediatorClient {
   /// Deletes messages from the mediator by message IDs.
   ///
   /// [messageIds] - The list of message IDs to fetch.
-  /// [accessToken] - Optional bearer token for authentication.
   ///
   /// Returns a list of messages.
   Future<void> deleteMessages({
     required List<String> messageIds,
-    String? accessToken,
   }) async {
-    final headers =
-        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
-
     try {
       await _dio.delete<Map<String, dynamic>>(
         '/delete',
         data: {'message_ids': messageIds},
-        options: Options(headers: headers),
+        options: Options(headers: await getAuthorizationHeaders()),
       );
       // TODO: return response to indicate which messages were deleted successfully
     } on DioException catch (error) {
@@ -237,7 +249,6 @@ class MediatorClient {
   /// [onError] - Optional callback for errors.
   /// [onDone] - Optional callback when the stream is closed.
   /// [cancelOnError] - Whether to cancel on error.
-  /// [accessToken] - Optional bearer token for authentication.
   ///
   /// Returns a [StreamSubscription] for the WebSocket stream.
   Future<StreamSubscription> listenForIncomingMessages(
@@ -245,14 +256,13 @@ class MediatorClient {
     Function? onError,
     void Function({int? closeCode, String? closeReason})? onDone,
     bool? cancelOnError,
-    String? accessToken,
   }) async {
     if (_channel != null) {
       await disconnect();
     }
 
     _channel = mediatorDidDocument.toWebSocketChannel(
-      accessToken: accessToken,
+      accessToken: await authorizationProvider?.getAccessToken(),
       webSocketOptions: webSocketOptions,
     );
 
@@ -267,7 +277,6 @@ class MediatorClient {
           final messageIdOnMediator = hex.encode(sha256Hash(utf8.encode(json)));
           await deleteMessages(
             messageIds: [messageIdOnMediator],
-            accessToken: accessToken,
           );
         }
         onMessage(
@@ -381,5 +390,14 @@ class MediatorClient {
     _channel!.sink.add(
       jsonEncode(message),
     );
+  }
+
+  Future<Map<String, String>?> getAuthorizationHeaders() async {
+    return authorizationProvider != null
+        ? {
+            'Authorization':
+                'Bearer ${await authorizationProvider!.getAccessToken()}'
+          }
+        : null;
   }
 }

@@ -1,22 +1,56 @@
 import 'package:dio/dio.dart';
+import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../didcomm.dart';
+import '../../../didcomm.dart';
 
-// TODO: should be eventually moved to TDK
-/// Extension for [MediatorClient] to support Affinidi-specific authentication.
-///
-/// Authentication by mediators is not covered by the DIDComm standard.
-/// This extension provides a method to authenticate with an Affinidi mediator.
-extension AffinidiAuthenticatorExtension on MediatorClient {
-  /// Authenticates with an Affinidi mediator.
-  ///
-  /// [encryptionAlgorithm]: The encryption algorithm to use for the authentication message (default: [EncryptionAlgorithm.a256cbc]).
-  ///
-  /// Returns [AuthenticationTokens] containing access and refresh tokens on successful authentication.
-  Future<AuthenticationTokens> authenticate({
-    EncryptionAlgorithm encryptionAlgorithm = EncryptionAlgorithm.a256cbc,
+class AffinidiAuthorizationProvider extends AuthorizationProvider {
+  final DidDocument mediatorDidDocument;
+  final KeyPair keyPair;
+  final String didKeyId;
+  final DidSigner signer;
+
+  AffinidiAuthorizationProvider({
+    required this.mediatorDidDocument,
+    required this.keyPair,
+    required this.didKeyId,
+    required this.signer,
+  });
+
+  static Future<AffinidiAuthorizationProvider> init({
+    required DidDocument mediatorDidDocument,
+    required DidManager didManager,
   }) async {
+    final ownDidDocument = await didManager.getDidDocument();
+
+    final bobMatchedDidKeyIds = ownDidDocument.matchKeysInKeyAgreement(
+      otherDidDocuments: [
+        mediatorDidDocument,
+      ],
+    );
+
+    if (bobMatchedDidKeyIds.isEmpty) {
+      throw Exception(
+        'No suitable key found for key agreement with the mediator.',
+      );
+    }
+
+    final didKeyId = bobMatchedDidKeyIds.first;
+
+    return AffinidiAuthorizationProvider(
+      mediatorDidDocument: mediatorDidDocument,
+      keyPair: await didManager.getKeyPairByDidKeyId(
+        didKeyId,
+      ),
+      didKeyId: didKeyId,
+      signer: await didManager.getSigner(
+        didManager.authentication.first,
+      ),
+    );
+  }
+
+  @override
+  Future<AuthorizationTokens> generateTokens() async {
     final dio = mediatorDidDocument.toDio(
       mediatorServiceType: DidDocumentServiceType.authentication,
     );
@@ -49,7 +83,7 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
         keyPair: keyPair,
         didKeyId: didKeyId,
         recipientDidDocuments: [mediatorDidDocument],
-        encryptionAlgorithm: encryptionAlgorithm,
+        encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
         keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdh1Pu,
         signer: signer,
       );
@@ -59,7 +93,7 @@ extension AffinidiAuthenticatorExtension on MediatorClient {
         data: encryptedMessage,
       );
 
-      return AuthenticationTokens.fromJson(
+      return AuthorizationTokens.fromJson(
         authenticateResponse.data!['data'] as Map<String, dynamic>,
       );
     } on DioException catch (error) {
