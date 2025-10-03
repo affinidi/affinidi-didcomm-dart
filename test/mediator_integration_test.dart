@@ -18,13 +18,11 @@ void main() async {
     late DidManager aliceDidManager;
     late DidDocument aliceDidDocument;
     late MediatorClient aliceMediatorClient;
-    late AuthenticationTokens aliceTokens;
 
     late PersistentWallet bobWallet;
     late DidManager bobDidManager;
     late DidDocument bobDidDocument;
     late MediatorClient bobMediatorClient;
-    late AuthenticationTokens bobTokens;
 
     late DidDocument bobMediatorDocument;
 
@@ -103,29 +101,12 @@ void main() async {
             await readDid(mediatorDidPath),
           );
 
-          // find keys whose curve is common in the mediator DID Document
-          final aliceMatchedDidKeyIds =
-              aliceDidDocument.matchKeysInKeyAgreement(
-            otherDidDocuments: [
-              bobMediatorDocument,
-            ],
-          );
-
-          // find keys whose curve is common in the mediator DID Document
-          final bobMatchedDidKeyIds = bobDidDocument.matchKeysInKeyAgreement(
-            otherDidDocuments: [
-              bobMediatorDocument,
-            ],
-          );
-
-          aliceMediatorClient = MediatorClient(
+          aliceMediatorClient = await MediatorClient.init(
+            didManager: aliceDidManager,
             mediatorDidDocument: bobMediatorDocument,
-            keyPair: await aliceDidManager.getKeyPairByDidKeyId(
-              aliceMatchedDidKeyIds.first,
-            ),
-            didKeyId: aliceMatchedDidKeyIds.first,
-            signer: await aliceDidManager.getSigner(
-              aliceDidDocument.authentication.first.id,
+            authorizationProvider: await AffinidiAuthorizationProvider.init(
+              didManager: aliceDidManager,
+              mediatorDidDocument: bobMediatorDocument,
             ),
             forwardMessageOptions: const ForwardMessageOptions(
               shouldSign: true,
@@ -134,14 +115,12 @@ void main() async {
             ),
           );
 
-          bobMediatorClient = MediatorClient(
+          bobMediatorClient = await MediatorClient.init(
             mediatorDidDocument: bobMediatorDocument,
-            keyPair: await bobDidManager.getKeyPairByDidKeyId(
-              bobMatchedDidKeyIds.first,
-            ),
-            didKeyId: bobMatchedDidKeyIds.first,
-            signer: await bobDidManager.getSigner(
-              bobDidDocument.authentication.first.id,
+            didManager: bobDidManager,
+            authorizationProvider: await AffinidiAuthorizationProvider.init(
+              mediatorDidDocument: bobMediatorDocument,
+              didManager: bobDidManager,
             ),
             webSocketOptions: const WebSocketOptions(
               liveDeliveryChangeMessageOptions:
@@ -159,9 +138,6 @@ void main() async {
               ),
             ),
           );
-
-          aliceTokens = await aliceMediatorClient.authenticate();
-          bobTokens = await bobMediatorClient.authenticate();
         });
 
         test('REST API works correctly', () async {
@@ -214,16 +190,12 @@ void main() async {
 
           await aliceMediatorClient.sendMessage(
             forwardMessage,
-            accessToken: aliceTokens.accessToken,
           );
 
-          final messageIds = await bobMediatorClient.listInboxMessageIds(
-            accessToken: bobTokens.accessToken,
-          );
+          final messageIds = await bobMediatorClient.listInboxMessageIds();
 
           final messagesFetchedByIds = await bobMediatorClient.fetchMessages(
             messageIds: messageIds,
-            accessToken: bobTokens.accessToken,
             deleteOnMediator: false,
           );
 
@@ -247,19 +219,15 @@ void main() async {
           final messagesFetchedByCursor =
               await bobMediatorClient.fetchMessagesStartingFrom(
             startFrom: actualUnpackedMessages.first.createdTime,
-            accessToken: bobTokens.accessToken,
             deleteOnMediator: false,
           );
 
           await bobMediatorClient.deleteMessages(
             messageIds: messageIds,
-            accessToken: bobTokens.accessToken,
           );
 
           final messagesAfterDeletion =
-              await bobMediatorClient.listInboxMessageIds(
-            accessToken: bobTokens.accessToken,
-          );
+              await bobMediatorClient.listInboxMessageIds();
 
           expect(
             messagesFetchedByIds.isNotEmpty,
@@ -396,13 +364,11 @@ void main() async {
                 }
               },
               onError: (Object error) => prettyPrint('error', object: error),
-              accessToken: bobTokens.accessToken,
               cancelOnError: false,
             );
 
             await aliceMediatorClient.sendMessage(
               forwardMessage,
-              accessToken: aliceTokens.accessToken,
             );
 
             await completer.future;
@@ -435,7 +401,6 @@ void main() async {
 
           final oobId = await aliceMediatorClient.createOob(
             message,
-            accessToken: aliceTokens.accessToken,
           );
 
           expect(oobId, isNotEmpty);

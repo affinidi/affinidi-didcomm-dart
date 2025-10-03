@@ -11,22 +11,16 @@ extension AffinidiOobExtension on MediatorClient {
   /// connections or sharing information outside of a predefined communication channel.
   ///
   /// Returns a [Future] that completes with the OOB invitation identifier.
-  Future<String> createOob(
-    OutOfBandMessage message, {
-    String? accessToken,
-  }) async {
+  Future<String> createOob(OutOfBandMessage message) async {
     final dio = mediatorDidDocument.toDio(
       mediatorServiceType: DidDocumentServiceType.didCommMessaging,
     );
-
-    final headers =
-        accessToken != null ? {'Authorization': 'Bearer $accessToken'} : null;
 
     try {
       final response = await dio.post<Map<String, dynamic>>(
         '/oob',
         data: message,
-        options: Options(headers: headers),
+        options: Options(headers: await getAuthorizationHeaders()),
       );
 
       return (response.data!['data'] as Map<String, dynamic>)['_oobid']

@@ -78,10 +78,6 @@ void main() async {
     await readDid(mediatorDidPath),
   );
 
-  final bobSigner = await bobDidManager.getSigner(
-    bobDidDocument.assertionMethod.first.id,
-  );
-
   final alicePlainTextMassage = PlainTextMessage(
     id: const Uuid().v4(),
     from: aliceDidDocument.id,
@@ -137,46 +133,27 @@ void main() async {
     object: forwardMessage,
   );
 
-  // find keys whose curve is common with keys in mediator's did document
-  final aliceMatchedDidKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-    otherDidDocuments: [
-      bobMediatorDocument,
-    ],
-  );
-
-  final aliceMediatorClient = MediatorClient(
-      mediatorDidDocument: bobMediatorDocument,
-      keyPair: await aliceDidManager.getKeyPairByDidKeyId(
-        aliceMatchedDidKeyIds.first,
-      ),
-      didKeyId: aliceMatchedDidKeyIds.first,
-      signer: aliceSigner,
-
-      // optional. if omitted defaults will be used
-      forwardMessageOptions: const ForwardMessageOptions(
-        shouldSign: true,
-        keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
-        encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
-      ));
-
-  // authenticate method is not direct part of mediatorClient, but it is extension method
-  // this method is need for mediators, that require authentication like an Affinidi mediator
-  final aliceTokens = await aliceMediatorClient.authenticate();
-
-  final bobMatchedDidKeyIds = bobDidDocument.matchKeysInKeyAgreement(
-    otherDidDocuments: [
-      bobMediatorDocument,
-      // bob only sends messages to the mediator, so we don't need to match keys with Alice's DID Document
-    ],
-  );
-
-  final bobMediatorClient = MediatorClient(
+  final aliceMediatorClient = await MediatorClient.init(
     mediatorDidDocument: bobMediatorDocument,
-    keyPair: await bobDidManager.getKeyPairByDidKeyId(
-      bobMatchedDidKeyIds.first,
+    didManager: aliceDidManager,
+    authorizationProvider: await AffinidiAuthorizationProvider.init(
+      mediatorDidDocument: bobMediatorDocument,
+      didManager: aliceDidManager,
     ),
-    didKeyId: bobMatchedDidKeyIds.first,
-    signer: bobSigner,
+    forwardMessageOptions: const ForwardMessageOptions(
+      shouldSign: true,
+      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+      encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+    ),
+  );
+
+  final bobMediatorClient = await MediatorClient.init(
+    mediatorDidDocument: bobMediatorDocument,
+    didManager: bobDidManager,
+    authorizationProvider: await AffinidiAuthorizationProvider.init(
+      mediatorDidDocument: bobMediatorDocument,
+      didManager: bobDidManager,
+    ),
     webSocketOptions: const WebSocketOptions(
       statusRequestMessageOptions: StatusRequestMessageOptions(
         shouldSend: true,
@@ -188,8 +165,6 @@ void main() async {
       ),
     ),
   );
-
-  final bobTokens = await bobMediatorClient.authenticate();
 
   prettyPrint('Bob is waiting for a message...');
 
@@ -228,12 +203,10 @@ void main() async {
     },
     onError: (dynamic error) => prettyPrint('error', object: error),
     onDone: ({int? closeCode, String? closeReason}) => prettyPrint('done'),
-    accessToken: bobTokens.accessToken,
     cancelOnError: false,
   );
 
   await aliceMediatorClient.sendMessage(
     forwardMessage,
-    accessToken: aliceTokens.accessToken,
   );
 }

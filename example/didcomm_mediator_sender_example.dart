@@ -102,13 +102,6 @@ void main() async {
     object: senderPlainTextMassage,
   );
 
-  // find keys whose curve is common in other DID Documents
-  final senderMatchedDidKeyIds = senderDidDocument.matchKeysInKeyAgreement(
-    otherDidDocuments: [
-      receiverDidDocument,
-    ],
-  );
-
   final senderSignedAndEncryptedMessage =
       await DidcommMessage.packIntoSignedAndEncryptedMessages(
     senderPlainTextMassage,
@@ -151,14 +144,13 @@ void main() async {
     object: forwardMessage,
   );
 
-  final senderMediatorClient = MediatorClient(
+  final senderMediatorClient = await MediatorClient.init(
     mediatorDidDocument: receiverMediatorDidDocument,
-    keyPair: await senderDidManager.getKeyPairByDidKeyId(
-      senderMatchedDidKeyIds.first,
+    didManager: senderDidManager,
+    authorizationProvider: await AffinidiAuthorizationProvider.init(
+      mediatorDidDocument: receiverMediatorDidDocument,
+      didManager: senderDidManager,
     ),
-    didKeyId: senderMatchedDidKeyIds.first,
-    signer: senderSigner,
-    // optional. if omitted defaults will be used
     forwardMessageOptions: const ForwardMessageOptions(
       shouldSign: true,
       keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
@@ -166,13 +158,8 @@ void main() async {
     ),
   );
 
-  // authenticate method is not direct part of mediatorClient, but it is extension method
-  // this method is need for mediators, that require authentication like an Affinidi mediator
-  final aliceTokens = await senderMediatorClient.authenticate();
-
   await senderMediatorClient.sendMessage(
     forwardMessage,
-    accessToken: aliceTokens.accessToken,
   );
 
   prettyPrint('The message has been sent');
