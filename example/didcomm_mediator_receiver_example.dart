@@ -57,11 +57,7 @@ void main() async {
 
   prettyPrint('Receiver is fetching messages...');
 
-  final messageIds = await receiverMediatorClient.listInboxMessageIds();
-
-  final messages = await receiverMediatorClient.fetchMessages(
-    messageIds: messageIds,
-  );
+  final messages = await receiverMediatorClient.fetchMessages();
 
   for (final message in messages) {
     final originalPlainTextMessageFromSender =

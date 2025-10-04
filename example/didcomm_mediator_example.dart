@@ -169,11 +169,7 @@ void main() async {
 
   prettyPrint('Bob is fetching messages...');
 
-  final messageIds = await bobMediatorClient.listInboxMessageIds();
-
-  final messages = await bobMediatorClient.fetchMessages(
-    messageIds: messageIds,
-  );
+  final messages = await bobMediatorClient.fetchMessages();
 
   for (final message in messages) {
     final originalPlainTextMessageFromAlice =
