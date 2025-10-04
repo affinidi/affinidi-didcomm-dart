@@ -9,24 +9,34 @@ import 'package:web_socket_channel/status.dart' as status;
 import '../../didcomm.dart';
 import '../common/crypto.dart';
 
+/// Manages a WebSocket connection to a DIDComm mediator, providing a stream of incoming messages.
 class Connection {
-  final MediatorClient mediatorClient;
+  /// A broadcast stream of incoming messages from the mediator.
   Stream<Map<String, dynamic>> get stream => _controller.stream;
 
+  // TODO: create internal mediator client instead of passing it from outside
+  final MediatorClient _mediatorClient;
   final StreamController<Map<String, dynamic>> _controller;
+
   IOWebSocketChannel? _channel;
   AuthorizationTokens? _authorizationTokens;
 
-  Connection(this.mediatorClient)
-      : _controller = StreamController<Map<String, dynamic>>.broadcast();
+  /// Creates a [Connection] for the given [mediatorClient].
+  Connection({
+    required MediatorClient mediatorClient,
+  })  : _mediatorClient = mediatorClient,
+        _controller = StreamController<Map<String, dynamic>>.broadcast();
 
+  /// Starts the WebSocket connection and begins listening for messages.
+  ///
+  /// Automatically handles token refresh and message queue draining.
   Future<void> start() async {
     _authorizationTokens =
-        await mediatorClient.authorizationProvider?.getAuthorizationTokens();
+        await _mediatorClient.authorizationProvider?.getAuthorizationTokens();
 
-    _channel = mediatorClient.mediatorDidDocument.toWebSocketChannel(
+    _channel = _mediatorClient.mediatorDidDocument.toWebSocketChannel(
       accessToken: _authorizationTokens?.accessToken,
-      webSocketOptions: mediatorClient.webSocketOptions,
+      webSocketOptions: _mediatorClient.webSocketOptions,
     );
 
     await _channel!.ready;
@@ -41,7 +51,7 @@ class Connection {
           ),
         );
 
-        await mediatorClient.deleteMessages(
+        await _mediatorClient.deleteMessages(
           messageIds: [messageIdOnMediator],
         );
 
@@ -64,47 +74,47 @@ class Connection {
       },
     );
 
-    final senderDid = getDidFromId(mediatorClient.didKeyId);
+    final senderDid = getDidFromId(_mediatorClient.didKeyId);
 
-    if (mediatorClient
+    if (_mediatorClient
         .webSocketOptions.statusRequestMessageOptions.shouldSend) {
       final setupRequestMessage = StatusRequestMessage(
         id: const Uuid().v4(),
-        to: [mediatorClient.mediatorDidDocument.id],
+        to: [_mediatorClient.mediatorDidDocument.id],
         from: senderDid,
         recipientDid: senderDid,
       );
 
       _sendMessage(
-        await mediatorClient.packMessage(
+        await _mediatorClient.packMessage(
           setupRequestMessage,
           messageOptions:
-              mediatorClient.webSocketOptions.statusRequestMessageOptions,
+              _mediatorClient.webSocketOptions.statusRequestMessageOptions,
         ),
       );
     }
 
-    if (mediatorClient
+    if (_mediatorClient
         .webSocketOptions.liveDeliveryChangeMessageOptions.shouldSend) {
       final liveDeliveryChangeMessage = LiveDeliveryChangeMessage(
         id: const Uuid().v4(),
-        to: [mediatorClient.mediatorDidDocument.id],
+        to: [_mediatorClient.mediatorDidDocument.id],
         from: senderDid,
         liveDelivery: true,
       );
 
       _sendMessage(
-        await mediatorClient.packMessage(
+        await _mediatorClient.packMessage(
           liveDeliveryChangeMessage,
           messageOptions:
-              mediatorClient.webSocketOptions.liveDeliveryChangeMessageOptions,
+              _mediatorClient.webSocketOptions.liveDeliveryChangeMessageOptions,
         ),
       );
     }
 
     // fetch messages that were sent before the WebSocket connection was established
     unawaited(
-      mediatorClient.fetchMessages().then((messages) {
+      _mediatorClient.fetchMessages().then((messages) {
         for (final message in messages) {
           _controller.add(message);
         }
@@ -112,6 +122,7 @@ class Connection {
     );
   }
 
+  /// Stops the WebSocket connection and closes the message stream.
   Future<void> stop() async {
     _authorizationTokens = null;
 
