@@ -32,6 +32,24 @@ class ConnectionPool {
     void Function()? onDone,
     bool? cancelOnError,
   }) {
+    if (_subscriptions.containsKey(mediatorClient)) {
+      throw StateError(
+        'A subscription for the provided MediatorClient already exists.',
+      );
+    }
+
+    if (_subscriptions.isNotEmpty) {
+      final commonMediatorDidDocument =
+          _subscriptions.keys.first.mediatorDidDocument;
+
+      if (commonMediatorDidDocument.id !=
+          mediatorClient.mediatorDidDocument.id) {
+        throw UnsupportedError(
+          'Only one mediator can be used at this time',
+        );
+      }
+    }
+
     if (!_connections.containsKey(mediatorClient.didKeyId)) {
       _connections[mediatorClient.didKeyId] = Connection(mediatorClient);
     }
