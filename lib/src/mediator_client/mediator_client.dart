@@ -179,8 +179,8 @@ class MediatorClient {
   /// [deleteOnMediator] - Whether to delete messages from the mediator after fetching (default: true).
   ///
   /// Returns a list of messages.
-  Future<List<Map<String, dynamic>>> fetchMessages({
-    required List<String> messageIds,
+  Future<List<Map<String, dynamic>>> fetchMessagesByIds(
+    List<String> messageIds, {
     bool deleteOnMediator = true,
   }) async {
     try {
@@ -196,14 +196,14 @@ class MediatorClient {
     }
   }
 
-  /// Fetches outbound messages from the mediator pointing the starting message ID.
+  /// Fetches outbound messages from the mediator pointing the starting date.
   ///
-  /// [startFrom] - The starting point to fetch messages from (inclusive). If null, fetches from the beginning.
+  /// [startFrom] - The starting point to fetch messages from date (inclusive). If null, fetches from the beginning.
   /// [batchSize] - Number of messages to fetch at once (default: 25).
   /// [deleteOnMediator] - Whether to delete messages from the mediator after fetching (default: true).
   ///
   /// Returns a list of messages.
-  Future<List<Map<String, dynamic>>> fetchMessagesStartingFrom({
+  Future<List<Map<String, dynamic>>> fetchMessages({
     DateTime? startFrom,
     int? batchSize = 25,
     bool deleteOnMediator = true,

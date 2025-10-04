@@ -104,7 +104,7 @@ class Connection {
 
     // fetch messages that were sent before the WebSocket connection was established
     unawaited(
-      mediatorClient.fetchMessagesStartingFrom().then((messages) {
+      mediatorClient.fetchMessages().then((messages) {
         for (final message in messages) {
           _controller.add(message);
         }
