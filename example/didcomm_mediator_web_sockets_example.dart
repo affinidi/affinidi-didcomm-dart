@@ -168,7 +168,7 @@ void main() async {
 
   prettyPrint('Bob is waiting for a message...');
 
-  await bobMediatorClient.listenForIncomingMessages(
+  bobMediatorClient.listenForIncomingMessages(
     (message) async {
       final encryptedMessage = EncryptedMessage.fromJson(message);
       final senderDid = const JweHeaderConverter()
@@ -199,12 +199,14 @@ void main() async {
         object: unpackedMessageByBob,
       );
 
-      await bobMediatorClient.disconnect();
+      await ConnectionPool.instance.stopConnections();
     },
     onError: (dynamic error) => prettyPrint('error', object: error),
     onDone: ({int? closeCode, String? closeReason}) => prettyPrint('done'),
     cancelOnError: false,
   );
+
+  await ConnectionPool.instance.startConnections();
 
   await aliceMediatorClient.sendMessage(
     forwardMessage,

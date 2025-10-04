@@ -322,7 +322,7 @@ void main() async {
 
             final completer = Completer<void>();
 
-            await bobMediatorClient.listenForIncomingMessages(
+            bobMediatorClient.listenForIncomingMessages(
               (message) async {
                 final encryptedMessage = EncryptedMessage.fromJson(message);
                 final senderDid = const JweHeaderConverter()
@@ -366,11 +366,14 @@ void main() async {
               cancelOnError: false,
             );
 
+            await ConnectionPool.instance.startConnections();
+
             await aliceMediatorClient.sendMessage(
               forwardMessage,
             );
 
             await completer.future;
+            await ConnectionPool.instance.stopConnections();
 
             expect(
               actualBodyContent,
