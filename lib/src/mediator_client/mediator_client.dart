@@ -315,7 +315,7 @@ class MediatorClient {
     return authorizationProvider != null
         ? {
             'Authorization':
-                'Bearer ${await authorizationProvider!.getAccessToken()}'
+                'Bearer ${(await authorizationProvider!.getAuthorizationTokens()).accessToken}'
           }
         : null;
   }
