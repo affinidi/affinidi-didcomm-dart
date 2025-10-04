@@ -1,18 +1,27 @@
 part of 'mediator_client.dart';
 
+/// Maintains a pool of [Connection]s shared across multiple [MediatorClient]s,
+/// enabling concurrent WebSocket usage and reusing existing connections.
+
 class ConnectionPool {
-  static final ConnectionPool instance = ConnectionPool();
+  /// The singleton instance of [ConnectionPool].
+  static final ConnectionPool instance = ConnectionPool._();
+
+  // Private constructor to enforce singleton usage.
+  ConnectionPool._();
 
   final _connections = <String, Connection>{};
   final _subscriptions =
       <MediatorClient, StreamSubscription<Map<String, dynamic>>>{};
 
+  /// Starts all connections in the pool.
   Future<void> startConnections() async {
     await Future.wait(
       _connections.values.map((connection) => connection.start()),
     );
   }
 
+  /// Stops all connections and cancels all subscriptions in the pool.
   Future<void> stopConnections() async {
     await Future.wait(
       [
@@ -25,6 +34,12 @@ class ConnectionPool {
     _connections.clear();
   }
 
+  /// Connects to a [MediatorClient] and subscribes to its message stream.
+  ///
+  /// Throws a [StateError] if a subscription for the provided [mediatorClient] already exists.
+  /// Throws an [UnsupportedError] if attempting to connect to a different mediator.
+  ///
+  /// Returns a [StreamSubscription] for the message stream.
   StreamSubscription connect({
     required MediatorClient mediatorClient,
     required void Function(Map<String, dynamic>) onMessage,
@@ -51,7 +66,9 @@ class ConnectionPool {
     }
 
     if (!_connections.containsKey(mediatorClient.didKeyId)) {
-      _connections[mediatorClient.didKeyId] = Connection(mediatorClient);
+      _connections[mediatorClient.didKeyId] = Connection(
+        mediatorClient: mediatorClient,
+      );
     }
 
     final connection = _connections[mediatorClient.didKeyId]!;
@@ -67,6 +84,7 @@ class ConnectionPool {
     return subscription;
   }
 
+  /// Disconnects and cancels the subscription for the given [mediatorClient].
   Future<void> disconnect({
     required MediatorClient mediatorClient,
   }) async {
