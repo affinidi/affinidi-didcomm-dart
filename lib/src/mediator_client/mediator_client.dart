@@ -1,16 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:ssi/ssi.dart';
-import 'package:uuid/uuid.dart';
-import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/status.dart' as status;
+import 'package:synchronized/synchronized.dart';
 
 import '../../didcomm.dart';
-import '../common/crypto.dart';
+import 'connection.dart';
 
 part 'connection_pool.dart';
 
