@@ -10,45 +10,46 @@ import '../../didcomm.dart';
 import '../common/crypto.dart';
 
 class Connection {
+  final MediatorClient mediatorClient;
   Stream<Map<String, dynamic>> get stream => _controller.stream;
 
-  final IOWebSocketChannel _channel;
   final StreamController<Map<String, dynamic>> _controller;
+  IOWebSocketChannel? _channel;
 
-  Connection({
-    required IOWebSocketChannel channel,
-    required StreamController<Map<String, dynamic>> controller,
-  })  : _channel = channel,
-        _controller = controller;
+  Connection(this.mediatorClient)
+      : _controller = StreamController<Map<String, dynamic>>.broadcast();
 
-  static Future<Connection> init({
-    required MediatorClient mediatorClient,
-  }) async {
-    final channel = mediatorClient.mediatorDidDocument.toWebSocketChannel(
+  Future<void> start() async {
+    _channel = mediatorClient.mediatorDidDocument.toWebSocketChannel(
       accessToken: await mediatorClient.authorizationProvider?.getAccessToken(),
       webSocketOptions: mediatorClient.webSocketOptions,
     );
 
-    final controller = StreamController<Map<String, dynamic>>.broadcast();
-    await channel.ready;
+    await _channel!.ready;
 
-    channel.stream.listen(
+    _channel!.stream.listen(
       (data) async {
         final json = data as String;
 
-        final messageIdOnMediator = hex.encode(sha256Hash(utf8.encode(json)));
+        final messageIdOnMediator = hex.encode(
+          sha256Hash(
+            utf8.encode(json),
+          ),
+        );
+
         await mediatorClient.deleteMessages(
           messageIds: [messageIdOnMediator],
         );
 
-        controller.add(
+        _controller.add(
           jsonDecode(json) as Map<String, dynamic>,
         );
       },
-      onError: controller.addError,
+      onError: _controller.addError,
       onDone: () {
-        print(channel.closeCode);
-        print(channel.closeReason);
+        // TODO: closeCode and closeReason
+        print(_channel!.closeCode);
+        print(_channel!.closeReason);
         // controller.close();
       },
     );
@@ -70,7 +71,6 @@ class Connection {
           messageOptions:
               mediatorClient.webSocketOptions.statusRequestMessageOptions,
         ),
-        channel: channel,
       );
     }
 
@@ -89,29 +89,22 @@ class Connection {
           messageOptions:
               mediatorClient.webSocketOptions.liveDeliveryChangeMessageOptions,
         ),
-        channel: channel,
       );
     }
-
-    // TODO: closeCode and closeReason
-
-    return Connection(
-      channel: channel,
-      controller: controller,
-    );
   }
 
-  static void _sendMessage(
-    DidcommMessage message, {
-    required IOWebSocketChannel channel,
-  }) {
-    channel.sink.add(
+  void _sendMessage(DidcommMessage message) {
+    if (_channel == null) {
+      throw StateError('WebSocket channel is not initialized');
+    }
+
+    _channel!.sink.add(
       jsonEncode(message),
     );
   }
 
-  Future<void> disconnect() async {
-    await _channel.sink.close(status.normalClosure);
+  Future<void> stop() async {
+    await _channel?.sink.close(status.normalClosure);
     await _controller.close();
   }
 }

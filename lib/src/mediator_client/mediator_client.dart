@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:ssi/ssi.dart';
-import 'package:synchronized/synchronized.dart';
 
 import '../../didcomm.dart';
 import 'connection.dart';
@@ -76,19 +75,19 @@ class MediatorClient {
   }) async {
     final ownDidDocument = await didManager.getDidDocument();
 
-    final bobMatchedDidKeyIds = ownDidDocument.matchKeysInKeyAgreement(
+    final matchedDidKeyIds = ownDidDocument.matchKeysInKeyAgreement(
       otherDidDocuments: [
         mediatorDidDocument,
       ],
     );
 
-    if (bobMatchedDidKeyIds.isEmpty) {
+    if (matchedDidKeyIds.isEmpty) {
       throw Exception(
         'No suitable key found for key agreement with the mediator.',
       );
     }
 
-    final didKeyId = bobMatchedDidKeyIds.first;
+    final didKeyId = matchedDidKeyIds.first;
 
     return MediatorClient(
       authorizationProvider: authorizationProvider,
@@ -260,13 +259,13 @@ class MediatorClient {
   /// [cancelOnError] - Whether to cancel on error.
   ///
   /// Returns a [StreamSubscription] for the WebSocket stream.
-  Future<StreamSubscription> listenForIncomingMessages(
+  StreamSubscription listenForIncomingMessages(
     void Function(Map<String, dynamic>) onMessage, {
     Function? onError,
     void Function({int? closeCode, String? closeReason})? onDone,
     bool? cancelOnError,
-  }) async {
-    return await ConnectionPool.instance.start(
+  }) {
+    return ConnectionPool.instance.connect(
       mediatorClient: this,
       onMessage: onMessage,
       onError: onError,
@@ -277,7 +276,9 @@ class MediatorClient {
 
   /// Disconnects the WebSocket channel if connected.
   Future<void> disconnect() async {
-    await ConnectionPool.instance.disconnect(mediatorClient: this);
+    await ConnectionPool.instance.disconnect(
+      mediatorClient: this,
+    );
   }
 
   /// Packs message, which then can be sent to mediator.
