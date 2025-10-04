@@ -5,7 +5,7 @@ scripts:
   test:
     name: test
     description: "test with coverage"
-    run: dart run coverage:test_with_coverage -- --concurrency=1
+    run: dart run coverage:test_with_coverage
     exec:
       concurrency: 1
 

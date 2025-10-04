@@ -16,9 +16,6 @@ class WebSocketOptions {
   /// WebSocket connection alive.
   final int pingIntervalInSeconds;
 
-  /// Indicates whether the message should be deleted on the mediator right after it was received by the client (default: true).
-  final bool deleteOnMediator;
-
   /// Constructs [WebSocketOptions].
   ///
   /// [statusRequestMessageOptions]: Options for status request messages (default: const StatusRequestMessageOptions()).
@@ -28,6 +25,5 @@ class WebSocketOptions {
     this.liveDeliveryChangeMessageOptions =
         const LiveDeliveryChangeMessageOptions(),
     this.pingIntervalInSeconds = 30,
-    this.deleteOnMediator = true,
   });
 }
