@@ -177,15 +177,9 @@ void main() async {
   );
 
   prettyPrint('Encrypted and Signed Forward Message', object: sentMessage);
-
   prettyPrint('Bob is fetching messages...');
 
-  final messageIds = await bobMediatorClient.listInboxMessageIds();
-
-  final messages = await bobMediatorClient.fetchMessages(
-    messageIds: messageIds,
-    deleteOnMediator: true,
-  );
+  final messages = await bobMediatorClient.fetchMessages();
 
   for (final message in messages) {
     prettyPrint(

@@ -192,9 +192,9 @@ void main() async {
           );
 
           final messageIds = await bobMediatorClient.listInboxMessageIds();
-
-          final messagesFetchedByIds = await bobMediatorClient.fetchMessages(
-            messageIds: messageIds,
+          final messagesFetchedByIds =
+              await bobMediatorClient.fetchMessagesByIds(
+            messageIds,
             deleteOnMediator: false,
           );
 
@@ -215,8 +215,7 @@ void main() async {
             ),
           );
 
-          final messagesFetchedByCursor =
-              await bobMediatorClient.fetchMessagesStartingFrom(
+          final messagesFetchedByCursor = await bobMediatorClient.fetchMessages(
             startFrom: actualUnpackedMessages.first.createdTime,
             deleteOnMediator: false,
           );
