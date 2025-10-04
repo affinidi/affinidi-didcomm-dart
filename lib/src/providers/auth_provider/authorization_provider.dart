@@ -7,24 +7,24 @@ import '../../../didcomm.dart';
 abstract class AuthorizationProvider {
   AuthorizationTokens? _authenticationTokens;
 
-  /// Returns a valid access token, refreshing it if necessary.
+  /// Returns valid authorization tokens, refreshing it if necessary.
   ///
   /// [minDuration] specifies the minimum required validity duration for the token.
   /// If the cached token expires before this duration, a new token is generated.
   ///
-  /// Returns a [String] access token.
-  Future<String> getAccessToken({
+  /// Returns a [AuthorizationTokens] authorization tokens.
+  Future<AuthorizationTokens> getAuthorizationTokens({
     Duration minDuration = const Duration(minutes: 3),
   }) async {
     final minDate = DateTime.now().toUtc().add(minDuration);
 
     if (_authenticationTokens != null &&
         _authenticationTokens!.accessExpiresAt.isAfter(minDate)) {
-      return _authenticationTokens!.accessToken;
+      return _authenticationTokens!;
     }
 
     _authenticationTokens = await generateTokens();
-    return _authenticationTokens!.accessToken;
+    return _authenticationTokens!;
   }
 
   /// Generates new authorization tokens.

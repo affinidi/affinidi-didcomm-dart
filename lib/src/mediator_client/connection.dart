@@ -15,13 +15,17 @@ class Connection {
 
   final StreamController<Map<String, dynamic>> _controller;
   IOWebSocketChannel? _channel;
+  AuthorizationTokens? _authorizationTokens;
 
   Connection(this.mediatorClient)
       : _controller = StreamController<Map<String, dynamic>>.broadcast();
 
   Future<void> start() async {
+    _authorizationTokens =
+        await mediatorClient.authorizationProvider?.getAuthorizationTokens();
+
     _channel = mediatorClient.mediatorDidDocument.toWebSocketChannel(
-      accessToken: await mediatorClient.authorizationProvider?.getAccessToken(),
+      accessToken: _authorizationTokens?.accessToken,
       webSocketOptions: mediatorClient.webSocketOptions,
     );
 
@@ -46,11 +50,17 @@ class Connection {
         );
       },
       onError: _controller.addError,
-      onDone: () {
-        // TODO: closeCode and closeReason
-        print(_channel!.closeCode);
-        print(_channel!.closeReason);
-        // controller.close();
+      onDone: () async {
+        // check if the connection was closed due to token expiration
+        if (_authorizationTokens?.accessExpiresAt
+                .isBefore(DateTime.now().toUtc()) ==
+            true) {
+          await start();
+        }
+        // TODO: handle other disconnection reasons and implement reconnection logic if needed
+        else {
+          await stop();
+        }
       },
     );
 
@@ -102,6 +112,13 @@ class Connection {
     );
   }
 
+  Future<void> stop() async {
+    _authorizationTokens = null;
+
+    await _channel?.sink.close(status.normalClosure);
+    await _controller.close();
+  }
+
   void _sendMessage(DidcommMessage message) {
     if (_channel == null) {
       throw StateError('WebSocket channel is not initialized');
@@ -110,10 +127,5 @@ class Connection {
     _channel!.sink.add(
       jsonEncode(message),
     );
-  }
-
-  Future<void> stop() async {
-    await _channel?.sink.close(status.normalClosure);
-    await _controller.close();
   }
 }
