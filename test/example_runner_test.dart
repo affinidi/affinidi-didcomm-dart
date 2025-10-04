@@ -47,7 +47,7 @@ void main() async {
 
       final errors = <String>[];
 
-      await Future.wait(filesWithMain.map((file) async {
+      for (final file in filesWithMain) {
         final result = await Process.run(
           Platform.resolvedExecutable,
           [file.path],
@@ -59,7 +59,7 @@ void main() async {
             'FAILED: ${file.path}.\nExit code: ${result.exitCode}.\nStdout: ${result.stdout}.\nStderr: ${result.stderr}.',
           );
         }
-      }));
+      }
 
       if (errors.isNotEmpty) {
         failTest(errors.join('\n'));
