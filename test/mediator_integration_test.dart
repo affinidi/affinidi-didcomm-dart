@@ -358,7 +358,7 @@ void main() async {
 
                 if (actualBodyContent == expectedBodyContent &&
                     telemetryMessageReceived == true) {
-                  await bobMediatorClient.disconnect();
+                  await ConnectionPool.instance.stopConnections();
                   completer.complete();
                 }
               },
