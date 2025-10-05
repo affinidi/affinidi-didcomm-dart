@@ -43,8 +43,8 @@ class AuthorizationTokens {
   ///
   /// [json] - The JSON map to parse.
   factory AuthorizationTokens.fromJson(Map<String, dynamic> json) =>
-      _$AuthenticationTokensFromJson(json);
+      _$AuthorizationTokensFromJson(json);
 
   /// Converts this [AuthorizationTokens] instance to a JSON map.
-  Map<String, dynamic> toJson() => _$AuthenticationTokensToJson(this);
+  Map<String, dynamic> toJson() => _$AuthorizationTokensToJson(this);
 }
