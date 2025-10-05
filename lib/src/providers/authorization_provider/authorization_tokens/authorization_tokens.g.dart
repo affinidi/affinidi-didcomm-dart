@@ -6,7 +6,7 @@ part of 'authorization_tokens.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-AuthorizationTokens _$AuthenticationTokensFromJson(Map<String, dynamic> json) =>
+AuthorizationTokens _$AuthorizationTokensFromJson(Map<String, dynamic> json) =>
     AuthorizationTokens(
       accessToken: json['access_token'] as String,
       accessExpiresAt: const EpochSecondsConverter()
@@ -16,7 +16,7 @@ AuthorizationTokens _$AuthenticationTokensFromJson(Map<String, dynamic> json) =>
           .fromJson((json['refresh_expires_at'] as num).toInt()),
     );
 
-Map<String, dynamic> _$AuthenticationTokensToJson(
+Map<String, dynamic> _$AuthorizationTokensToJson(
         AuthorizationTokens instance) =>
     <String, dynamic>{
       'access_token': instance.accessToken,
