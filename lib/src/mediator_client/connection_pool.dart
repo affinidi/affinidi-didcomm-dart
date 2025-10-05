@@ -44,7 +44,7 @@ class ConnectionPool {
     required MediatorClient mediatorClient,
     required void Function(Map<String, dynamic>) onMessage,
     Function? onError,
-    void Function()? onDone,
+    void Function({int? closeCode, String? closeReason})? onDone,
     bool? cancelOnError,
   }) {
     if (_subscriptions.containsKey(mediatorClient)) {
@@ -76,7 +76,12 @@ class ConnectionPool {
     final subscription = connection.stream.listen(
       onMessage,
       onError: onError,
-      onDone: onDone,
+      onDone: onDone != null
+          ? () => onDone(
+                closeCode: connection.channel?.closeCode,
+                closeReason: connection.channel?.closeReason,
+              )
+          : null,
       cancelOnError: cancelOnError,
     );
 

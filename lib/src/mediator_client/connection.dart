@@ -14,11 +14,18 @@ class Connection {
   /// A broadcast stream of incoming messages from the mediator.
   Stream<Map<String, dynamic>> get stream => _controller.stream;
 
+  /// The underlying WebSocket channel for this connection.
+  ///
+  /// This is initialized in [start] and is null before the connection is started.
+  ///
+  /// The channel instance is replaced each time the connection is (re)established,
+  /// such as when reconnecting after a disconnect or token refresh.
+  IOWebSocketChannel? channel;
+
   // TODO: create internal mediator client instead of passing it from outside
   final MediatorClient _mediatorClient;
   final StreamController<Map<String, dynamic>> _controller;
 
-  IOWebSocketChannel? _channel;
   AuthorizationTokens? _authorizationTokens;
 
   /// Creates a [Connection] for the given [mediatorClient].
@@ -34,14 +41,14 @@ class Connection {
     _authorizationTokens =
         await _mediatorClient.authorizationProvider?.getAuthorizationTokens();
 
-    _channel = _mediatorClient.mediatorDidDocument.toWebSocketChannel(
+    channel = _mediatorClient.mediatorDidDocument.toWebSocketChannel(
       accessToken: _authorizationTokens?.accessToken,
       webSocketOptions: _mediatorClient.webSocketOptions,
     );
 
-    await _channel!.ready;
+    await channel!.ready;
 
-    _channel!.stream.listen(
+    channel!.stream.listen(
       (data) async {
         final json = data as String;
 
@@ -126,16 +133,16 @@ class Connection {
   Future<void> stop() async {
     _authorizationTokens = null;
 
-    await _channel?.sink.close(status.normalClosure);
+    await channel?.sink.close(status.normalClosure);
     await _controller.close();
   }
 
   void _sendMessage(DidcommMessage message) {
-    if (_channel == null) {
+    if (channel == null) {
       throw StateError('WebSocket channel is not initialized');
     }
 
-    _channel!.sink.add(
+    channel!.sink.add(
       jsonEncode(message),
     );
   }
