@@ -5,10 +5,7 @@ part of 'mediator_client.dart';
 
 class ConnectionPool {
   /// The singleton instance of [ConnectionPool].
-  static final ConnectionPool instance = ConnectionPool._();
-
-  // Private constructor to enforce singleton usage.
-  ConnectionPool._();
+  static final ConnectionPool instance = ConnectionPool();
 
   final _connections = <String, Connection>{};
   final _subscriptions =
