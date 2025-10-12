@@ -25,6 +25,10 @@ class MediatorClient {
   /// The signer used for signing messages.
   final DidSigner signer;
 
+  /// Maintains a pool of WebSocket [Connection]s shared across multiple [MediatorClient]s,
+  /// enabling concurrent usage and efficient reuse of existing connections.
+  final ConnectionPool connectionPool;
+
   /// Options for forwarding messages to the mediator.
   final ForwardMessageOptions forwardMessageOptions;
 
@@ -49,12 +53,14 @@ class MediatorClient {
     required this.keyPair,
     required this.didKeyId,
     required this.signer,
+    ConnectionPool? connectionPool,
     this.authorizationProvider,
     this.forwardMessageOptions = const ForwardMessageOptions(),
     this.webSocketOptions = const WebSocketOptions(),
-  }) : _dio = mediatorDidDocument.toDio(
+  })  : _dio = mediatorDidDocument.toDio(
           mediatorServiceType: DidDocumentServiceType.didCommMessaging,
-        );
+        ),
+        connectionPool = connectionPool ?? ConnectionPool.instance;
 
   /// Initializes a [MediatorClient] by resolving the appropriate key agreement and signer
   /// from the provided [DidManager] and [mediatorDidDocument].
@@ -265,7 +271,7 @@ class MediatorClient {
     void Function({int? closeCode, String? closeReason})? onDone,
     bool? cancelOnError,
   }) {
-    return ConnectionPool.instance.connect(
+    return connectionPool.connect(
       mediatorClient: this,
       onMessage: onMessage,
       onError: onError,
@@ -276,7 +282,7 @@ class MediatorClient {
 
   /// Disconnects the WebSocket channel if connected.
   Future<void> disconnect() async {
-    await ConnectionPool.instance.disconnect(
+    await connectionPool.disconnect(
       mediatorClient: this,
     );
   }
