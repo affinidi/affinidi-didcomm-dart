@@ -34,7 +34,6 @@ class ConnectionPool {
   /// Connects to a [MediatorClient] and subscribes to its message stream.
   ///
   /// Throws a [StateError] if a subscription for the provided [mediatorClient] already exists.
-  /// Throws an [UnsupportedError] if attempting to connect to a different mediator.
   ///
   /// Returns a [StreamSubscription] for the message stream.
   StreamSubscription connect({
@@ -50,25 +49,17 @@ class ConnectionPool {
       );
     }
 
-    if (_subscriptions.isNotEmpty) {
-      final commonMediatorDidDocument =
-          _subscriptions.keys.first.mediatorDidDocument;
+    final connectionKey = _getConnectionKey(
+      mediatorClient: mediatorClient,
+    );
 
-      if (commonMediatorDidDocument.id !=
-          mediatorClient.mediatorDidDocument.id) {
-        throw UnsupportedError(
-          'Only one mediator can be used at this time',
-        );
-      }
-    }
-
-    if (!_connections.containsKey(mediatorClient.didKeyId)) {
-      _connections[mediatorClient.didKeyId] = Connection(
+    if (!_connections.containsKey(connectionKey)) {
+      _connections[connectionKey] = Connection(
         mediatorClient: mediatorClient,
       );
     }
 
-    final connection = _connections[mediatorClient.didKeyId]!;
+    final connection = _connections[connectionKey]!;
 
     final subscription = connection.stream.listen(
       onMessage,
@@ -86,10 +77,31 @@ class ConnectionPool {
     return subscription;
   }
 
-  /// Disconnects and cancels the subscription for the given [mediatorClient].
+  /// Disconnects a [MediatorClient] from its associated [Connection] and cancels its subscription.
+  ///
+  /// If the [MediatorClient] is the only client using the connection, the connection is stopped and removed from the pool.
+  /// Otherwise, only the client's subscription is cancelled.
   Future<void> disconnect({
     required MediatorClient mediatorClient,
   }) async {
+    final connectionKey = _getConnectionKey(
+      mediatorClient: mediatorClient,
+    );
+
+    final connectedClients = _subscriptions.keys
+        .where((client) =>
+            _getConnectionKey(mediatorClient: client) == connectionKey)
+        .toList();
+
+    if (connectedClients.length == 1) {
+      await _connections.remove(connectionKey)?.stop();
+    }
+
     await _subscriptions.remove(mediatorClient)?.cancel();
   }
+
+  String _getConnectionKey({
+    required MediatorClient mediatorClient,
+  }) =>
+      '${mediatorClient.didKeyId}|${mediatorClient.mediatorDidDocument.id}';
 }
