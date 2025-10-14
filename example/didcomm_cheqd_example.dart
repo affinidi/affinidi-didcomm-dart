@@ -32,7 +32,7 @@ void main() async {
   );
 
   await aliceDidManager.registerDid(
-    keyPair.id,
+    [keyPair.id],
     network: 'testnet', // or 'mainnet'
   );
   final aliceDidDocument = await aliceDidManager.getDidDocument();
