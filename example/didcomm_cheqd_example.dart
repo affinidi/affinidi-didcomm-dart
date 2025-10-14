@@ -20,19 +20,37 @@ void main() async {
     store: InMemoryDidStore(),
   );
 
-  final aliceKeyId = 'alice-key-1';
-  final keyPair = await aliceWallet.generateKey(
-    keyId: aliceKeyId,
+  // Create Ed25519 key for Alice (required for Cheqd)
+  final aliceEd25519KeyId = 'alice-ed25519-key';
+  final aliceEd25519KeyPair = await aliceWallet.generateKey(
+    keyId: aliceEd25519KeyId,
     keyType: KeyType.ed25519, // Cheqd requires Ed25519 keys
   );
 
+  // Create P256 key for Alice
+  final aliceP256KeyId = 'alice-p256-key';
+  final aliceP256KeyPair = await aliceWallet.generateKey(
+    keyId: aliceP256KeyId,
+    keyType: KeyType.p256,
+  );
+
+  // Add Ed25519 key for authentication
   await aliceDidManager.addVerificationMethod(
-    keyPair.id,
+    aliceEd25519KeyPair.id,
     relationships: {VerificationRelationship.authentication},
   );
 
+  // Add P256 key for key agreement
+  await aliceDidManager.addVerificationMethod(
+    aliceP256KeyPair.id,
+    relationships: {
+      VerificationRelationship.keyAgreement,
+      VerificationRelationship.authentication,
+    },
+  );
+
   await aliceDidManager.registerDid(
-    [keyPair.id],
+    [aliceEd25519KeyPair.id, aliceP256KeyPair.id],
     network: 'testnet', // or 'mainnet'
   );
   final aliceDidDocument = await aliceDidManager.getDidDocument();
@@ -41,13 +59,16 @@ void main() async {
     aliceDidDocument.assertionMethod.first.id,
   );
 
-  final bobKeyId = 'bob-key-1';
+  // Create P256 key for Bob (DidKeyManager doesn't support multiple keys)
+  final bobP256KeyId = 'bob-p256-key';
   await bobWallet.generateKey(
-    keyId: bobKeyId,
-    keyType: KeyType.ed25519,
+    keyId: bobP256KeyId,
+    keyType: KeyType.p256,
   );
 
-  await bobDidManager.addVerificationMethod(bobKeyId);
+  // Add P256 key (DidKeyManager doesn't support relationships parameter)
+  await bobDidManager.addVerificationMethod(bobP256KeyId);
+  
   final bobDidDocument = await bobDidManager.getDidDocument();
 
   final alicePlainTextMassage = PlainTextMessage(
@@ -80,12 +101,15 @@ void main() async {
   //   otherDidDocuments: [bobDidDocument],
   // );
 
+  // Find Alice's P256 key for key agreement (use the second one, which should be P256)
+  final aliceP256VerificationMethod = aliceDidDocument.verificationMethod[1];
+  
   final aliceEncryptedMessage = await EncryptedMessage.packWithAuthentication(
     aliceSignedMessage,
     keyPair: await aliceDidManager.getKeyPairByDidKeyId(
-      aliceDidDocument.verificationMethod.first.didKeyId,
+      aliceP256VerificationMethod.didKeyId,
     ),
-    didKeyId: aliceDidDocument.verificationMethod.first.didKeyId,
+    didKeyId: aliceP256VerificationMethod.didKeyId,
     recipientDidDocuments: [bobDidDocument],
   );
 
