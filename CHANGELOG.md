@@ -1,3 +1,7 @@
+## 1.1.1
+
+ - **FIX**: fetch by date and time.
+
 ## 1.1.0
 
  - **FEAT**: pass close code and reason to channel onDone method.
