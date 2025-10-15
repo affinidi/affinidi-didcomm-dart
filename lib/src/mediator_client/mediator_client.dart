@@ -187,7 +187,9 @@ class MediatorClient {
       final response = await _dio.post<Map<String, dynamic>>(
         '/fetch',
         data: {
-          'start_id': startFrom?.microsecondsSinceEpoch,
+          'start_id': startFrom != null
+              ? '${startFrom.millisecondsSinceEpoch}-0'
+              : null,
           'limit': batchSize,
           'delete_policy': deleteOnMediator ? 'Optimistic' : 'DoNotDelete'
         },

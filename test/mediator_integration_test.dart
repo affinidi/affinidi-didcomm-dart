@@ -172,6 +172,7 @@ void main() async {
             from: aliceDidDocument.id,
             to: [bobDidDocument.id],
             type: Uri.parse('https://didcomm.org/example/1.0/message'),
+            createdTime: DateTime.now().toUtc(),
             body: {'content': expectedBodyContent},
           );
 
