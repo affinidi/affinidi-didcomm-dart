@@ -1,3 +1,16 @@
+## 2.0.0
+
+> Note: This release has breaking changes.
+
+ - **FIX**: tests timeout.
+ - **FIX**: tests timeout.
+ - **FIX**: tests timeout.
+ - **FIX**: test concurrency on ci.
+ - **FIX**: build deps.
+ - **FIX**: authorization provider path.
+ - **FEAT**: add authorization provider.
+ - **BREAKING** **CHANGE**: add connection pool.
+
 ## 1.1.1
 
  - **FIX**: fetch by date and time.
