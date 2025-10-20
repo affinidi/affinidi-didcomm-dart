@@ -2,14 +2,33 @@
 
 > Note: This release has breaking changes.
 
- - **FIX**: tests timeout.
- - **FIX**: tests timeout.
- - **FIX**: tests timeout.
- - **FIX**: test concurrency on ci.
- - **FIX**: build deps.
- - **FIX**: authorization provider path.
- - **FEAT**: add authorization provider.
- - **BREAKING** **CHANGE**: add connection pool.
+**1. MediatorClient Refactoring**
+- Introduced a new `MediatorClient.init` factory for easier and safer instantiation, handling key agreement and signer resolution internally.
+- All authentication and access token logic is now handled via a new `AuthorizationProvider` abstraction.
+- Methods like `sendMessage`, `fetchMessages`, `listInboxMessageIds`, etc., no longer require explicit access tokens; tokens are managed automatically.
+- WebSocket connection management is now handled via a new `Connection` class and a singleton `ConnectionPool` for concurrent connections.
+
+**2. AuthorizationProvider Abstraction**
+- Added `AuthorizationProvider` and `AffinidiAuthorizationProvider` for pluggable, extensible token management.
+- Token refresh and challenge-response authentication are now encapsulated and reusable.
+- All mediator flows (REST and WebSocket) now support authenticated mediators out of the box.
+
+**3. Connection & ConnectionPool**
+- New `Connection` class manages a single WebSocket connection and message stream.
+- New `ConnectionPool` singleton manages multiple concurrent connections, subscriptions, and lifecycle.
+- **Important:** All mediator clients must be registered with the pool before calling `ConnectionPool.startConnections()`. Clients added after `startConnections()` will not be managed.
+
+**4. API and Example Updates**
+- All examples and tests updated to use the new `MediatorClient.init` and `AffinidiAuthorizationProvider.init` flows.
+- Removed legacy extension-based authentication methods.
+- Simplified message sending, receiving, and inbox management APIs.
+
+**Migration Notes**
+
+- Replace direct `MediatorClient` constructors with `MediatorClient.init`.
+- Use `AffinidiAuthorizationProvider` for Affinidi mediator authentication.
+- Use `ConnectionPool` for managing multiple concurrent WebSocket connections.
+- Remove any manual access token handling in your code.
 
 ## 1.1.1
 
