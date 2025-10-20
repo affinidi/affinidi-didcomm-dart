@@ -74,6 +74,7 @@ const _$CurveTypeEnumMap = {
   CurveType.p521: 'P-521',
   CurveType.secp256k1: 'secp256k1',
   CurveType.x25519: 'X25519',
+  CurveType.ed25519: 'Ed25519',
 };
 
 Value? _$JsonConverterFromJson<Json, Value>(

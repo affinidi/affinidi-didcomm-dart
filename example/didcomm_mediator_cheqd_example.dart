@@ -49,10 +49,13 @@ void main() async {
     ),
   );
 
-  // Add Ed25519 key for authentication
+  // Add Ed25519 key for authentication and assertion method
   await aliceDidManager.addVerificationMethod(
     aliceEd25519KeyPair.id,
-    relationships: {VerificationRelationship.authentication},
+    relationships: {
+      VerificationRelationship.authentication,
+      VerificationRelationship.assertionMethod,
+    },
   );
 
   // Add P256 key for key agreement
@@ -60,7 +63,6 @@ void main() async {
     aliceP256KeyId,
     relationships: {
       VerificationRelationship.keyAgreement,
-      VerificationRelationship.authentication,
     },
   );
 
@@ -69,14 +71,24 @@ void main() async {
     network: 'testnet', // or 'mainnet'
   );
   final aliceDidDocument = await aliceDidManager.getDidDocument();
+  prettyPrint('Alice DID Document', object: aliceDidDocument);
 
   prettyPrint(
     'Alice DID',
     object: aliceDidDocument.id,
   );
 
+  prettyPrint(
+    'Alice DID Document',
+    object: aliceDidDocument,
+  );
+
+  // Find Alice's Ed25519 key for signing (it's the first verification method)
+  final aliceEd25519VerificationMethod = aliceDidDocument.verificationMethod[0];
+
+  // Use Ed25519 key for signing (now with Ed25519 curve support)
   final aliceSigner = await aliceDidManager.getSigner(
-    aliceDidDocument.assertionMethod.first.id,
+    aliceEd25519VerificationMethod.didKeyId,
   );
 
   // Create P256 key for Bob using persistent PEM file
@@ -103,9 +115,13 @@ void main() async {
     object: bobDidDocument,
   );
 
-  final bobMediatorDocument =
-      await UniversalDIDResolver.defaultResolver.resolveDid(
-    await readDid(mediatorDidPath),
+  final bobMediatorDocument = await readDidDocument(
+    './example/mediator/mediator_did_document_example.json',
+  );
+
+  prettyPrint(
+    'Mediator DID Document',
+    object: bobMediatorDocument,
   );
 
   final bobSigner = await bobDidManager.getSigner(
@@ -147,6 +163,7 @@ void main() async {
 
   final forwardMessage = ForwardMessage(
     id: const Uuid().v4(),
+    from: aliceDidDocument.id,
     to: [bobMediatorDocument.id],
     next: bobDidDocument.id,
     expiresTime: expiresTime,
@@ -167,19 +184,18 @@ void main() async {
     object: forwardMessage,
   );
 
-  final aliceMatchedKeyIds = aliceDidDocument.matchKeysInKeyAgreement(
-    otherDidDocuments: [
-      bobMediatorDocument,
-    ],
-  );
+  print('TEST!!!');
+
+  // Find Alice's P256 key for key agreement
+  final aliceP256VerificationMethod = aliceDidDocument.verificationMethod[1];
 
   // Alice is going to use Bob's Mediator to send him a message
   final aliceMediatorClient = MediatorClient(
     mediatorDidDocument: bobMediatorDocument,
     keyPair: await aliceDidManager.getKeyPairByDidKeyId(
-      aliceMatchedKeyIds.first,
+      aliceP256VerificationMethod.didKeyId,
     ),
-    didKeyId: aliceMatchedKeyIds.first,
+    didKeyId: aliceP256VerificationMethod.didKeyId,
     signer: aliceSigner,
     forwardMessageOptions: const ForwardMessageOptions(
       shouldSign: true,
@@ -188,9 +204,12 @@ void main() async {
     ),
   );
 
+  print('AFTER MediatorClient');
+
   // authenticate method is not direct part of mediatorClient, but it is extension method
   // this method is need for mediators, that require authentication like an Affinidi mediator
   final aliceTokens = await aliceMediatorClient.authenticate();
+  print('AFTER aliceMediatorClient.authenticate');
 
   final bobMatchedDidKeyIds = bobDidDocument.matchKeysInKeyAgreement(
     otherDidDocuments: [
@@ -210,6 +229,7 @@ void main() async {
 
   final bobTokens = await bobMediatorClient.authenticate();
 
+  print('BEFORE aliceMediatorClient.sendMessage');
   final sentMessage = await aliceMediatorClient.sendMessage(
     forwardMessage,
     accessToken: aliceTokens.accessToken,
@@ -240,7 +260,7 @@ void main() async {
         MessageWrappingType.anoncryptSignPlaintext,
       ],
       expectedSigners: [
-        aliceDidDocument.assertionMethod.first.didKeyId,
+        aliceEd25519VerificationMethod.didKeyId,
       ],
     );
 

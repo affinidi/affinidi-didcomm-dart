@@ -10,6 +10,7 @@ extension CurveTypeExtension on CurveType {
     CurveType.p521: KeyType.p521,
     CurveType.secp256k1: KeyType.secp256k1,
     CurveType.x25519: KeyType.ed25519, // X25519 is derived from Ed25519
+    CurveType.ed25519: KeyType.ed25519,
   };
 
   /// Maps a [CurveType] to a compatible [KeyType] for DIDComm operations.

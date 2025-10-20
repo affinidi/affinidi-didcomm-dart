@@ -29,9 +29,9 @@ extension DidDocumentExtension on DidDocument {
         );
 
     final serviceEndpoint = service.getDidcommServiceEndpoints().firstWhere(
-          (endpoint) => endpoint.uri.startsWith('https://'),
+          (endpoint) => endpoint.uri.startsWith('https://') || endpoint.uri.startsWith('http://'),
           orElse: () => throw ArgumentError(
-            'Can not find https endpoint in $serviceType service',
+            'Can not find https or http endpoint in $serviceType service',
             'didDocument',
           ),
         );

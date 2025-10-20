@@ -16,7 +16,10 @@ enum CurveType {
   secp256k1('secp256k1', 32),
 
   /// X25519 curve.
-  x25519('X25519', 32);
+  x25519('X25519', 32),
+
+  /// Ed25519 curve.
+  ed25519('Ed25519', 32);
 
   /// The string value of the curve, as used in JWKs and headers.
   final String value;
@@ -38,5 +41,10 @@ enum CurveType {
   /// Returns true if this curve is an X-curve (X25519).
   bool isXCurve() {
     return value.startsWith('X');
+  }
+
+  /// Returns true if this curve is Ed25519.
+  bool isEd25519Curve() {
+    return value == 'Ed25519';
   }
 }
