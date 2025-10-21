@@ -184,7 +184,6 @@ void main() async {
     object: forwardMessage,
   );
 
-  print('TEST!!!');
 
   // Find Alice's P256 key for key agreement
   final aliceP256VerificationMethod = aliceDidDocument.verificationMethod[1];
@@ -204,12 +203,10 @@ void main() async {
     ),
   );
 
-  print('AFTER MediatorClient');
 
   // authenticate method is not direct part of mediatorClient, but it is extension method
   // this method is need for mediators, that require authentication like an Affinidi mediator
   final aliceTokens = await aliceMediatorClient.authenticate();
-  print('AFTER aliceMediatorClient.authenticate');
 
   final bobMatchedDidKeyIds = bobDidDocument.matchKeysInKeyAgreement(
     otherDidDocuments: [
@@ -229,7 +226,6 @@ void main() async {
 
   final bobTokens = await bobMediatorClient.authenticate();
 
-  print('BEFORE aliceMediatorClient.sendMessage');
   final sentMessage = await aliceMediatorClient.sendMessage(
     forwardMessage,
     accessToken: aliceTokens.accessToken,
