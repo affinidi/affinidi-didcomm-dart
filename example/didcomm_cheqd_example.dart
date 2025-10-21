@@ -52,6 +52,7 @@ void main() async {
   await aliceDidManager.registerDid(
     [aliceEd25519KeyPair.id, aliceP256KeyPair.id],
     network: 'testnet', // or 'mainnet'
+    registrarUrl: 'http://localhost:3000',
   );
   final aliceDidDocument = await aliceDidManager.getDidDocument();
 
