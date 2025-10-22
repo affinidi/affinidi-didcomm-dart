@@ -7,11 +7,7 @@ part of 'signature_header.dart';
 // **************************************************************************
 
 SignatureHeader _$SignatureHeaderFromJson(Map<String, dynamic> json) =>
-    SignatureHeader(
-      keyId: json['kid'] as String,
-    );
+    SignatureHeader(keyId: json['kid'] as String);
 
 Map<String, dynamic> _$SignatureHeaderToJson(SignatureHeader instance) =>
-    <String, dynamic>{
-      'kid': instance.keyId,
-    };
+    <String, dynamic>{'kid': instance.keyId};

@@ -4,7 +4,7 @@ When contributing to this repository, please first discuss the change you wish t
 
 ## Developement Requirements
 
-- Dart SDK version ^3.6.0
+- Dart SDK version ^3.9.0
 
 ### Code quality expectations
 

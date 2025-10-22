@@ -7,11 +7,7 @@ part of 'recipient_header.dart';
 // **************************************************************************
 
 RecipientHeader _$RecipientHeaderFromJson(Map<String, dynamic> json) =>
-    RecipientHeader(
-      keyId: json['kid'] as String,
-    );
+    RecipientHeader(keyId: json['kid'] as String);
 
 Map<String, dynamic> _$RecipientHeaderToJson(RecipientHeader instance) =>
-    <String, dynamic>{
-      'kid': instance.keyId,
-    };
+    <String, dynamic>{'kid': instance.keyId};

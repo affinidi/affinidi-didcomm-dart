@@ -1,5 +1,5 @@
-// dart format width=80
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format width=80
 
 part of 'message_pickup_message.dart';
 
@@ -20,5 +20,5 @@ const _$ownJsonProperties = [
   'please_ack',
   'ack',
   'body',
-  'attachments'
+  'attachments',
 ];

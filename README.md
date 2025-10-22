@@ -175,7 +175,7 @@ For more details, see the [DIDComm Messaging specification](https://identity.fou
 
 ## Requirements
 
-- Dart SDK version ^3.6.0
+- Dart SDK version ^3.9.0
 
 ## Installation
 

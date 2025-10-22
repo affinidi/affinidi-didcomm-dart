@@ -7,26 +7,24 @@ part of 'jwe_header.dart';
 // **************************************************************************
 
 JweHeader _$JweHeaderFromJson(Map<String, dynamic> json) => JweHeader(
-      type: json['typ'] as String? ?? 'application/didcomm-encrypted+json',
-      subjectKeyId: json['skid'] as String?,
-      keyWrappingAlgorithm:
-          $enumDecode(_$KeyWrappingAlgorithmEnumMap, json['alg']),
-      encryptionAlgorithm:
-          $enumDecode(_$EncryptionAlgorithmEnumMap, json['enc']),
-      ephemeralKey: EphemeralKey.fromJson(json['epk'] as Map<String, dynamic>),
-      agreementPartyUInfo: json['apu'] as String?,
-      agreementPartyVInfo: json['apv'] as String?,
-    );
+  type: json['typ'] as String? ?? 'application/didcomm-encrypted+json',
+  subjectKeyId: json['skid'] as String?,
+  keyWrappingAlgorithm: $enumDecode(_$KeyWrappingAlgorithmEnumMap, json['alg']),
+  encryptionAlgorithm: $enumDecode(_$EncryptionAlgorithmEnumMap, json['enc']),
+  ephemeralKey: EphemeralKey.fromJson(json['epk'] as Map<String, dynamic>),
+  agreementPartyUInfo: json['apu'] as String?,
+  agreementPartyVInfo: json['apv'] as String?,
+);
 
 Map<String, dynamic> _$JweHeaderToJson(JweHeader instance) => <String, dynamic>{
-      'typ': instance.type,
-      if (instance.subjectKeyId case final value?) 'skid': value,
-      'alg': _$KeyWrappingAlgorithmEnumMap[instance.keyWrappingAlgorithm]!,
-      'enc': _$EncryptionAlgorithmEnumMap[instance.encryptionAlgorithm]!,
-      'epk': instance.ephemeralKey.toJson(),
-      if (instance.agreementPartyUInfo case final value?) 'apu': value,
-      if (instance.agreementPartyVInfo case final value?) 'apv': value,
-    };
+  'typ': instance.type,
+  'skid': ?instance.subjectKeyId,
+  'alg': _$KeyWrappingAlgorithmEnumMap[instance.keyWrappingAlgorithm]!,
+  'enc': _$EncryptionAlgorithmEnumMap[instance.encryptionAlgorithm]!,
+  'epk': instance.ephemeralKey.toJson(),
+  'apu': ?instance.agreementPartyUInfo,
+  'apv': ?instance.agreementPartyVInfo,
+};
 
 const _$KeyWrappingAlgorithmEnumMap = {
   KeyWrappingAlgorithm.ecdhEs: 'ECDH-ES+A256KW',

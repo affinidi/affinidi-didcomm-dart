@@ -7,10 +7,10 @@ part of 'disclose_body.dart';
 // **************************************************************************
 
 DiscloseBody _$DiscloseBodyFromJson(Map<String, dynamic> json) => DiscloseBody(
-      disclosures: (json['disclosures'] as List<dynamic>)
-          .map((e) => Disclosure.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
+  disclosures: (json['disclosures'] as List<dynamic>)
+      .map((e) => Disclosure.fromJson(e as Map<String, dynamic>))
+      .toList(),
+);
 
 Map<String, dynamic> _$DiscloseBodyToJson(DiscloseBody instance) =>
     <String, dynamic>{

@@ -7,11 +7,11 @@ part of 'query.dart';
 // **************************************************************************
 
 Query _$QueryFromJson(Map<String, dynamic> json) => Query(
-      featureType: json['feature-type'] as String,
-      match: json['match'] as String,
-    );
+  featureType: json['feature-type'] as String,
+  match: json['match'] as String,
+);
 
 Map<String, dynamic> _$QueryToJson(Query instance) => <String, dynamic>{
-      'feature-type': instance.featureType,
-      'match': instance.match,
-    };
+  'feature-type': instance.featureType,
+  'match': instance.match,
+};

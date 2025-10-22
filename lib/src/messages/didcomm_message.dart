@@ -1,4 +1,3 @@
-import 'package:meta/meta.dart';
 import 'package:ssi/ssi.dart';
 
 import '../../didcomm.dart';
@@ -31,10 +30,7 @@ abstract class DidcommMessage {
     PlainTextMessage message, {
     required DidSigner signer,
   }) async {
-    return await SignedMessage.pack(
-      message,
-      signer: signer,
-    );
+    return await SignedMessage.pack(message, signer: signer);
   }
 
   /// Packs a [PlainTextMessage] into an [EncryptedMessage] using the provided cryptographic parameters.
@@ -101,10 +97,7 @@ abstract class DidcommMessage {
     required EncryptionAlgorithm encryptionAlgorithm,
     required DidSigner signer,
   }) async {
-    final signedMessage = await SignedMessage.pack(
-      message,
-      signer: signer,
-    );
+    final signedMessage = await SignedMessage.pack(message, signer: signer);
 
     return await EncryptedMessage.pack(
       signedMessage,
@@ -185,7 +178,8 @@ abstract class DidcommMessage {
     void Function({
       required List<DidcommMessage> foundMessages,
       required List<String> foundSigners,
-    })? onUnpacked,
+    })?
+    onUnpacked,
   }) async {
     final foundMessages = <DidcommMessage>[];
     final foundSigners = <String>[];
@@ -227,23 +221,18 @@ abstract class DidcommMessage {
     );
 
     if (onUnpacked != null) {
-      onUnpacked(
-        foundMessages: foundMessages,
-        foundSigners: foundSigners,
-      );
+      onUnpacked(foundMessages: foundMessages, foundSigners: foundSigners);
     }
 
     return plainTextMessage;
   }
 
   /// Merges [json] with custom headers for serialization.
-  @protected
   Map<String, dynamic> withCustomHeaders(Map<String, dynamic> json) {
     return {...json, ..._customHeaders};
   }
 
   /// Assigns custom headers from [json] that are not in [ownHeaders].
-  @protected
   void assignCustomHeaders(Map<String, dynamic> json, List<String> ownHeaders) {
     final customHeaders = json.keys.where((key) => !ownHeaders.contains(key));
 
@@ -266,10 +255,7 @@ abstract class DidcommMessage {
       expectedMessageWrappingTypes: expectedMessageWrappingTypes,
     );
 
-    _validateSigners(
-      messages: messages,
-      expectedSigners: expectedSigners,
-    );
+    _validateSigners(messages: messages, expectedSigners: expectedSigners);
 
     _validateAddressingConsistency(
       messages: messages,
@@ -283,13 +269,12 @@ abstract class DidcommMessage {
   }) {
     expectedMessageWrappingTypes ??= [MessageWrappingType.authcryptPlaintext];
 
-    final currentMessageWrappingType =
-        MessageWrappingType.findFromMessages(messages);
+    final currentMessageWrappingType = MessageWrappingType.findFromMessages(
+      messages,
+    );
 
     if (currentMessageWrappingType == null) {
-      throw UnsupportedError(
-        'Can not find matching MessageWrappingType',
-      );
+      throw UnsupportedError('Can not find matching MessageWrappingType');
     }
 
     if (!expectedMessageWrappingTypes.contains(currentMessageWrappingType)) {
@@ -305,8 +290,9 @@ abstract class DidcommMessage {
     required bool validateAddressingConsistency,
   }) {
     if (validateAddressingConsistency && messages.length > 1) {
-      final messageWrappingType =
-          MessageWrappingType.findFromMessages(messages);
+      final messageWrappingType = MessageWrappingType.findFromMessages(
+        messages,
+      );
 
       if (messageWrappingType == null) {
         throw ArgumentError(
@@ -373,9 +359,7 @@ abstract class DidcommMessage {
       final expectedSignerSet = expectedSigners.toSet();
 
       final actualSignerSet = message.signatures
-          .map(
-            (signature) => signature.header.keyId,
-          )
+          .map((signature) => signature.header.keyId)
           .toSet();
 
       if (!actualSignerSet.containsAll(expectedSigners)) {

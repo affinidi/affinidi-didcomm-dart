@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, depend_on_referenced_packages
 
 import 'dart:async';
 
@@ -40,21 +40,24 @@ class OwnJsonPropertiesGenerator
     final fields = _getAllFieldsIncludingFromParent(classElement)
         .where((field) => !field.isStatic && !field.isSynthetic)
         .map((field) {
-      final jsonKey = field.metadata.firstWhereOrNull(
-        (meta) => meta.element2?.displayName == 'JsonKey',
-      );
+          final jsonKey = field.metadata.annotations.firstWhereOrNull(
+            (meta) => meta.element2?.displayName == 'JsonKey',
+          );
 
-      if (jsonKey != null) {
-        final name =
-            jsonKey.computeConstantValue()?.getField('name')?.toStringValue();
+          if (jsonKey != null) {
+            final name = jsonKey
+                .computeConstantValue()
+                ?.getField('name')
+                ?.toStringValue();
 
-        if (name != null) {
-          return "'$name'";
-        }
-      }
+            if (name != null) {
+              return "'$name'";
+            }
+          }
 
-      return "'${field.name}'";
-    }).join(', ');
+          return "'${field.name}'";
+        })
+        .join(', ');
 
     return '''
   const _\$ownJsonProperties = [$fields];

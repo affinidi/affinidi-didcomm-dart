@@ -19,10 +19,9 @@ AttachmentData _$AttachmentDataFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$AttachmentDataToJson(AttachmentData instance) =>
     <String, dynamic>{
-      if (instance.jws case final value?) 'jws': value,
-      if (instance.hash case final value?) 'hash': value,
-      if (instance.links?.map((e) => e.toString()).toList() case final value?)
-        'links': value,
-      if (instance.base64 case final value?) 'base64': value,
-      if (instance.json case final value?) 'json': value,
+      'jws': ?instance.jws,
+      'hash': ?instance.hash,
+      'links': ?instance.links?.map((e) => e.toString()).toList(),
+      'base64': ?instance.base64,
+      'json': ?instance.json,
     };

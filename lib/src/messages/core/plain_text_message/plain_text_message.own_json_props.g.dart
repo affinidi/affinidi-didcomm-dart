@@ -1,5 +1,5 @@
-// dart format width=80
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format width=80
 
 part of 'plain_text_message.dart';
 
@@ -19,5 +19,5 @@ const _$ownJsonProperties = [
   'please_ack',
   'ack',
   'body',
-  'attachments'
+  'attachments',
 ];
