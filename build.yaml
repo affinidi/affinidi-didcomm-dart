@@ -9,7 +9,7 @@ targets:
 
 builders:
   own_json_properties:
-    import: "package:didcomm/builder.dart"
+    import: "generator/builder.dart"
     builder_factories: ["ownJsonPropertiesBuilder"]
     build_extensions: {".dart": [".g.dart"]}
     auto_apply: dependents

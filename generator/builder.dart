@@ -2,7 +2,7 @@
 
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
-import 'src/generators/own_json_properties_generator.dart';
+import 'own_json_properties_generator.dart';
 
 /// Creates a [PartBuilder] for generating custom JSON property lists using [OwnJsonPropertiesGenerator].
 ///
