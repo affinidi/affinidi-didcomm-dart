@@ -1,3 +1,10 @@
+## 2.0.2
+
+ - **FIX**: code generation.
+ - **FIX**: use compatible syncronized package.
+ - **FIX**: add lock to prevent steam closing when messages are still processing.
+ - **FIX**: use acl for tests and examples.
+
 ## 2.0.1
 
  - **FIX**: changelog after breaking changes.
