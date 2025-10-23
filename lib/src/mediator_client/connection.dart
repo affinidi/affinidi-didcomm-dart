@@ -138,7 +138,6 @@ class Connection {
   }
 
   /// Stops the WebSocket connection and closes the message stream.
-
   Future<void> stop() async {
     _authorizationTokens = null;
     await channel?.sink.close(status.normalClosure);
