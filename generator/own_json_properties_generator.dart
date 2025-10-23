@@ -5,9 +5,8 @@ import 'dart:async';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:collection/collection.dart';
+import 'package:didcomm/didcomm.dart';
 import 'package:source_gen/source_gen.dart';
-
-import '../annotations/own_json_properties.dart';
 
 /// A code generator for the [OwnJsonProperties] annotation.
 ///
