@@ -1,4 +1,3 @@
-import 'package:meta/meta.dart';
 import 'package:ssi/ssi.dart';
 
 import '../../didcomm.dart';
@@ -237,13 +236,11 @@ abstract class DidcommMessage {
   }
 
   /// Merges [json] with custom headers for serialization.
-  @protected
   Map<String, dynamic> withCustomHeaders(Map<String, dynamic> json) {
     return {...json, ..._customHeaders};
   }
 
   /// Assigns custom headers from [json] that are not in [ownHeaders].
-  @protected
   void assignCustomHeaders(Map<String, dynamic> json, List<String> ownHeaders) {
     final customHeaders = json.keys.where((key) => !ownHeaders.contains(key));
 

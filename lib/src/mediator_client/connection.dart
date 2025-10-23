@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:convert/convert.dart';
+import 'package:synchronized/synchronized.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
@@ -27,6 +28,7 @@ class Connection {
   final StreamController<Map<String, dynamic>> _controller;
 
   AuthorizationTokens? _authorizationTokens;
+  final _lock = Lock();
 
   /// Creates a [Connection] for the given [mediatorClient].
   Connection({
@@ -50,21 +52,24 @@ class Connection {
 
     channel!.stream.listen(
       (data) async {
-        final json = data as String;
+        // prevent connection from being closed while processing messages
+        await _lock.synchronized(() async {
+          final json = data as String;
 
-        final messageIdOnMediator = hex.encode(
-          sha256Hash(
-            utf8.encode(json),
-          ),
-        );
+          final messageIdOnMediator = hex.encode(
+            sha256Hash(
+              utf8.encode(json),
+            ),
+          );
 
-        await _mediatorClient.deleteMessages(
-          messageIds: [messageIdOnMediator],
-        );
+          unawaited(_mediatorClient.deleteMessages(
+            messageIds: [messageIdOnMediator],
+          ).catchError(_controller.addError));
 
-        _controller.add(
-          jsonDecode(json) as Map<String, dynamic>,
-        );
+          _controller.add(
+            jsonDecode(json) as Map<String, dynamic>,
+          );
+        });
       },
       onError: _controller.addError,
       onDone: () async {
@@ -121,20 +126,27 @@ class Connection {
 
     // fetch messages that were sent before the WebSocket connection was established
     unawaited(
-      _mediatorClient.fetchMessages().then((messages) {
+      _mediatorClient.fetchMessages().then((messages) async {
         for (final message in messages) {
-          _controller.add(message);
+          // prevent connection from being closed while processing messages
+          await _lock.synchronized(() async {
+            _controller.add(message);
+          });
         }
       }),
     );
   }
 
   /// Stops the WebSocket connection and closes the message stream.
+
   Future<void> stop() async {
     _authorizationTokens = null;
-
     await channel?.sink.close(status.normalClosure);
-    await _controller.close();
+
+    // ensure we stop only if there are not messages being processed
+    await _lock.synchronized(() async {
+      await _controller.close();
+    });
   }
 
   void _sendMessage(DidcommMessage message) {
