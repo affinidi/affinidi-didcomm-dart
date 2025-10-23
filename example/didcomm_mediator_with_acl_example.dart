@@ -5,9 +5,13 @@ import 'package:uuid/uuid.dart';
 import '../test/example_configs.dart';
 
 void main() async {
+  // Run commands below in your terminal to generate keys for Alice and Bob:
+  // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/alice_private_key.pem
+  // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/bob_private_key.pem
+
   // Create and run a DIDComm mediator, for instance https://github.com/affinidi/affinidi-tdk-rs/tree/main/crates/affinidi-messaging/affinidi-messaging-mediator or with https://portal.affinidi.com.
   // Configure ACL.
-  // Copy its DID Document URL into example/mediator/mediator_with_acl_did.txt.
+  // Copy its DID Document URL into example/mediator/mediator_did.txt.
   final aliceKeyStore = InMemoryKeyStore();
   final aliceWallet = PersistentWallet(aliceKeyStore);
 
@@ -46,7 +50,7 @@ void main() async {
 
   final bobMediatorDocument =
       await UniversalDIDResolver.defaultResolver.resolveDid(
-    await readDid(mediatorWithAclDidPath),
+    await readDid(mediatorDidPath),
   );
 
   prettyPrint('Bob Mediator Document', object: bobMediatorDocument);
@@ -193,13 +197,10 @@ void main() async {
       recipientDidManager: bobDidManager,
       expectedMessageWrappingTypes: [
         MessageWrappingType.anoncryptSignPlaintext,
-        MessageWrappingType.authcryptPlaintext,
         MessageWrappingType.authcryptSignPlaintext,
+        MessageWrappingType.authcryptPlaintext,
+        MessageWrappingType.anoncryptAuthcryptPlaintext,
       ],
-      // expectedSigners: [
-      //   aliceDidDocument.assertionMethod.first.didKeyId,
-      //   bobMediatorDocument.assertionMethod.first.didKeyId,
-      // ],
     );
 
     prettyPrint(

@@ -10,6 +10,10 @@ void main() async {
   // Create and run a DIDComm mediator, for instance https://github.com/affinidi/affinidi-tdk-rs/tree/main/crates/affinidi-messaging/affinidi-messaging-mediator or with https://portal.affinidi.com.
   // Copy its DID Document URL into example/mediator/mediator_did.txt.
 
+  // The sender's DID is needed to configure ACL if the mediator requires it
+  // did:key:......
+  final senderDid = await getDidKeyForPrivateKeyPath(alicePrivateKeyPath);
+
   final receiverKeyStore = InMemoryKeyStore();
   final receiverWallet = PersistentWallet(receiverKeyStore);
 
@@ -53,6 +57,22 @@ void main() async {
       mediatorDidDocument: receiverMediatorDocument,
       didManager: receiverDidManager,
     ),
+    forwardMessageOptions: const ForwardMessageOptions(
+      shouldSign: true,
+      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+      encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+    ),
+  );
+
+  // configure ACL to allow Alice to send messages to Bob via his mediator
+  // need only if the mediator requires ACL management
+  await configureAcl(
+    ownDidDocument: receiverDidDocument,
+    theirDids: [senderDid],
+    mediatorClient: receiverMediatorClient,
+    expiresTime: DateTime.now().toUtc().add(
+          const Duration(minutes: 3),
+        ),
   );
 
   prettyPrint('Receiver is fetching messages...');
@@ -66,6 +86,9 @@ void main() async {
       recipientDidManager: receiverDidManager,
       expectedMessageWrappingTypes: [
         MessageWrappingType.anoncryptSignPlaintext,
+        MessageWrappingType.authcryptSignPlaintext,
+        MessageWrappingType.authcryptPlaintext,
+        MessageWrappingType.anoncryptAuthcryptPlaintext,
       ],
     );
 
