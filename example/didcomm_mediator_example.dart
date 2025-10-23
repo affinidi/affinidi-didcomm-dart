@@ -114,6 +114,7 @@ void main() async {
 
   final forwardMessage = ForwardMessage(
     id: const Uuid().v4(),
+    from: aliceDidDocument.id,
     to: [bobMediatorDocument.id],
     next: bobDidDocument.id,
     expiresTime: expiresTime,
@@ -156,6 +157,20 @@ void main() async {
       mediatorDidDocument: bobMediatorDocument,
       didManager: bobDidManager,
     ),
+    forwardMessageOptions: const ForwardMessageOptions(
+      shouldSign: true,
+      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+      encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+    ),
+  );
+
+  // configure ACL to allow Alice to send messages to Bob via his mediator
+  // need only if the mediator requires ACL management
+  await configureAcl(
+    ownDidDocument: bobDidDocument,
+    theirDids: [aliceDidDocument.id],
+    mediatorClient: bobMediatorClient,
+    expiresTime: expiresTime,
   );
 
   final sentMessage = await aliceMediatorClient.sendMessage(
@@ -178,9 +193,9 @@ void main() async {
       recipientDidManager: bobDidManager,
       expectedMessageWrappingTypes: [
         MessageWrappingType.anoncryptSignPlaintext,
-      ],
-      expectedSigners: [
-        aliceDidDocument.assertionMethod.first.didKeyId,
+        MessageWrappingType.authcryptSignPlaintext,
+        MessageWrappingType.authcryptPlaintext,
+        MessageWrappingType.anoncryptAuthcryptPlaintext,
       ],
     );
 

@@ -113,6 +113,7 @@ void main() async {
 
   final forwardMessage = ForwardMessage(
     id: const Uuid().v4(),
+    from: aliceDidDocument.id,
     to: [bobMediatorDocument.id],
     next: bobDidDocument.id,
     expiresTime: expiresTime,
@@ -164,33 +165,35 @@ void main() async {
         shouldSign: true,
       ),
     ),
+    forwardMessageOptions: const ForwardMessageOptions(
+      shouldSign: true,
+      keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+      encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+    ),
+  );
+
+  // configure ACL to allow Alice to send messages to Bob via his mediator
+  // need only if the mediator requires ACL management
+  await configureAcl(
+    ownDidDocument: bobDidDocument,
+    theirDids: [aliceDidDocument.id],
+    mediatorClient: bobMediatorClient,
+    expiresTime: expiresTime,
   );
 
   prettyPrint('Bob is waiting for a message...');
 
   bobMediatorClient.listenForIncomingMessages(
     (message) async {
-      final encryptedMessage = EncryptedMessage.fromJson(message);
-      final senderDid = const JweHeaderConverter()
-          .fromJson(encryptedMessage.protected)
-          .subjectKeyId;
-
-      final isMediatorTelemetryMessage =
-          senderDid?.contains('.affinidi.io') == true;
-
       final unpackedMessageByBob =
           await DidcommMessage.unpackToPlainTextMessage(
         message: message,
         recipientDidManager: bobDidManager,
         expectedMessageWrappingTypes: [
-          isMediatorTelemetryMessage
-              ? MessageWrappingType.authcryptSignPlaintext
-              : MessageWrappingType.anoncryptSignPlaintext,
-        ],
-        expectedSigners: [
-          isMediatorTelemetryMessage
-              ? bobMediatorDocument.assertionMethod.first.didKeyId
-              : aliceDidDocument.assertionMethod.first.didKeyId,
+          MessageWrappingType.anoncryptSignPlaintext,
+          MessageWrappingType.authcryptSignPlaintext,
+          MessageWrappingType.authcryptPlaintext,
+          MessageWrappingType.anoncryptAuthcryptPlaintext,
         ],
       );
 

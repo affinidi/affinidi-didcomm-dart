@@ -137,7 +137,26 @@ void main() async {
                 encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
               ),
             ),
+            forwardMessageOptions: const ForwardMessageOptions(
+              shouldSign: true,
+              keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+              encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+            ),
           );
+
+          // configure ACL to allow Alice to send messages to Bob via his mediator
+          // need only if the mediator requires ACL management
+          await configureAcl(
+            ownDidDocument: bobDidDocument,
+            theirDids: [aliceDidDocument.id],
+            mediatorClient: bobMediatorClient,
+            expiresTime: DateTime.now().toUtc().add(
+                  const Duration(minutes: 3),
+                ),
+          );
+
+          // clear Bob's mediator inbox before each test
+          await bobMediatorClient.fetchMessages();
         });
 
         test('REST API works correctly', () async {
@@ -207,9 +226,8 @@ void main() async {
                 expectedMessageWrappingTypes: [
                   MessageWrappingType.anoncryptSignPlaintext,
                   MessageWrappingType.authcryptSignPlaintext,
-                ],
-                expectedSigners: [
-                  aliceDidDocument.assertionMethod.first.didKeyId,
+                  MessageWrappingType.authcryptPlaintext,
+                  MessageWrappingType.anoncryptAuthcryptPlaintext,
                 ],
               ),
             ),

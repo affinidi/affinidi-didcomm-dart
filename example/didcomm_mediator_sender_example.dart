@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:didcomm/didcomm.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
@@ -13,39 +11,15 @@ void main() async {
   // Create and run a DIDComm mediator, for instance https://github.com/affinidi/affinidi-tdk-rs/tree/main/crates/affinidi-messaging/affinidi-messaging-mediator or with https://portal.affinidi.com.
   // Copy its DID Document URL into example/mediator/mediator_did.txt.
 
-  // Replace this DID Document with your receiver DID Document
-  final receiverDidDocument = DidDocument.fromJson(jsonDecode('''
-    {
-      "id": "did:key:zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy",
-      "@context": [
-        "https://www.w3.org/ns/did/v1",
-        "https://ns.did.ai/suites/multikey-2021/v1/"
-      ],
-      "verificationMethod": [
-        {
-          "id": "did:key:zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy#zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy",
-          "controller": "did:key:zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy",
-          "type": "P256Key2021",
-          "publicKeyMultibase": "zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy"
-        }
-      ],
-      "authentication": [
-        "did:key:zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy#zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy"
-      ],
-      "capabilityDelegation": [
-        "did:key:zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy#zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy"
-      ],
-      "capabilityInvocation": [
-        "did:key:zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy#zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy"
-      ],
-      "keyAgreement": [
-        "did:key:zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy#zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy"
-      ],
-      "assertionMethod": [
-        "did:key:zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy#zDnaemfWXqUu9bSWWEAVb4KNfbPC1Ca5AftrkiuDeUDdw1eMy"
-      ]
-    }
-  '''));
+  // If the mediator requires ACL, the sender DID is needed to be added to the receiver's ACL. See example/didcomm_receiver_example.dart
+
+  // did:key:......
+  final receiverDid = await getDidKeyForPrivateKeyPath(bobPrivateKeyPath);
+
+  final receiverDidDocument =
+      await UniversalDIDResolver.defaultResolver.resolveDid(
+    receiverDid,
+  );
 
   final messageForReceiver = 'Hello, Bob!';
 
@@ -124,6 +98,7 @@ void main() async {
 
   final forwardMessage = ForwardMessage(
     id: const Uuid().v4(),
+    from: senderDidDocument.id,
     to: [receiverMediatorDidDocument.id],
     next: receiverDidDocument.id,
     expiresTime: expiresTime,
