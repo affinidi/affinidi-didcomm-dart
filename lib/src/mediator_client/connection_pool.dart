@@ -18,13 +18,14 @@ class ConnectionPool {
     );
   }
 
-  /// Stops all connections and cancels all subscriptions in the pool.
+  /// Cancels all subscriptions in the pool and stops all connections.
   Future<void> stopConnections() async {
     await Future.wait(
-      [
-        ..._connections.values.map((connection) => connection.stop()),
-        ..._subscriptions.values.map((subscription) => subscription.cancel()),
-      ],
+      _subscriptions.values.map((subscription) => subscription.cancel()),
+    );
+
+    await Future.wait(
+      _connections.values.map((connection) => connection.stop()),
     );
 
     _subscriptions.clear();
