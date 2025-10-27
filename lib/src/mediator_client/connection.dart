@@ -40,111 +40,127 @@ class Connection {
   ///
   /// Automatically handles token refresh and message queue draining.
   Future<void> start() async {
-    _authorizationTokens =
-        await _mediatorClient.authorizationProvider?.getAuthorizationTokens();
+    // prevent channel from being started multiple times concurrently
+    await _lock.synchronized(() async {
+      if (channel != null) {
+        // already started
+        return;
+      }
 
-    channel = _mediatorClient.mediatorDidDocument.toWebSocketChannel(
-      accessToken: _authorizationTokens?.accessToken,
-      webSocketOptions: _mediatorClient.webSocketOptions,
-    );
+      _authorizationTokens =
+          await _mediatorClient.authorizationProvider?.getAuthorizationTokens();
 
-    await channel!.ready;
-
-    channel!.stream.listen(
-      (data) async {
-        // prevent connection from being closed while processing messages
-        await _lock.synchronized(() async {
-          final json = data as String;
-
-          final messageIdOnMediator = hex.encode(
-            sha256Hash(
-              utf8.encode(json),
-            ),
-          );
-
-          unawaited(_mediatorClient.deleteMessages(
-            messageIds: [messageIdOnMediator],
-          ).catchError(_controller.addError));
-
-          _controller.add(
-            jsonDecode(json) as Map<String, dynamic>,
-          );
-        });
-      },
-      onError: _controller.addError,
-      onDone: () async {
-        // check if the connection was closed due to token expiration
-        if (_authorizationTokens?.accessExpiresAt
-                .isBefore(DateTime.now().toUtc()) ==
-            true) {
-          await start();
-        }
-        // TODO: handle other disconnection reasons and implement reconnection logic if needed
-        else {
-          await stop();
-        }
-      },
-    );
-
-    final senderDid = getDidFromId(_mediatorClient.didKeyId);
-
-    if (_mediatorClient
-        .webSocketOptions.statusRequestMessageOptions.shouldSend) {
-      final setupRequestMessage = StatusRequestMessage(
-        id: const Uuid().v4(),
-        to: [_mediatorClient.mediatorDidDocument.id],
-        from: senderDid,
-        recipientDid: senderDid,
+      channel = _mediatorClient.mediatorDidDocument.toWebSocketChannel(
+        accessToken: _authorizationTokens?.accessToken,
+        webSocketOptions: _mediatorClient.webSocketOptions,
       );
 
-      _sendMessage(
-        await _mediatorClient.packMessage(
-          setupRequestMessage,
-          messageOptions:
-              _mediatorClient.webSocketOptions.statusRequestMessageOptions,
-        ),
-      );
-    }
+      await channel!.ready;
 
-    if (_mediatorClient
-        .webSocketOptions.liveDeliveryChangeMessageOptions.shouldSend) {
-      final liveDeliveryChangeMessage = LiveDeliveryChangeMessage(
-        id: const Uuid().v4(),
-        to: [_mediatorClient.mediatorDidDocument.id],
-        from: senderDid,
-        liveDelivery: true,
-      );
-
-      _sendMessage(
-        await _mediatorClient.packMessage(
-          liveDeliveryChangeMessage,
-          messageOptions:
-              _mediatorClient.webSocketOptions.liveDeliveryChangeMessageOptions,
-        ),
-      );
-    }
-
-    // fetch messages that were sent before the WebSocket connection was established
-    unawaited(
-      _mediatorClient.fetchMessages().then((messages) async {
-        for (final message in messages) {
+      channel!.stream.listen(
+        (data) async {
           // prevent connection from being closed while processing messages
           await _lock.synchronized(() async {
-            _controller.add(message);
+            final json = data as String;
+
+            final messageIdOnMediator = hex.encode(
+              sha256Hash(
+                utf8.encode(json),
+              ),
+            );
+
+            unawaited(_mediatorClient.deleteMessages(
+              messageIds: [messageIdOnMediator],
+            ).catchError(_controller.addError));
+
+            _controller.add(
+              jsonDecode(json) as Map<String, dynamic>,
+            );
           });
-        }
-      }),
-    );
+        },
+        onError: _controller.addError,
+        onDone: () async {
+          // check if the connection was closed due to token expiration
+          if (_authorizationTokens?.accessExpiresAt
+                  .isBefore(DateTime.now().toUtc()) ==
+              true) {
+            await start();
+          }
+          // TODO: handle other disconnection reasons and implement reconnection logic if needed
+          else {
+            await stop();
+          }
+        },
+      );
+
+      final senderDid = getDidFromId(_mediatorClient.didKeyId);
+
+      if (_mediatorClient
+          .webSocketOptions.statusRequestMessageOptions.shouldSend) {
+        final setupRequestMessage = StatusRequestMessage(
+          id: const Uuid().v4(),
+          to: [_mediatorClient.mediatorDidDocument.id],
+          from: senderDid,
+          recipientDid: senderDid,
+        );
+
+        _sendMessage(
+          await _mediatorClient.packMessage(
+            setupRequestMessage,
+            messageOptions:
+                _mediatorClient.webSocketOptions.statusRequestMessageOptions,
+          ),
+        );
+      }
+
+      if (_mediatorClient
+          .webSocketOptions.liveDeliveryChangeMessageOptions.shouldSend) {
+        final liveDeliveryChangeMessage = LiveDeliveryChangeMessage(
+          id: const Uuid().v4(),
+          to: [_mediatorClient.mediatorDidDocument.id],
+          from: senderDid,
+          liveDelivery: true,
+        );
+
+        _sendMessage(
+          await _mediatorClient.packMessage(
+            liveDeliveryChangeMessage,
+            messageOptions: _mediatorClient
+                .webSocketOptions.liveDeliveryChangeMessageOptions,
+          ),
+        );
+      }
+
+      // fetch messages that were sent before the WebSocket connection was established
+      unawaited(
+        _mediatorClient.fetchMessages().then((messages) async {
+          for (final message in messages) {
+            // prevent connection from being closed while processing messages
+            await _lock.synchronized(() async {
+              _controller.add(message);
+            });
+          }
+        }),
+      );
+    });
   }
 
   /// Stops the WebSocket connection and closes the message stream.
   Future<void> stop() async {
-    _authorizationTokens = null;
-    await channel?.sink.close(status.normalClosure);
-
     // ensure we stop only if there are not messages being processed
+
     await _lock.synchronized(() async {
+      if (channel == null) {
+        // already stopped
+        return;
+      }
+
+      _authorizationTokens = null;
+
+      await channel?.sink.close(status.normalClosure);
       await _controller.close();
+
+      channel = null;
     });
   }
 
