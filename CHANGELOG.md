@@ -1,3 +1,8 @@
+## 2.0.3
+
+ - **FIX**: close connections at the end of each test.
+ - **FIX**: allow sequential connections.
+
 ## 2.0.2
 
  - **FIX**: code generation.
