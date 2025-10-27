@@ -189,6 +189,12 @@ void main() async {
           ]);
         });
 
+        tearDown(() async {
+          // stop all connections after each test
+          // it is need if some tests failed and connections remain open
+          await ConnectionPool.instance.stopConnections();
+        });
+
         test('REST API works correctly', () async {
           final expectedBodyContent = const Uuid().v4();
 
