@@ -33,7 +33,7 @@ void main() async {
       'did:peer',
     ]) {
       group(didType, () {
-        setUp(() async {
+        setUpAll(() async {
           final useDidKey = didType == 'did:key';
 
           final aliceKeyStore = InMemoryKeyStore();
@@ -115,6 +115,21 @@ void main() async {
               keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
               encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
             ),
+            webSocketOptions: const WebSocketOptions(
+              liveDeliveryChangeMessageOptions:
+                  LiveDeliveryChangeMessageOptions(
+                shouldSend: true,
+                shouldSign: true,
+                keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+                encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+              ),
+              statusRequestMessageOptions: StatusRequestMessageOptions(
+                shouldSend: true,
+                shouldSign: true,
+                keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+                encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+              ),
+            ),
           );
 
           bobMediatorClient = await MediatorClient.init(
@@ -123,6 +138,11 @@ void main() async {
             authorizationProvider: await AffinidiAuthorizationProvider.init(
               mediatorDidDocument: bobMediatorDocument,
               didManager: bobDidManager,
+            ),
+            forwardMessageOptions: const ForwardMessageOptions(
+              shouldSign: true,
+              keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+              encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
             ),
             webSocketOptions: const WebSocketOptions(
               liveDeliveryChangeMessageOptions:
@@ -139,32 +159,40 @@ void main() async {
                 encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
               ),
             ),
-            forwardMessageOptions: const ForwardMessageOptions(
-              shouldSign: true,
-              keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
-              encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+          );
+
+          // configure ACL to allow Alice and Bob to communicate via the mediator
+          // it is needed only if the mediator requires ACL management
+          await Future.wait([
+            configureAcl(
+              ownDidDocument: aliceDidDocument,
+              theirDids: [bobDidDocument.id],
+              mediatorClient: aliceMediatorClient,
+              expiresTime: DateTime.now().toUtc().add(
+                    const Duration(minutes: 3),
+                  ),
             ),
-          );
+            configureAcl(
+              ownDidDocument: bobDidDocument,
+              theirDids: [aliceDidDocument.id],
+              mediatorClient: bobMediatorClient,
+              expiresTime: DateTime.now().toUtc().add(
+                    const Duration(minutes: 3),
+                  ),
+            ),
+          ]);
 
-          // configure ACL to allow Alice to send messages to Bob via his mediator
-          // need only if the mediator requires ACL management
-          await configureAcl(
-            ownDidDocument: bobDidDocument,
-            theirDids: [aliceDidDocument.id],
-            mediatorClient: bobMediatorClient,
-            expiresTime: DateTime.now().toUtc().add(
-                  const Duration(minutes: 3),
-                ),
-          );
-
-          // clear Bob's mediator inbox before each test
-          await bobMediatorClient.fetchMessages();
+          // clear inboxes before tests
+          await Future.wait([
+            aliceMediatorClient.fetchMessages(),
+            bobMediatorClient.fetchMessages(),
+          ]);
         });
 
         test('REST API works correctly', () async {
           final expectedBodyContent = const Uuid().v4();
 
-          final alicePlainTextMassage = PlainTextMessage(
+          final alicePlainTextMessage = PlainTextMessage(
             id: const Uuid().v4(),
             from: aliceDidDocument.id,
             to: [bobDidDocument.id],
@@ -173,11 +201,11 @@ void main() async {
             body: {'content': expectedBodyContent},
           );
 
-          alicePlainTextMassage['custom-header'] = 'custom-value';
+          alicePlainTextMessage['custom-header'] = 'custom-value';
 
           final aliceSignedAndEncryptedMessage =
               await DidcommMessage.packIntoSignedAndEncryptedMessages(
-            alicePlainTextMassage,
+            alicePlainTextMessage,
             keyType: [bobDidDocument].getCommonKeyTypesInKeyAgreements().first,
             recipientDidDocuments: [bobDidDocument],
             keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
@@ -291,7 +319,7 @@ void main() async {
           () async {
             final expectedBodyContent = const Uuid().v4();
 
-            final alicePlainTextMassage = PlainTextMessage(
+            final alicePlainTextMessage = PlainTextMessage(
               id: const Uuid().v4(),
               from: aliceDidDocument.id,
               to: [bobDidDocument.id],
@@ -299,11 +327,11 @@ void main() async {
               body: {'content': expectedBodyContent},
             );
 
-            alicePlainTextMassage['custom-header'] = 'custom-value';
+            alicePlainTextMessage['custom-header'] = 'custom-value';
 
             final aliceSignedAndEncryptedMessage =
                 await DidcommMessage.packIntoSignedAndEncryptedMessages(
-              alicePlainTextMassage,
+              alicePlainTextMessage,
               keyType: [
                 bobDidDocument,
               ].getCommonKeyTypesInKeyAgreements().first,
@@ -425,6 +453,183 @@ void main() async {
           );
 
           expect(oobId, isNotEmpty);
+        });
+
+        test('Can connect after connections have been started', () async {
+          final aliceCompleter = Completer<PlainTextMessage>();
+          final bobCompleter = Completer<PlainTextMessage>();
+
+          final alicePlainTextMessage = PlainTextMessage(
+            id: const Uuid().v4(),
+            from: aliceDidDocument.id,
+            to: [bobDidDocument.id],
+            type: Uri.parse('https://didcomm.org/example/1.0/message'),
+          );
+
+          final bobPlainTextMessage = PlainTextMessage(
+            id: const Uuid().v4(),
+            from: bobDidDocument.id,
+            to: [aliceDidDocument.id],
+            type: Uri.parse('https://didcomm.org/example/1.0/message'),
+          );
+
+          final encryptedAliceMessage =
+              await DidcommMessage.packIntoSignedAndEncryptedMessages(
+            alicePlainTextMessage,
+            keyType: [bobDidDocument].getCommonKeyTypesInKeyAgreements().first,
+            recipientDidDocuments: [bobDidDocument],
+            keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+            encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+            signer: await aliceDidManager.getSigner(
+              aliceDidDocument.assertionMethod.first.id,
+            ),
+          );
+
+          final encryptedBobMessage =
+              await DidcommMessage.packIntoSignedAndEncryptedMessages(
+            bobPlainTextMessage,
+            keyType:
+                [aliceDidDocument].getCommonKeyTypesInKeyAgreements().first,
+            recipientDidDocuments: [aliceDidDocument],
+            keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+            encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+            signer: await bobDidManager.getSigner(
+              bobDidDocument.assertionMethod.first.id,
+            ),
+          );
+
+          // Alice sends message to Bob and Bob receives it
+
+          await aliceMediatorClient.sendMessage(
+            ForwardMessage(
+              id: const Uuid().v4(),
+              from: aliceDidDocument.id,
+              to: [bobMediatorDocument.id],
+              next: alicePlainTextMessage.to!.first,
+              attachments: [
+                Attachment(
+                  mediaType: 'application/json',
+                  data: AttachmentData(
+                    base64: base64UrlEncodeNoPadding(
+                      encryptedAliceMessage.toJsonBytes(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+
+          bobMediatorClient.listenForIncomingMessages(
+            (message) async {
+              final unpacked = await DidcommMessage.unpackToPlainTextMessage(
+                message: message,
+                recipientDidManager: bobDidManager,
+                expectedMessageWrappingTypes: [
+                  MessageWrappingType.anoncryptSignPlaintext,
+                  MessageWrappingType.authcryptSignPlaintext,
+                  MessageWrappingType.authcryptPlaintext,
+                  MessageWrappingType.anoncryptAuthcryptPlaintext,
+                ],
+              );
+
+              if (unpacked.from?.contains('.affinidi.io') == true) {
+                return;
+              }
+
+              bobCompleter.complete(unpacked);
+            },
+            onError: (Object error) async {
+              aliceCompleter.completeError(error);
+              await ConnectionPool.instance.stopConnections();
+            },
+            onDone: ({closeCode, closeReason}) {
+              if (!bobCompleter.isCompleted) {
+                bobCompleter.completeError(
+                  Exception(
+                    'WebSocket closed unexpectedly. Code: $closeCode, Reason: $closeReason',
+                  ),
+                );
+              }
+            },
+          );
+
+          await ConnectionPool.instance.startConnections();
+
+          // Bob sends message to Alice and Alice receives it
+
+          await bobMediatorClient.sendMessage(
+            ForwardMessage(
+              id: const Uuid().v4(),
+              from: bobDidDocument.id,
+              to: [bobMediatorDocument.id],
+              next: bobPlainTextMessage.to!.first,
+              attachments: [
+                Attachment(
+                  mediaType: 'application/json',
+                  data: AttachmentData(
+                    base64: base64UrlEncodeNoPadding(
+                      encryptedBobMessage.toJsonBytes(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+
+          aliceMediatorClient.listenForIncomingMessages(
+            (message) async {
+              final unpacked = await DidcommMessage.unpackToPlainTextMessage(
+                message: message,
+                recipientDidManager: aliceDidManager,
+                expectedMessageWrappingTypes: [
+                  MessageWrappingType.anoncryptSignPlaintext,
+                  MessageWrappingType.authcryptSignPlaintext,
+                  MessageWrappingType.authcryptPlaintext,
+                  MessageWrappingType.anoncryptAuthcryptPlaintext,
+                ],
+              );
+
+              if (unpacked.from?.contains('.affinidi.io') == true) {
+                return;
+              }
+
+              aliceCompleter.complete(unpacked);
+            },
+            onError: (Object error) async {
+              aliceCompleter.completeError(error);
+              await ConnectionPool.instance.stopConnections();
+            },
+            onDone: ({closeCode, closeReason}) async {
+              if (!aliceCompleter.isCompleted) {
+                aliceCompleter.completeError(
+                  Exception(
+                    'WebSocket closed unexpectedly. Code: $closeCode, Reason: $closeReason',
+                  ),
+                );
+
+                await ConnectionPool.instance.stopConnections();
+              }
+            },
+          );
+
+          await ConnectionPool.instance.startConnections();
+
+          final receivedAliceMessage = await aliceCompleter.future;
+          final receivedBobMessage = await bobCompleter.future;
+
+          await ConnectionPool.instance.stopConnections();
+
+          expect(
+            receivedBobMessage.id,
+            alicePlainTextMessage.id,
+            reason: 'Alice did not receive the expected message from Bob',
+          );
+
+          expect(
+            receivedAliceMessage.id,
+            bobPlainTextMessage.id,
+            reason: 'Bob did not receive the expected message from Alice',
+          );
         });
       });
     }
