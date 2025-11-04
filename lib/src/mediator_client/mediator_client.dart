@@ -363,9 +363,6 @@ class MediatorClient {
 
     return (data['success'] as List<dynamic>)
         .cast<Map<String, dynamic>>()
-        // TODO: temporary, fix on mediator side
-        // ignore messages without 'msg' field
-        .where((item) => item.containsKey('msg'))
         .map(
           (item) => jsonDecode(
             item['msg'] as String,
