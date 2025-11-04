@@ -1,3 +1,7 @@
+## 2.1.0
+
+ - **FEAT**: reconnect callbacks.
+
 ## 2.0.3
 
  - **FIX**: close connections at the end of each test.
