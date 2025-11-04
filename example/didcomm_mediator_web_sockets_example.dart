@@ -155,6 +155,20 @@ void main() async {
       mediatorDidDocument: bobMediatorDocument,
       didManager: bobDidManager,
     ),
+    onReconnecting: ({
+      closeCode,
+      closeReason,
+    }) =>
+        prettyPrint(
+      'Bob Mediator Client reconnecting',
+      object: {
+        'closeCode': closeCode,
+        'closeReason': closeReason,
+      },
+    ),
+    onReconnected: () => prettyPrint(
+      'Bob Mediator Client reconnected',
+    ),
     webSocketOptions: const WebSocketOptions(
       statusRequestMessageOptions: StatusRequestMessageOptions(
         shouldSend: true,

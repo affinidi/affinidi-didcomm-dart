@@ -38,6 +38,12 @@ class MediatorClient {
   /// Optional provider for authorization tokens.
   final AuthorizationProvider? authorizationProvider;
 
+  /// Callback invoked when the connection is attempting to reconnect.
+  final OnReconnectingCallback? onReconnecting;
+
+  /// Callback invoked when the connection has successfully reconnected.
+  final OnReconnectedCallback? onReconnected;
+
   final Dio _dio;
 
   /// Creates a [MediatorClient] instance.
@@ -46,6 +52,10 @@ class MediatorClient {
   /// [keyPair] - The key pair for encryption/signing.
   /// [didKeyId] - The key ID for encryption.
   /// [signer] - The signer for signing messages.
+  /// [connectionPool] - Pool of connections for WebSocket management (default: ConnectionPool.instance).
+  /// [authorizationProvider] - Provider for authorization tokens (optional).
+  /// [onReconnecting] - Callback for when the connection is reconnecting (optional).
+  /// [onReconnected] - Callback for when the connection has reconnected (optional).
   /// [forwardMessageOptions] - Options for forwarding messages (default: const ForwardMessageOptions()).
   /// [webSocketOptions] - Options for WebSocket/live delivery (default: const WebSocketOptions()).
   MediatorClient({
@@ -55,6 +65,8 @@ class MediatorClient {
     required this.signer,
     ConnectionPool? connectionPool,
     this.authorizationProvider,
+    this.onReconnecting,
+    this.onReconnected,
     this.forwardMessageOptions = const ForwardMessageOptions(),
     this.webSocketOptions = const WebSocketOptions(),
   })  : _dio = mediatorDidDocument.toDio(
@@ -69,13 +81,19 @@ class MediatorClient {
   ///
   /// [mediatorDidDocument] - The mediator's DID Document.
   /// [didManager] - The DID manager for resolving keys and signers.
+  /// [connectionPool] - Pool of connections for WebSocket management (default: ConnectionPool.instance).
   /// [authorizationProvider] - Provider for authorization tokens (optional).
+  /// [onReconnecting] - Callback for when the connection is reconnecting (optional).
+  /// [onReconnected] - Callback for when the connection has reconnected (optional).
   /// [forwardMessageOptions] - Options for forwarding messages (default: const ForwardMessageOptions()).
   /// [webSocketOptions] - Options for WebSocket/live delivery (default: const WebSocketOptions()).
   static Future<MediatorClient> init({
     required DidDocument mediatorDidDocument,
     required DidManager didManager,
+    ConnectionPool? connectionPool,
     AuthorizationProvider? authorizationProvider,
+    OnReconnectingCallback? onReconnecting,
+    OnReconnectedCallback? onReconnected,
     ForwardMessageOptions forwardMessageOptions = const ForwardMessageOptions(),
     WebSocketOptions webSocketOptions = const WebSocketOptions(),
   }) async {
@@ -105,6 +123,9 @@ class MediatorClient {
       signer: await didManager.getSigner(
         ownDidDocument.authentication.first.id,
       ),
+      connectionPool: connectionPool,
+      onReconnecting: onReconnecting,
+      onReconnected: onReconnected,
       forwardMessageOptions: forwardMessageOptions,
       webSocketOptions: webSocketOptions,
     );
@@ -196,7 +217,7 @@ class MediatorClient {
         options: Options(headers: await getAuthorizationHeaders()),
       );
 
-      return _responseToMessages(response);
+      return _convertResponseToMessages(response);
     } on DioException catch (error) {
       throw MediatorClientException(innerException: error);
     }
@@ -227,7 +248,7 @@ class MediatorClient {
         options: Options(headers: await getAuthorizationHeaders()),
       );
 
-      return _responseToMessages(response);
+      return _convertResponseToMessages(response);
     } on DioException catch (error) {
       throw MediatorClientException(innerException: error);
     }
@@ -276,6 +297,8 @@ class MediatorClient {
       onMessage: onMessage,
       onError: onError,
       onDone: onDone,
+      onReconnecting: onReconnecting,
+      onReconnected: onReconnected,
       cancelOnError: cancelOnError,
     );
   }
@@ -287,7 +310,14 @@ class MediatorClient {
     );
   }
 
-  /// Packs message, which then can be sent to mediator.
+  /// Packs a message for sending to the mediator.
+  ///
+  /// Applies signing and/or encryption based on the provided [messageOptions].
+  ///
+  /// [message] - The plain text message to pack.
+  /// [messageOptions] - Options specifying whether to sign and/or encrypt the message.
+  ///
+  /// Returns the packed [DidcommMessage] ready to be sent.
   Future<DidcommMessage> packMessage(
     PlainTextMessage message, {
     required MessageOptions messageOptions,
@@ -326,15 +356,19 @@ class MediatorClient {
         : null;
   }
 
-  List<Map<String, dynamic>> _responseToMessages(
+  List<Map<String, dynamic>> _convertResponseToMessages(
     Response<Map<String, dynamic>> response,
   ) {
     final data = response.data!['data'] as Map<String, dynamic>;
 
     return (data['success'] as List<dynamic>)
+        .cast<Map<String, dynamic>>()
+        // TODO: temporary, fix on mediator side
+        // ignore messages without 'msg' field
+        .where((item) => item.containsKey('msg'))
         .map(
           (item) => jsonDecode(
-            (item as Map<String, dynamic>)['msg'] as String,
+            item['msg'] as String,
           ) as Map<String, dynamic>,
         )
         .toList();

@@ -10,6 +10,17 @@ import 'package:web_socket_channel/status.dart' as status;
 import '../../didcomm.dart';
 import '../common/crypto.dart';
 
+/// Callback invoked when the connection is attempting to reconnect.
+///
+/// Provides optional [closeCode] and [closeReason] for the previous disconnect.
+typedef OnReconnectingCallback = void Function({
+  int? closeCode,
+  String? closeReason,
+});
+
+/// Callback invoked when the connection has successfully reconnected.
+typedef OnReconnectedCallback = void Function();
+
 /// Manages a WebSocket connection to a DIDComm mediator, providing a stream of incoming messages.
 class Connection {
   /// A broadcast stream of incoming messages from the mediator.
@@ -23,6 +34,12 @@ class Connection {
   /// such as when reconnecting after a disconnect or token refresh.
   IOWebSocketChannel? channel;
 
+  /// Callback invoked when the connection is attempting to reconnect.
+  final OnReconnectingCallback? onReconnecting;
+
+  /// Callback invoked when the connection has successfully reconnected.
+  final OnReconnectedCallback? onReconnected;
+
   // TODO: create internal mediator client instead of passing it from outside
   final MediatorClient _mediatorClient;
   final StreamController<Map<String, dynamic>> _controller;
@@ -33,6 +50,8 @@ class Connection {
   /// Creates a [Connection] for the given [mediatorClient].
   Connection({
     required MediatorClient mediatorClient,
+    this.onReconnecting,
+    this.onReconnected,
   })  : _mediatorClient = mediatorClient,
         _controller = StreamController<Map<String, dynamic>>.broadcast();
 
@@ -42,7 +61,7 @@ class Connection {
   Future<void> start() async {
     // prevent channel from being started multiple times concurrently
     await _lock.synchronized(() async {
-      if (channel != null) {
+      if (channel != null && channel!.closeCode == null) {
         // already started
         return;
       }
@@ -80,14 +99,27 @@ class Connection {
         },
         onError: _controller.addError,
         onDone: () async {
-          // check if the connection was closed due to token expiration
-          if (_authorizationTokens?.accessExpiresAt
-                  .isBefore(DateTime.now().toUtc()) ==
-              true) {
+          var shouldReconnect = false;
+
+          await _lock.synchronized(() async {
+            shouldReconnect =
+                channel != null && channel!.closeCode != status.normalClosure;
+          });
+
+          if (shouldReconnect) {
+            if (onReconnecting != null) {
+              onReconnecting!(
+                closeCode: channel?.closeCode,
+                closeReason: channel?.closeReason,
+              );
+            }
+
             await start();
-          }
-          // TODO: handle other disconnection reasons and implement reconnection logic if needed
-          else {
+
+            if (onReconnected != null) {
+              onReconnected!();
+            }
+          } else {
             await stop();
           }
         },
