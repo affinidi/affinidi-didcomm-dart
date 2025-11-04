@@ -40,8 +40,13 @@ class ConnectionPool {
   StreamSubscription connect({
     required MediatorClient mediatorClient,
     required void Function(Map<String, dynamic>) onMessage,
+    OnReconnectingCallback? onReconnecting,
+    OnReconnectedCallback? onReconnected,
     Function? onError,
-    void Function({int? closeCode, String? closeReason})? onDone,
+    void Function({
+      int? closeCode,
+      String? closeReason,
+    })? onDone,
     bool? cancelOnError,
   }) {
     if (_subscriptions.containsKey(mediatorClient)) {
@@ -57,6 +62,8 @@ class ConnectionPool {
     if (!_connections.containsKey(connectionKey)) {
       _connections[connectionKey] = Connection(
         mediatorClient: mediatorClient,
+        onReconnecting: onReconnecting,
+        onReconnected: onReconnected,
       );
     }
 
