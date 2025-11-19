@@ -82,15 +82,16 @@ class Connection {
           await _lock.synchronized(() async {
             final json = data as String;
 
-            final messageIdOnMediator = hex.encode(
-              sha256Hash(
-                utf8.encode(json),
-              ),
-            );
-
-            unawaited(_mediatorClient.deleteMessages(
-              messageIds: [messageIdOnMediator],
-            ).catchError(_controller.addError));
+            if (_mediatorClient.webSocketOptions.deleteOnReceive) {
+              final messageIdOnMediator = hex.encode(
+                sha256Hash(
+                  utf8.encode(json),
+                ),
+              );
+              unawaited(_mediatorClient.deleteMessages(
+                messageIds: [messageIdOnMediator],
+              ).catchError(_controller.addError));
+            }
 
             _controller.add(
               jsonDecode(json) as Map<String, dynamic>,
@@ -165,7 +166,11 @@ class Connection {
 
       // fetch messages that were sent before the WebSocket connection was established
       unawaited(
-        _mediatorClient.fetchMessages().then((messages) async {
+        _mediatorClient
+            .fetchMessages(
+                deleteOnMediator:
+                    _mediatorClient.webSocketOptions.deleteOnWsConnection)
+            .then((messages) async {
           for (final message in messages) {
             // prevent connection from being closed while processing messages
             await _lock.synchronized(() async {
