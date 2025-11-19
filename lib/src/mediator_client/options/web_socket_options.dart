@@ -19,7 +19,7 @@ class WebSocketOptions {
   /// Indicates whether the message should be deleted on the mediator right after it was received by the client (default: true).
   final bool deleteOnMediator;
 
-  /// Indicates whether the messages should be deleted on the first read before WS connection is established (default: true).
+  /// Indicates whether the messages should be deleted on the first read once WS connection is established (default: true).
   final bool deleteOnWsConnection;
 
   /// Constructs [WebSocketOptions].
