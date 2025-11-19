@@ -251,17 +251,22 @@ void main() async {
 
   for (var i = 1; i <= messageCount; i++) {
     await aliceMediatorClient.sendMessage(
-      await getForwardMessage(aliceDidDocument, bobDidDocument,
-          bobMediatorDocument, aliceSigner, expiresTime, 'Hello, Bob #$messageCount!'),
+      await getForwardMessage(
+          aliceDidDocument,
+          bobDidDocument,
+          bobMediatorDocument,
+          aliceSigner,
+          expiresTime,
+          'Hello, Bob #$messageCount!'),
     );
   }
 
-  sleep(const Duration(seconds:2));
+  sleep(const Duration(seconds: 2));
 
   await ConnectionPool.instance.stopConnections();
   prettyPrint('ConnectionPool.instance.stopConnections');
 
-  sleep(const Duration(seconds:2));
+  sleep(const Duration(seconds: 2));
 
   final aliceMessages =
       await bobMediatorClient.fetchMessages(deleteOnMediator: false);
