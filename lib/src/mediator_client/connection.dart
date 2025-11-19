@@ -82,7 +82,7 @@ class Connection {
           await _lock.synchronized(() async {
             final json = data as String;
 
-            if (_mediatorClient.webSocketOptions.deleteOnMediator) {
+            if (_mediatorClient.webSocketOptions.deleteOnReceive) {
               final messageIdOnMediator = hex.encode(
                 sha256Hash(
                   utf8.encode(json),

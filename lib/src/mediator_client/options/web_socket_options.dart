@@ -16,10 +16,16 @@ class WebSocketOptions {
   /// WebSocket connection alive.
   final int pingIntervalInSeconds;
 
-  /// Indicates whether the message should be deleted on the mediator right after it was received by the client (default: true).
-  final bool deleteOnMediator;
+  /// Indicates whether the message should be deleted from the mediator right after it was received by the client (default: true).
+  ///
+  /// NOTE: This may lead to the client application loosing messages if it crashes while processing a message.
+  /// For high durability it is recommended to set it to false and explicitly delete messages once they are processed.
+  final bool deleteOnReceive;
 
   /// Indicates whether the messages should be deleted on the first read once WS connection is established (default: true).
+  ///
+  /// NOTE: This may lead to the client application loosing messages if it crashes while processing a message.
+  /// For high durability it is recommended to set it to false and explicitly delete messages once they are processed.
   final bool deleteOnWsConnection;
 
   /// Constructs [WebSocketOptions].
@@ -31,7 +37,7 @@ class WebSocketOptions {
     this.liveDeliveryChangeMessageOptions =
         const LiveDeliveryChangeMessageOptions(),
     this.pingIntervalInSeconds = 30,
-    this.deleteOnMediator = true,
+    this.deleteOnReceive = true,
     this.deleteOnWsConnection = true,
   });
 }

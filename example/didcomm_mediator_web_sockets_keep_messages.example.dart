@@ -181,7 +181,7 @@ void main() async {
       'Bob Mediator Client reconnected',
     ),
     webSocketOptions: const WebSocketOptions(
-      deleteOnMediator: false,
+      deleteOnReceive: false,
       deleteOnWsConnection: false,
       statusRequestMessageOptions: StatusRequestMessageOptions(
         shouldSend: true,
