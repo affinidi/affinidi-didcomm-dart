@@ -82,15 +82,16 @@ class Connection {
           await _lock.synchronized(() async {
             final json = data as String;
 
-            final messageIdOnMediator = hex.encode(
-              sha256Hash(
-                utf8.encode(json),
-              ),
-            );
-
-            unawaited(_mediatorClient.deleteMessages(
-              messageIds: [messageIdOnMediator],
-            ).catchError(_controller.addError));
+            if (_mediatorClient.webSocketOptions.deleteOnMediator) {
+              final messageIdOnMediator = hex.encode(
+                sha256Hash(
+                  utf8.encode(json),
+                ),
+              );
+              unawaited(_mediatorClient.deleteMessages(
+                messageIds: [messageIdOnMediator],
+              ).catchError(_controller.addError));
+            }
 
             _controller.add(
               jsonDecode(json) as Map<String, dynamic>,
