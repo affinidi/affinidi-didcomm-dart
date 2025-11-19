@@ -182,7 +182,6 @@ void main() async {
     ),
     webSocketOptions: const WebSocketOptions(
       deleteOnReceive: false,
-      deleteOnWsConnection: false,
       statusRequestMessageOptions: StatusRequestMessageOptions(
         shouldSend: true,
         shouldSign: true,

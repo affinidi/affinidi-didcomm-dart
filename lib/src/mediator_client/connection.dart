@@ -169,7 +169,7 @@ class Connection {
         _mediatorClient
             .fetchMessages(
                 deleteOnMediator:
-                    _mediatorClient.webSocketOptions.deleteOnWsConnection)
+                    _mediatorClient.webSocketOptions.deleteOnReceive)
             .then((messages) async {
           for (final message in messages) {
             // prevent connection from being closed while processing messages
