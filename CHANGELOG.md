@@ -1,3 +1,20 @@
+## 2.2.0
+
+ - **FEAT**: reverting deleteOnMediator to allow keeping msg during live mode (#78).
+
+    * feat: reverting deleteOnMediator to allow ws flexibility
+    
+    * feat: example updated, more on delete options added
+    
+    * fix: formatting
+    
+    * fix: linting
+    
+    * fix: doc
+    
+    * fix: doc/naming
+
+
 ## 2.1.0
 
  - **FEAT**: reconnect callbacks.
