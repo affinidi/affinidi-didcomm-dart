@@ -19,6 +19,9 @@ class WebSocketOptions {
   /// Indicates whether the message should be deleted on the mediator right after it was received by the client (default: true).
   final bool deleteOnMediator;
 
+  /// Indicates whether the messages should be deleted on the first read before WS connection is established (default: true).
+  final bool deleteOnWsConnection;
+
   /// Constructs [WebSocketOptions].
   ///
   /// [statusRequestMessageOptions]: Options for status request messages (default: const StatusRequestMessageOptions()).
@@ -29,5 +32,6 @@ class WebSocketOptions {
         const LiveDeliveryChangeMessageOptions(),
     this.pingIntervalInSeconds = 30,
     this.deleteOnMediator = true,
+    this.deleteOnWsConnection = true,
   });
 }
