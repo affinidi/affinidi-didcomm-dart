@@ -1,9 +1,6 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:convert/convert.dart';
 import 'package:didcomm/didcomm.dart';
-import 'package:didcomm/src/common/crypto.dart';
 import 'package:ssi/ssi.dart';
 import 'package:uuid/uuid.dart';
 
