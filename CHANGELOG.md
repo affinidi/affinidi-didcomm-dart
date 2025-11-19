@@ -1,3 +1,7 @@
+## 2.3.0
+
+ - **FEAT**: deleteOn flags consolidated to deleteOnReceive (#79).
+
 ## 2.2.0
 
  - **FEAT**: reverting deleteOnMediator to allow keeping msg during live mode (#78).
