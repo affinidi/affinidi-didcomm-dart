@@ -18,7 +18,8 @@ import 'service_endpoint_extension.dart';
 bool _serviceTypeMatches(ServiceType serviceType, String value) {
   if (serviceType is StringServiceType) {
     return serviceType.value == value;
-  } else if (serviceType is SetServiceType) {
+  }
+  if (serviceType is SetServiceType) {
     return serviceType.values.contains(value);
   }
   return false;
