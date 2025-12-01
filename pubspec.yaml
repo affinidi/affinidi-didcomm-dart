@@ -23,7 +23,7 @@ dependencies:
   elliptic: ^0.3.11
   json_annotation: ^4.9.0
   pointycastle: ^4.0.0
-  ssi: ^2.12.4
+  ssi: ^3.0.2
   synchronized: ^3.3.0+3
   uuid: ^4.5.1
   web_socket_channel: ^3.0.3
