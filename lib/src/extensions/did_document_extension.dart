@@ -10,6 +10,21 @@ import '../mediator_client.dart';
 import 'extensions.dart';
 import 'service_endpoint_extension.dart';
 
+/// Helper function to check if a [ServiceType] matches a string value.
+///
+/// This handles both [StringServiceType] and [SetServiceType] from SSI v3.0+.
+/// - For [StringServiceType]: returns true if the value matches exactly
+/// - For [SetServiceType]: returns true if the value is contained in the set
+bool _serviceTypeMatches(ServiceType serviceType, String value) {
+  if (serviceType is StringServiceType) {
+    return serviceType.value == value;
+  }
+  if (serviceType is SetServiceType) {
+    return serviceType.values.contains(value);
+  }
+  return false;
+}
+
 /// Extension methods for [DidDocument] to support DIDComm-specific operations,
 /// such as extracting endpoints, creating transport clients, and key matching.
 extension DidDocumentExtension on DidDocument {
@@ -21,7 +36,7 @@ extension DidDocumentExtension on DidDocument {
     final serviceType = mediatorServiceType.value;
 
     final service = this.service.firstWhere(
-          (service) => service.type == serviceType,
+          (service) => _serviceTypeMatches(service.type, serviceType),
           orElse: () => throw ArgumentError(
             'DID Document does not have a service with type $serviceType',
             'didDocument',
@@ -55,7 +70,7 @@ extension DidDocumentExtension on DidDocument {
     final serviceType = DidDocumentServiceType.didCommMessaging.value;
 
     final service = this.service.firstWhere(
-          (service) => service.type == serviceType,
+          (service) => _serviceTypeMatches(service.type, serviceType),
           orElse: () => throw ArgumentError(
             'DID Document does not have a service with type $serviceType',
             'didDocument',
@@ -84,12 +99,15 @@ extension DidDocumentExtension on DidDocument {
 
   /// Returns all [ServiceEndpoint]s of the given [serviceType] in this DID Document.
   List<ServiceEndpoint> getServicesByType(DidDocumentServiceType serviceType) {
-    return service.where((item) => item.type == serviceType.value).toList();
+    return service
+        .where((item) => _serviceTypeMatches(item.type, serviceType.value))
+        .toList();
   }
 
   /// Returns the first [ServiceEndpoint] of the given [serviceType], or null if not found.
   ServiceEndpoint? getFirstServiceByType(DidDocumentServiceType serviceType) {
-    return service.firstWhereOrNull((item) => item.type == serviceType.value);
+    return service.firstWhereOrNull(
+        (item) => _serviceTypeMatches(item.type, serviceType.value));
   }
 
   /// Matches and returns key IDs in this DID Document's key agreement section that are compatible with all [otherDidDocuments].
