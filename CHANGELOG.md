@@ -1,3 +1,14 @@
+## 2.3.1
+
+ - **FIX**: update ServiceType handling for SSI v3 compatibility (#80).
+
+    * fix: update ServiceType handling for SSI v3 compatibility
+    
+    
+    
+    ---------
+
+
 ## 2.3.0
 
  - **FEAT**: deleteOn flags consolidated to deleteOnReceive (#79).
