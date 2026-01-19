@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:convert/convert.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../didcomm.dart';
 import '../common/crypto.dart';
@@ -74,7 +76,10 @@ class Connection {
         webSocketOptions: _mediatorClient.webSocketOptions,
       );
 
-      await channel!.ready;
+      await channel!.ready.catchError((Object err) {
+        channel = null;
+        throw err as Exception;
+      });
 
       channel!.stream.listen(
         (data) async {
@@ -115,7 +120,7 @@ class Connection {
               );
             }
 
-            await start();
+            await _reconnect();
 
             if (onReconnected != null) {
               onReconnected!();
@@ -209,5 +214,26 @@ class Connection {
     channel!.sink.add(
       jsonEncode(message),
     );
+  }
+
+  Future<void> _reconnect() async {
+    while (true) {
+      try {
+        await start();
+        return;
+      } on WebSocketChannelException catch (e) {
+        if (e.inner is SocketException) {
+          await Future<void>.delayed(Duration(
+            seconds: _mediatorClient.webSocketOptions.pingIntervalInSeconds,
+          ));
+          continue;
+        }
+
+        rethrow;
+      } catch (e) {
+        await stop();
+        rethrow;
+      }
+    }
   }
 }
