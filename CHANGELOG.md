@@ -1,3 +1,7 @@
+## 2.3.2
+
+ - **FIX**: add retry logic for socket reconnection on SocketException.
+
 ## 2.3.1
 
  - **FIX**: update ServiceType handling for SSI v3 compatibility (#80).

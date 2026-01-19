@@ -1,6 +1,6 @@
 name: didcomm
 description: A Dart package for implementing secure and private communication on your app using DIDComm v2 Messaging protocol.
-version: 2.3.1
+version: 2.3.2
 repository: https://github.com/affinidi/affinidi-didcomm-dart
 
 environment:
