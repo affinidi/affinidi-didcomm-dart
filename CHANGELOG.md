@@ -1,3 +1,7 @@
+## 2.3.3
+
+ - **FIX**: option to enable or disable fetching messages on connect.
+
 ## 2.3.2
 
  - **FIX**: add retry logic for socket reconnection on SocketException.
