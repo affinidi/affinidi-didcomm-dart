@@ -22,6 +22,9 @@ class WebSocketOptions {
   /// For high durability it is recommended to set it to false and explicitly delete messages once they are processed.
   final bool deleteOnReceive;
 
+  /// Indicates whether to fetch messages from the mediator immediately after the WebSocket connection is established (default: true).
+  final bool fetchMessagesOnConnect;
+
   /// Constructs [WebSocketOptions].
   ///
   /// [statusRequestMessageOptions]: Options for status request messages (default: const StatusRequestMessageOptions()).
@@ -32,5 +35,6 @@ class WebSocketOptions {
         const LiveDeliveryChangeMessageOptions(),
     this.pingIntervalInSeconds = 30,
     this.deleteOnReceive = true,
+    this.fetchMessagesOnConnect = true,
   });
 }

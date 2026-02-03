@@ -169,21 +169,23 @@ class Connection {
         );
       }
 
-      // fetch messages that were sent before the WebSocket connection was established
-      unawaited(
-        _mediatorClient
-            .fetchMessages(
-                deleteOnMediator:
-                    _mediatorClient.webSocketOptions.deleteOnReceive)
-            .then((messages) async {
-          for (final message in messages) {
-            // prevent connection from being closed while processing messages
-            await _lock.synchronized(() async {
-              _controller.add(message);
-            });
-          }
-        }),
-      );
+      if (_mediatorClient.webSocketOptions.fetchMessagesOnConnect) {
+        // fetch messages that were sent before the WebSocket connection was established
+        unawaited(
+          _mediatorClient
+              .fetchMessages(
+                  deleteOnMediator:
+                      _mediatorClient.webSocketOptions.deleteOnReceive)
+              .then((messages) async {
+            for (final message in messages) {
+              // prevent connection from being closed while processing messages
+              await _lock.synchronized(() async {
+                _controller.add(message);
+              });
+            }
+          }),
+        );
+      }
     });
   }
 
