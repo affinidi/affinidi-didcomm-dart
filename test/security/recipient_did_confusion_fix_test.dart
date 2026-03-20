@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 /// the fix correctly rejects messages addressed to a foreign DID, even when
 /// the key fragment matches a local wallet key.
 void main() {
-  group('recipient DID confusion — fix verification (counter-PoC)', () {
+  group('recipient DID confusion — fix verification', () {
     test(
         'anoncrypt rejects a did:peer recipient as did:example when the key fragment matches',
         () async {
@@ -42,7 +42,9 @@ void main() {
         DidcommMessage.unpackToPlainTextMessage(
           message: encrypted.toJson(),
           recipientDidManager: victim.didManager,
-          expectedMessageWrappingTypes: [MessageWrappingType.anoncryptPlaintext],
+          expectedMessageWrappingTypes: [
+            MessageWrappingType.anoncryptPlaintext
+          ],
         ),
         throwsA(
           isA<Exception>().having(
