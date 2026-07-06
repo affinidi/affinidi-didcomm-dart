@@ -173,7 +173,7 @@ class Connection {
         // inbox before live delivery is active and never be pushed over the
         // WebSocket
         // TODO: remove this delay once we process acknowledgment of the live-delivery-change message
-        await Future<void>.delayed(const Duration(seconds: 2));
+        await Future<void>.delayed(const Duration(milliseconds: 250));
       }
 
       if (_mediatorClient.webSocketOptions.fetchMessagesOnConnect) {
