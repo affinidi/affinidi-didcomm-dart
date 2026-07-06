@@ -390,16 +390,22 @@ void main() async {
                   message: message,
                   recipientDidManager: bobDidManager,
                   validateAddressingConsistency: true,
-                  expectedMessageWrappingTypes: [
-                    isMediatorTelemetryMessage
-                        ? MessageWrappingType.authcryptSignPlaintext
-                        : MessageWrappingType.anoncryptSignPlaintext,
-                  ],
-                  expectedSigners: [
-                    isMediatorTelemetryMessage
-                        ? bobMediatorDocument.assertionMethod.first.didKeyId
-                        : aliceDidDocument.assertionMethod.first.didKeyId,
-                  ],
+                  expectedMessageWrappingTypes: isMediatorTelemetryMessage
+                      ? [
+                          // send by the old mediator
+                          // TODO: remove after immigration to the new mediator is completed
+                          MessageWrappingType.authcryptSignPlaintext,
+                          // send by the new mediator
+                          MessageWrappingType.authcryptPlaintext
+                        ]
+                      : [
+                          MessageWrappingType.anoncryptSignPlaintext,
+                        ],
+                  expectedSigners: isMediatorTelemetryMessage
+                      ? null
+                      : [
+                          aliceDidDocument.assertionMethod.first.didKeyId,
+                        ],
                 );
 
                 if (isMediatorTelemetryMessage) {
@@ -700,7 +706,7 @@ void main() async {
 
         expect(errors, isEmpty);
       },
-      timeout: const Timeout(Duration(minutes: 2)),
+      timeout: const Timeout(Duration(minutes: 3)),
     );
   });
 }

@@ -39,19 +39,19 @@ class AffinidiAuthorizationProvider extends AuthorizationProvider {
   }) async {
     final ownDidDocument = await didManager.getDidDocument();
 
-    final bobMatchedDidKeyIds = ownDidDocument.matchKeysInKeyAgreement(
+    final matchedDidKeyIds = ownDidDocument.matchKeysInKeyAgreement(
       otherDidDocuments: [
         mediatorDidDocument,
       ],
     );
 
-    if (bobMatchedDidKeyIds.isEmpty) {
+    if (matchedDidKeyIds.isEmpty) {
       throw Exception(
         'No suitable key found for key agreement with the mediator.',
       );
     }
 
-    final didKeyId = bobMatchedDidKeyIds.first;
+    final didKeyId = matchedDidKeyIds.first;
 
     return AffinidiAuthorizationProvider(
       mediatorDidDocument: mediatorDidDocument,
