@@ -167,6 +167,13 @@ class Connection {
                 .webSocketOptions.liveDeliveryChangeMessageOptions,
           ),
         );
+
+        // give the mediator time to activate live delivery before any
+        // subsequent message is forwarded, otherwise a message can land in the
+        // inbox before live delivery is active and never be pushed over the
+        // WebSocket
+        // TODO: remove this delay once we process acknowledgment of the live-delivery-change message
+        await Future<void>.delayed(const Duration(seconds: 2));
       }
 
       if (_mediatorClient.webSocketOptions.fetchMessagesOnConnect) {
