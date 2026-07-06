@@ -393,7 +393,7 @@ void main() async {
                   expectedMessageWrappingTypes: isMediatorTelemetryMessage
                       ? [
                           // send by the old mediator
-                          // TODO: remove after immigration to the new mediator is completed
+                          // TODO: remove after migration to the new mediator is completed
                           MessageWrappingType.authcryptSignPlaintext,
                           // send by the new mediator
                           MessageWrappingType.authcryptPlaintext
