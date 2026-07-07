@@ -382,8 +382,7 @@ void main() async {
                     .fromJson(encryptedMessage.protected)
                     .subjectKeyId;
 
-                final isMediatorTelemetryMessage =
-                    senderDid?.contains('.affinidi.io') == true;
+                final isMediatorTelemetryMessage = isMediatorDid(senderDid);
 
                 final unpackedMessage =
                     await DidcommMessage.unpackToPlainTextMessage(
@@ -544,7 +543,7 @@ void main() async {
                 ],
               );
 
-              if (unpacked.from?.contains('.affinidi.io') == true) {
+              if (isMediatorDid(unpacked.from)) {
                 return;
               }
 
@@ -601,7 +600,7 @@ void main() async {
                 ],
               );
 
-              if (unpacked.from?.contains('.affinidi.io') == true) {
+              if (isMediatorDid(unpacked.from)) {
                 return;
               }
 
@@ -714,3 +713,7 @@ void main() async {
 void failTest(String message) {
   throw Exception(message);
 }
+
+/// Whether [did] belongs to the mediator (used to identify mediator-originated
+/// messages such as telemetry).
+bool isMediatorDid(String? did) => did?.contains('.affinidi.io') == true;
