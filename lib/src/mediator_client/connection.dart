@@ -167,33 +167,80 @@ class Connection {
                 .webSocketOptions.liveDeliveryChangeMessageOptions,
           ),
         );
-
-        // give the mediator time to activate live delivery before any
-        // subsequent message is forwarded, otherwise a message can land in the
-        // inbox before live delivery is active and never be pushed over the
-        // WebSocket
-        // TODO: remove this delay once we process acknowledgment of the live-delivery-change message
-        await Future<void>.delayed(const Duration(milliseconds: 250));
       }
 
       if (_mediatorClient.webSocketOptions.fetchMessagesOnConnect) {
-        // fetch messages that were sent before the WebSocket connection was established
-        unawaited(
-          _mediatorClient
-              .fetchMessages(
-                  deleteOnMediator:
-                      _mediatorClient.webSocketOptions.deleteOnReceive)
-              .then((messages) async {
-            for (final message in messages) {
-              // prevent connection from being closed while processing messages
-              await _lock.synchronized(() async {
-                _controller.add(message);
-              });
+        // Messages forwarded to the inbox around the time the WebSocket
+        // connection is being established may not be pushed over the socket
+        // via live delivery, so they would otherwise stay in the inbox until
+        // the next (re)connect. To cover that window we poll the inbox a few
+        // times right after connecting and push any queued messages into the
+        // stream.
+        // TODO: the proper solution would be to wait for the live delivery
+        // status message from the mediator and only then fetch all messages.
+        // However, this requires significant refactoring since the DidManager,
+        // needed to unpack the status message, is not available at the
+        // connection level.
+        unawaited(drainInboxMessages(
+          listMessageIds: _mediatorClient.listInboxMessageIds,
+          fetchMessagesByIds: (ids) => _mediatorClient.fetchMessagesByIds(
+            ids,
+            deleteOnMediator: _mediatorClient.webSocketOptions.deleteOnReceive,
+          ),
+          emit: (message) => _lock.synchronized(() async {
+            if (channel == null) {
+              // connection has been stopped
+              return;
             }
+
+            _controller.add(message);
           }),
-        );
+          isActive: () => channel != null,
+        ));
       }
     });
+  }
+
+  /// Polls the mediator inbox up to [maxAttempts] times, [interval] apart, and
+  /// emits any not-yet-seen messages via [emit].
+  ///
+  /// Messages are deduplicated by their inbox message id, so a message that is
+  /// still returned by a later poll (e.g. when messages are not deleted on the
+  /// mediator) is emitted only once. Polling stops early once [isActive]
+  /// returns false.
+  static Future<void> drainInboxMessages({
+    required Future<List<String>> Function() listMessageIds,
+    required Future<List<Map<String, dynamic>>> Function(List<String> ids)
+        fetchMessagesByIds,
+    required Future<void> Function(Map<String, dynamic> message) emit,
+    required bool Function() isActive,
+    int maxAttempts = 5,
+    Duration interval = const Duration(seconds: 1),
+  }) async {
+    // IDs of messages already added to the stream during polling, used to
+    // avoid emitting the same message twice when it is still returned by a
+    // later poll (e.g. when messages are not deleted on the mediator).
+    final seenMessageIds = <String>{};
+
+    for (var attempt = 0; attempt < maxAttempts; attempt++) {
+      // stop polling once the connection has been stopped
+      if (!isActive()) {
+        break;
+      }
+
+      final messageIds = await listMessageIds();
+      final newMessageIds = messageIds.where(seenMessageIds.add).toList();
+
+      if (newMessageIds.isNotEmpty) {
+        final messages = await fetchMessagesByIds(newMessageIds);
+
+        for (final message in messages) {
+          await emit(message);
+        }
+      }
+
+      await Future<void>.delayed(interval);
+    }
   }
 
   /// Stops the WebSocket connection and closes the message stream.
