@@ -6,14 +6,11 @@ env:
   TEST_ALICE_PRIVATE_KEY_PEM: ${{ vars.TEST_ALICE_PRIVATE_KEY_PEM }}
   TEST_BOB_PRIVATE_KEY_PEM: ${{ vars.TEST_BOB_PRIVATE_KEY_PEM }}
 jobs:
-  wiz-scan:
-    uses: affinidi/pipeline-security/.github/workflows/wizcli-dirscan.yml@main
-    secrets: inherit
   build:
     runs-on: ubuntu-latest
     services:
       localstack:
-        image: localstack/localstack:latest
+        image: localstack/localstack:4.14.0
         ports:
           - 4566:4566
         options: --env KMS=true

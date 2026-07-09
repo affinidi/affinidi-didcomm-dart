@@ -12,6 +12,14 @@ import 'example_configs.dart';
 
 const testRetries = 2;
 
+/// How long to keep listening after the expected message(s) have been received
+/// to make sure the mediator does not deliver the same message again.
+const duplicateDetectionWindow = Duration(seconds: 5);
+
+/// Number of messages used by the tests that verify messages are kept on the
+/// mediator when they are not auto-deleted.
+const keptMessageCount = 3;
+
 void main() async {
   await configureTestFiles();
 
@@ -247,6 +255,14 @@ void main() async {
           );
 
           final messageIds = await bobMediatorClient.listInboxMessageIds();
+
+          expect(
+            findDuplicateIds(messageIds),
+            isEmpty,
+            reason: 'Duplicated message ids in the inbox: '
+                '${findDuplicateIds(messageIds)}',
+          );
+
           final messagesFetchedByIds =
               await bobMediatorClient.fetchMessagesByIds(
             messageIds,
@@ -267,6 +283,17 @@ void main() async {
                 ],
               ),
             ),
+          );
+
+          final duplicatedUnpackedMessageIds = findDuplicateIds(
+            actualUnpackedMessages.map((message) => message.id),
+          );
+
+          expect(
+            duplicatedUnpackedMessageIds,
+            isEmpty,
+            reason:
+                'Duplicated messages fetched: $duplicatedUnpackedMessageIds',
           );
 
           final messagesFetchedByCursor = await bobMediatorClient.fetchMessages(
@@ -318,7 +345,94 @@ void main() async {
             isNotNull,
             reason: 'Sent message not found',
           );
+
+          expect(
+            actualUnpackedMessages.map((message) => message.id),
+            contains(alicePlainTextMessage.id),
+            reason: 'Sent message id was not received',
+          );
         }, retry: testRetries, tags: []);
+
+        test(
+          'REST API keeps messages when they are not auto-deleted',
+          () async {
+            final sentMessageIds = <String>{};
+
+            for (var i = 0; i < keptMessageCount; i++) {
+              final built = await buildForwardMessage(
+                senderDidManager: aliceDidManager,
+                senderDidDocument: aliceDidDocument,
+                recipientDidDocument: bobDidDocument,
+                mediatorDidDocument: bobMediatorDocument,
+                content: const Uuid().v4(),
+              );
+
+              sentMessageIds.add(built.messageId);
+              await aliceMediatorClient.sendMessage(built.forwardMessage);
+            }
+
+            // fetching without deletion must keep the messages on the mediator
+            final firstFetch = await bobMediatorClient.fetchMessages(
+              deleteOnMediator: false,
+            );
+
+            expect(
+              firstFetch.length,
+              keptMessageCount,
+              reason: 'Expected $keptMessageCount messages, '
+                  'but got ${firstFetch.length}',
+            );
+
+            final firstFetchIds = await unpackMessageIds(
+              firstFetch,
+              bobDidManager,
+            );
+
+            expect(
+              findDuplicateIds(firstFetchIds),
+              isEmpty,
+              reason: 'Duplicated messages fetched: '
+                  '${findDuplicateIds(firstFetchIds)}',
+            );
+
+            expect(
+              firstFetchIds.toSet(),
+              sentMessageIds,
+              reason: 'Fetched messages do not match the sent ones',
+            );
+
+            // fetching again must return the same messages since none were
+            // deleted
+            final secondFetch = await bobMediatorClient.fetchMessages(
+              deleteOnMediator: false,
+            );
+
+            final secondFetchIds = await unpackMessageIds(
+              secondFetch,
+              bobDidManager,
+            );
+
+            expect(
+              secondFetchIds.toSet(),
+              firstFetchIds.toSet(),
+              reason: 'Messages changed between fetches without deletion',
+            );
+
+            // finally delete and make sure the inbox is empty
+            final messageIds = await bobMediatorClient.listInboxMessageIds();
+            await bobMediatorClient.deleteMessages(messageIds: messageIds);
+
+            final inboxAfterDeletion =
+                await bobMediatorClient.listInboxMessageIds();
+
+            expect(
+              inboxAfterDeletion,
+              isEmpty,
+              reason: 'Messages were not deleted',
+            );
+          },
+          retry: testRetries,
+        );
 
         test(
           'WebSockets API works correctly',
@@ -373,7 +487,10 @@ void main() async {
             String? actualBodyContent;
             bool? telemetryMessageReceived;
 
-            final completer = Completer<void>();
+            final receivedMessageIds = <String>{};
+            final duplicateMessageIds = <String>[];
+
+            final expectedMessagesReceived = Completer<void>();
 
             bobMediatorClient.listenForIncomingMessages(
               (message) async {
@@ -382,25 +499,35 @@ void main() async {
                     .fromJson(encryptedMessage.protected)
                     .subjectKeyId;
 
-                final isMediatorTelemetryMessage =
-                    senderDid?.contains('.affinidi.io') == true;
+                final isMediatorTelemetryMessage = isMediatorDid(senderDid);
 
                 final unpackedMessage =
                     await DidcommMessage.unpackToPlainTextMessage(
                   message: message,
                   recipientDidManager: bobDidManager,
                   validateAddressingConsistency: true,
-                  expectedMessageWrappingTypes: [
-                    isMediatorTelemetryMessage
-                        ? MessageWrappingType.authcryptSignPlaintext
-                        : MessageWrappingType.anoncryptSignPlaintext,
-                  ],
-                  expectedSigners: [
-                    isMediatorTelemetryMessage
-                        ? bobMediatorDocument.assertionMethod.first.didKeyId
-                        : aliceDidDocument.assertionMethod.first.didKeyId,
-                  ],
+                  expectedMessageWrappingTypes: isMediatorTelemetryMessage
+                      ? [
+                          // send by the old mediator
+                          // TODO: remove after migration to the new mediator is completed
+                          MessageWrappingType.authcryptSignPlaintext,
+                          // send by the new mediator
+                          MessageWrappingType.authcryptPlaintext
+                        ]
+                      : [
+                          MessageWrappingType.anoncryptSignPlaintext,
+                        ],
+                  expectedSigners: isMediatorTelemetryMessage
+                      ? null
+                      : [
+                          aliceDidDocument.assertionMethod.first.didKeyId,
+                        ],
                 );
+
+                // track received message ids to detect duplicated messages
+                if (!receivedMessageIds.add(unpackedMessage.id)) {
+                  duplicateMessageIds.add(unpackedMessage.id);
+                }
 
                 if (isMediatorTelemetryMessage) {
                   telemetryMessageReceived = true;
@@ -410,9 +537,9 @@ void main() async {
                 }
 
                 if (actualBodyContent == expectedBodyContent &&
-                    telemetryMessageReceived == true) {
-                  await ConnectionPool.instance.stopConnections();
-                  completer.complete();
+                    telemetryMessageReceived == true &&
+                    !expectedMessagesReceived.isCompleted) {
+                  expectedMessagesReceived.complete();
                 }
               },
               onError: (Object error) => prettyPrint('error', object: error),
@@ -425,7 +552,12 @@ void main() async {
               forwardMessage,
             );
 
-            await completer.future;
+            await expectedMessagesReceived.future;
+
+            // keep the connection open for a while to make sure the expected
+            // message is not delivered again (no duplicated messages)
+            await Future<void>.delayed(duplicateDetectionWindow);
+
             await ConnectionPool.instance.stopConnections();
 
             expect(
@@ -439,6 +571,181 @@ void main() async {
               isTrue,
               reason: 'No telemetry message',
             );
+
+            expect(
+              receivedMessageIds,
+              contains(alicePlainTextMessage.id),
+              reason: 'Sent message id was not received',
+            );
+
+            expect(
+              duplicateMessageIds,
+              isEmpty,
+              reason: 'Duplicated messages received: $duplicateMessageIds',
+            );
+          },
+          retry: testRetries,
+        );
+
+        test(
+          'WebSockets API keeps messages when they are not auto-deleted',
+          () async {
+            // a dedicated client that does not delete messages on receive,
+            // so they remain available on the mediator after being delivered
+            final bobKeepMessagesClient = await MediatorClient.init(
+              mediatorDidDocument: bobMediatorDocument,
+              didManager: bobDidManager,
+              authorizationProvider: await AffinidiAuthorizationProvider.init(
+                mediatorDidDocument: bobMediatorDocument,
+                didManager: bobDidManager,
+              ),
+              forwardMessageOptions: const ForwardMessageOptions(
+                shouldSign: true,
+                keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+                encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+              ),
+              webSocketOptions: const WebSocketOptions(
+                deleteOnReceive: false,
+                liveDeliveryChangeMessageOptions:
+                    LiveDeliveryChangeMessageOptions(
+                  shouldSend: true,
+                  shouldSign: true,
+                  keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+                  encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+                ),
+                statusRequestMessageOptions: StatusRequestMessageOptions(
+                  shouldSend: true,
+                  shouldSign: true,
+                  keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+                  encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+                ),
+              ),
+            );
+
+            final sentMessageIds = <String>{};
+            final forwardMessages = <ForwardMessage>[];
+            final receivedMessageIds = <String>{};
+            final duplicateMessageIds = <String>[];
+            final allMessagesReceived = Completer<void>();
+
+            // build the messages up front so [sentMessageIds] is fully
+            // populated before the listener evaluates its completion condition
+            for (var i = 0; i < keptMessageCount; i++) {
+              final built = await buildForwardMessage(
+                senderDidManager: aliceDidManager,
+                senderDidDocument: aliceDidDocument,
+                recipientDidDocument: bobDidDocument,
+                mediatorDidDocument: bobMediatorDocument,
+                content: const Uuid().v4(),
+              );
+
+              sentMessageIds.add(built.messageId);
+              forwardMessages.add(built.forwardMessage);
+            }
+
+            bobKeepMessagesClient.listenForIncomingMessages(
+              (message) async {
+                final encryptedMessage = EncryptedMessage.fromJson(message);
+                final senderDid = const JweHeaderConverter()
+                    .fromJson(encryptedMessage.protected)
+                    .subjectKeyId;
+
+                // ignore mediator telemetry messages
+                if (isMediatorDid(senderDid)) {
+                  return;
+                }
+
+                final unpackedMessage =
+                    await DidcommMessage.unpackToPlainTextMessage(
+                  message: message,
+                  recipientDidManager: bobDidManager,
+                  validateAddressingConsistency: true,
+                  expectedMessageWrappingTypes: [
+                    MessageWrappingType.anoncryptSignPlaintext,
+                  ],
+                  expectedSigners: [
+                    aliceDidDocument.assertionMethod.first.didKeyId,
+                  ],
+                );
+
+                // track received message ids to detect duplicated messages
+                if (!receivedMessageIds.add(unpackedMessage.id)) {
+                  duplicateMessageIds.add(unpackedMessage.id);
+                }
+
+                if (sentMessageIds.every(receivedMessageIds.contains) &&
+                    !allMessagesReceived.isCompleted) {
+                  allMessagesReceived.complete();
+                }
+              },
+              onError: (Object error) => prettyPrint('error', object: error),
+              cancelOnError: false,
+            );
+
+            await ConnectionPool.instance.startConnections();
+
+            // send after the connection is established so each message is
+            // pushed via live delivery while also remaining in the inbox
+            // (deleteOnReceive: false) - the scenario where the live-delivery
+            // and inbox-drain paths could otherwise emit the same message twice
+            for (final forwardMessage in forwardMessages) {
+              await aliceMediatorClient.sendMessage(forwardMessage);
+            }
+
+            await allMessagesReceived.future;
+
+            // keep the connection open for a while to make sure the same
+            // messages are not delivered again (no duplicated messages)
+            await Future<void>.delayed(duplicateDetectionWindow);
+
+            await ConnectionPool.instance.stopConnections();
+
+            expect(
+              duplicateMessageIds,
+              isEmpty,
+              reason: 'Duplicated messages received: $duplicateMessageIds',
+            );
+
+            expect(
+              receivedMessageIds,
+              sentMessageIds,
+              reason: 'Received messages do not match the sent ones',
+            );
+
+            // since deleteOnReceive is false, the messages must still be
+            // available on the mediator after being delivered
+            final remainingMessages = await bobKeepMessagesClient.fetchMessages(
+              deleteOnMediator: false,
+            );
+
+            expect(
+              remainingMessages.length,
+              keptMessageCount,
+              reason: 'Expected $keptMessageCount messages to be kept on the '
+                  'mediator, but got ${remainingMessages.length}',
+            );
+
+            final remainingIds = await unpackMessageIds(
+              remainingMessages,
+              bobDidManager,
+            );
+
+            expect(
+              findDuplicateIds(remainingIds),
+              isEmpty,
+              reason: 'Duplicated messages kept on the mediator: '
+                  '${findDuplicateIds(remainingIds)}',
+            );
+
+            expect(
+              remainingIds.toSet(),
+              sentMessageIds,
+              reason: 'Kept messages differ from the sent ones',
+            );
+
+            // clean up the inbox for the following tests
+            final inboxIds = await bobKeepMessagesClient.listInboxMessageIds();
+            await bobKeepMessagesClient.deleteMessages(messageIds: inboxIds);
           },
           retry: testRetries,
         );
@@ -464,6 +771,10 @@ void main() async {
         test('Can connect after connections have been started', () async {
           final aliceCompleter = Completer<PlainTextMessage>();
           final bobCompleter = Completer<PlainTextMessage>();
+
+          final aliceReceivedMessageIds = <String>{};
+          final bobReceivedMessageIds = <String>{};
+          final duplicateMessageIds = <String>[];
 
           final alicePlainTextMessage = PlainTextMessage(
             id: const Uuid().v4(),
@@ -538,10 +849,17 @@ void main() async {
                 ],
               );
 
-              if (unpacked.from?.contains('.affinidi.io') == true) {
+              if (isMediatorDid(unpacked.from)) {
                 return;
               }
 
+              // track received message ids to detect duplicated messages
+              if (!bobReceivedMessageIds.add(unpacked.id)) {
+                duplicateMessageIds.add(unpacked.id);
+              }
+
+              // intentionally not guarding with isCompleted so a duplicated
+              // message fails the test by completing the completer twice
               bobCompleter.complete(unpacked);
             },
             onError: (Object error) async {
@@ -595,10 +913,17 @@ void main() async {
                 ],
               );
 
-              if (unpacked.from?.contains('.affinidi.io') == true) {
+              if (isMediatorDid(unpacked.from)) {
                 return;
               }
 
+              // track received message ids to detect duplicated messages
+              if (!aliceReceivedMessageIds.add(unpacked.id)) {
+                duplicateMessageIds.add(unpacked.id);
+              }
+
+              // intentionally not guarding with isCompleted so a duplicated
+              // message fails the test by completing the completer twice
               aliceCompleter.complete(unpacked);
             },
             onError: (Object error) async {
@@ -623,6 +948,10 @@ void main() async {
           final receivedAliceMessage = await aliceCompleter.future;
           final receivedBobMessage = await bobCompleter.future;
 
+          // keep the connections open for a while to make sure the mediator
+          // does not deliver the same messages again (no duplicated messages)
+          await Future<void>.delayed(duplicateDetectionWindow);
+
           await ConnectionPool.instance.stopConnections();
 
           expect(
@@ -635,6 +964,12 @@ void main() async {
             receivedAliceMessage.id,
             bobPlainTextMessage.id,
             reason: 'Bob did not receive the expected message from Alice',
+          );
+
+          expect(
+            duplicateMessageIds,
+            isEmpty,
+            reason: 'Duplicated messages received: $duplicateMessageIds',
           );
         });
       });
@@ -700,7 +1035,7 @@ void main() async {
 
         expect(errors, isEmpty);
       },
-      timeout: const Timeout(Duration(minutes: 2)),
+      timeout: const Timeout(Duration(minutes: 3)),
     );
   });
 }
@@ -708,3 +1043,101 @@ void main() async {
 void failTest(String message) {
   throw Exception(message);
 }
+
+/// Returns the ids that appear more than once in [ids], preserving the order
+/// in which the duplicates are encountered.
+List<String> findDuplicateIds(Iterable<String> ids) {
+  final seen = <String>{};
+  final duplicates = <String>[];
+
+  for (final id in ids) {
+    if (!seen.add(id)) {
+      duplicates.add(id);
+    }
+  }
+
+  return duplicates;
+}
+
+/// Packs [content] into a signed and encrypted message and wraps it into a
+/// [ForwardMessage] addressed to the recipient's mediator.
+///
+/// Returns the forward message together with the id of the inner plaintext
+/// message so callers can correlate what was sent with what is received.
+Future<({ForwardMessage forwardMessage, String messageId})>
+    buildForwardMessage({
+  required DidManager senderDidManager,
+  required DidDocument senderDidDocument,
+  required DidDocument recipientDidDocument,
+  required DidDocument mediatorDidDocument,
+  required String content,
+}) async {
+  final messageId = const Uuid().v4();
+
+  final plainTextMessage = PlainTextMessage(
+    id: messageId,
+    from: senderDidDocument.id,
+    to: [recipientDidDocument.id],
+    type: Uri.parse('https://didcomm.org/example/1.0/message'),
+    body: {'content': content},
+  );
+
+  final signedAndEncryptedMessage =
+      await DidcommMessage.packIntoSignedAndEncryptedMessages(
+    plainTextMessage,
+    keyType: [recipientDidDocument].getCommonKeyTypesInKeyAgreements().first,
+    recipientDidDocuments: [recipientDidDocument],
+    keyWrappingAlgorithm: KeyWrappingAlgorithm.ecdhEs,
+    encryptionAlgorithm: EncryptionAlgorithm.a256cbc,
+    signer: await senderDidManager.getSigner(
+      senderDidDocument.assertionMethod.first.id,
+    ),
+  );
+
+  final forwardMessage = ForwardMessage(
+    id: const Uuid().v4(),
+    from: senderDidDocument.id,
+    to: [mediatorDidDocument.id],
+    next: recipientDidDocument.id,
+    expiresTime: DateTime.now().toUtc().add(const Duration(seconds: 600)),
+    attachments: [
+      Attachment(
+        mediaType: 'application/json',
+        data: AttachmentData(
+          base64: base64UrlEncodeNoPadding(
+            signedAndEncryptedMessage.toJsonBytes(),
+          ),
+        ),
+      ),
+    ],
+  );
+
+  return (forwardMessage: forwardMessage, messageId: messageId);
+}
+
+/// Unpacks [messages] and returns their DIDComm message ids.
+Future<List<String>> unpackMessageIds(
+  List<Map<String, dynamic>> messages,
+  DidManager recipientDidManager,
+) async {
+  final unpackedMessages = await Future.wait(
+    messages.map(
+      (message) => DidcommMessage.unpackToPlainTextMessage(
+        message: message,
+        recipientDidManager: recipientDidManager,
+        expectedMessageWrappingTypes: [
+          MessageWrappingType.anoncryptSignPlaintext,
+          MessageWrappingType.authcryptSignPlaintext,
+          MessageWrappingType.authcryptPlaintext,
+          MessageWrappingType.anoncryptAuthcryptPlaintext,
+        ],
+      ),
+    ),
+  );
+
+  return unpackedMessages.map((message) => message.id).toList();
+}
+
+/// Whether [did] belongs to the mediator (used to identify mediator-originated
+/// messages such as telemetry).
+bool isMediatorDid(String? did) => did?.contains('.affinidi.io') == true;

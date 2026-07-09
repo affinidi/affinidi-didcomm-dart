@@ -49,6 +49,23 @@ class Connection {
   AuthorizationTokens? _authorizationTokens;
   final _lock = Lock();
 
+  /// Inbox message ids that have already been emitted while the post-connect
+  /// inbox drain is running.
+  ///
+  /// Shared between the WebSocket live-delivery path and [drainInboxMessages]
+  /// so that a message delivered over the socket and also still present in the
+  /// inbox (e.g. when `deleteOnReceive` is false) is emitted only once. It is
+  /// only populated while [_isDrainingInbox] is true and cleared once draining
+  /// finishes, so it does not grow for the lifetime of the connection.
+  final _seenMessageIds = <String>{};
+
+  /// Whether the post-connect inbox drain is currently running.
+  ///
+  /// Deduplication between live delivery and the inbox drain is only needed
+  /// while the drain is active, since afterwards live delivery is the only
+  /// source of messages.
+  bool _isDrainingInbox = false;
+
   /// Creates a [Connection] for the given [mediatorClient].
   Connection({
     required MediatorClient mediatorClient,
@@ -86,16 +103,27 @@ class Connection {
           // prevent connection from being closed while processing messages
           await _lock.synchronized(() async {
             final json = data as String;
+            final messageIdOnMediator = hex.encode(
+              sha256Hash(
+                utf8.encode(json),
+              ),
+            );
 
             if (_mediatorClient.webSocketOptions.deleteOnReceive) {
-              final messageIdOnMediator = hex.encode(
-                sha256Hash(
-                  utf8.encode(json),
-                ),
-              );
               unawaited(_mediatorClient.deleteMessages(
                 messageIds: [messageIdOnMediator],
               ).catchError(_controller.addError));
+            }
+
+            // A message may be delivered both over the WebSocket (live
+            // delivery) and fetched from the inbox by [drainInboxMessages]
+            // while the post-connect inbox drain is running (e.g. when
+            // deleteOnReceive is false and the message is not removed from the
+            // inbox). Deduplicate by the inbox message id only during that
+            // window; once the drain has finished, live delivery is the only
+            // source, so we stop tracking ids to avoid unbounded memory growth.
+            if (_isDrainingInbox && !_seenMessageIds.add(messageIdOnMediator)) {
+              return;
             }
 
             _controller.add(
@@ -170,23 +198,86 @@ class Connection {
       }
 
       if (_mediatorClient.webSocketOptions.fetchMessagesOnConnect) {
-        // fetch messages that were sent before the WebSocket connection was established
-        unawaited(
-          _mediatorClient
-              .fetchMessages(
-                  deleteOnMediator:
-                      _mediatorClient.webSocketOptions.deleteOnReceive)
-              .then((messages) async {
-            for (final message in messages) {
-              // prevent connection from being closed while processing messages
-              await _lock.synchronized(() async {
-                _controller.add(message);
-              });
+        // Messages forwarded to the inbox around the time the WebSocket
+        // connection is being established may not be pushed over the socket
+        // via live delivery, so they would otherwise stay in the inbox until
+        // the next (re)connect. To cover that window we poll the inbox a few
+        // times right after connecting and push any queued messages into the
+        // stream.
+        // TODO: the proper solution would be to wait for the live delivery
+        // status message from the mediator and only then fetch all messages.
+        // However, this requires significant refactoring since the DidManager,
+        // needed to unpack the status message, is not available at the
+        // connection level.
+
+        // Deduplicate live-delivered messages against the drained ones only
+        // while the drain is running (see the WebSocket listener above). The
+        // flag is reset and the tracked ids are cleared once draining finishes
+        // to avoid unbounded memory growth.
+        _isDrainingInbox = true;
+
+        unawaited(drainInboxMessages(
+          listMessageIds: _mediatorClient.listInboxMessageIds,
+          fetchMessagesByIds: (ids) => _mediatorClient.fetchMessagesByIds(
+            ids,
+            deleteOnMediator: _mediatorClient.webSocketOptions.deleteOnReceive,
+          ),
+          emit: (message) => _lock.synchronized(() async {
+            if (channel == null) {
+              // connection has been stopped
+              return;
             }
+
+            _controller.add(message);
           }),
-        );
+          isActive: () => channel != null,
+          seenMessageIds: _seenMessageIds,
+        ).whenComplete(() {
+          _isDrainingInbox = false;
+          _seenMessageIds.clear();
+        }));
       }
     });
+  }
+
+  /// Polls the mediator inbox up to [maxAttempts] times, [interval] apart, and
+  /// emits any not-yet-seen messages via [emit].
+  ///
+  /// Messages are deduplicated by their inbox message id using [seenMessageIds]
+  /// (which is mutated as ids are emitted), so a message that is still returned
+  /// by a later poll (e.g. when messages are not deleted on the mediator) is
+  /// emitted only once. The same set can be shared with another source (such as
+  /// the WebSocket live-delivery path) so a message delivered there is not
+  /// emitted again here. Polling stops early once [isActive] returns false.
+  static Future<void> drainInboxMessages({
+    required Future<List<String>> Function() listMessageIds,
+    required Future<List<Map<String, dynamic>>> Function(List<String> ids)
+        fetchMessagesByIds,
+    required Future<void> Function(Map<String, dynamic> message) emit,
+    required bool Function() isActive,
+    required Set<String> seenMessageIds,
+    int maxAttempts = 5,
+    Duration interval = const Duration(seconds: 1),
+  }) async {
+    for (var attempt = 0; attempt < maxAttempts; attempt++) {
+      // stop polling once the connection has been stopped
+      if (!isActive()) {
+        break;
+      }
+
+      final messageIds = await listMessageIds();
+      final newMessageIds = messageIds.where(seenMessageIds.add).toList();
+
+      if (newMessageIds.isNotEmpty) {
+        final messages = await fetchMessagesByIds(newMessageIds);
+
+        for (final message in messages) {
+          await emit(message);
+        }
+      }
+
+      await Future<void>.delayed(interval);
+    }
   }
 
   /// Stops the WebSocket connection and closes the message stream.
