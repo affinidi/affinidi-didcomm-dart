@@ -305,7 +305,13 @@ class EncryptedMessage extends DidcommMessage {
   }
 
   Future<Recipient> _findSelfAsRecipient(DidManager didManager) async {
+    final ownDid = (await didManager.getDidDocument()).id;
+
     for (final recipient in recipients) {
+      final recipientDid = getDidFromId(recipient.header.keyId);
+
+      if (recipientDid != ownDid) continue;
+
       final keyId = await didManager.getWalletKeyIdUniversally(
         recipient.header.keyId,
       );
