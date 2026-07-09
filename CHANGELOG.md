@@ -1,3 +1,16 @@
+## 2.3.4
+
+ - **FIX**: new mediator migration (#86).
+
+    * fix: new mediator migration
+    
+    * fix: update ssi to 3.9.4 and pin localstack to 4.14.0
+    
+    * fix: remove wiz-scan job from CI
+    
+    * fix: dedupe messages across WS live delivery and inbox drain
+
+
 ## 2.3.3
 
  - **FIX**: option to enable or disable fetching messages on connect.
