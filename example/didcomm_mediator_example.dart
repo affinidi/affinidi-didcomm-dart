@@ -28,7 +28,7 @@ void main() async {
     store: InMemoryDidStore(),
   );
 
-  final aliceKeyId = 'alice-key-1';
+  final aliceKeyId = 'alice-key-1tmp';
   final alicePrivateKeyBytes = await extractPrivateKeyBytes(
     alicePrivateKeyPath,
   );
