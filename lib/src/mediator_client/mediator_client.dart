@@ -159,7 +159,26 @@ class MediatorClient {
   /// [message] - The message to send.
   ///
   /// Returns the packed [DidcommMessage] that was sent.
-  Future<DidcommMessage> sendMessage(ForwardMessage message) async {
+  Future<DidcommMessage> sendMessage(ForwardMessage message) =>
+      _sendToInbound(message);
+
+  /// Sends a [TrustTaskMessage] to the mediator.
+  ///
+  /// Affinidi mediators are administered through Trust Tasks, e.g. to update a
+  /// DID's access list or ACL.
+  ///
+  /// The mediator rejects a task synchronously (HTTP error carrying a problem
+  /// report), which is thrown as [MediatorClientException]. On success the
+  /// mediator stores its response in the sender's inbox; decode it with
+  /// [TrustTaskMessage.fromJson].
+  ///
+  /// [message] - The message to send.
+  ///
+  /// Returns the packed [DidcommMessage] that was sent.
+  Future<DidcommMessage> sendTrustTask(TrustTaskMessage message) =>
+      _sendToInbound(message);
+
+  Future<DidcommMessage> _sendToInbound(PlainTextMessage message) async {
     final messageToSend = await packMessage(
       message,
       messageOptions: forwardMessageOptions,
