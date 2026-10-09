@@ -13,5 +13,8 @@ export 'protocols/problem_report/problem_report_message.dart';
 export 'protocols/routing/forward_message.dart';
 export 'protocols/trust_ping/ping_message.dart';
 export 'protocols/trust_ping/ping_response_message.dart';
+export 'protocols/trust_task/mediator/access_list_update_task.dart';
+export 'protocols/trust_task/mediator/account_update_task.dart';
+export 'protocols/trust_task/mediator/mediator_acl.dart';
 export 'protocols/trust_task/trust_task_document.dart';
 export 'protocols/trust_task/trust_task_message.dart';

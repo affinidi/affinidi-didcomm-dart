@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:ssi/ssi.dart';
 
 import '../../didcomm.dart';
+import '../messages/protocols/trust_task/mediator/did_hash.dart';
 import 'connection.dart';
 
 part 'connection_pool.dart';
@@ -205,7 +205,7 @@ class MediatorClient {
 
     try {
       final response = await _dio.get<Map<String, dynamic>>(
-        '/list/${sha256.convert(utf8.encode(did)).toString()}/inbox',
+        '/list/${mediatorDidHash(did)}/inbox',
         options: Options(headers: await getAuthorizationHeaders()),
       );
 
