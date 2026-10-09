@@ -203,6 +203,67 @@ void main() async {
           await ConnectionPool.instance.stopConnections();
         });
 
+        test('account update Trust Task changes a self-changeable flag',
+            () async {
+          final task = TrustTaskMessage(
+            id: const Uuid().v4(),
+            // explicit allow is the mode the test mediators already use, so
+            // this leaves the setup from configureAcl intact
+            document: AccountUpdateTask(
+              issuer: aliceDidDocument.id,
+              mediatorDid: bobMediatorDocument.id,
+              acl: const MediatorAcl(
+                accessListMode: AccessListMode.explicitAllow,
+              ),
+            ),
+          );
+
+          await aliceMediatorClient.sendTrustTask(task);
+
+          final responses = await fetchTrustTaskMessages(
+            aliceMediatorClient,
+            aliceDidManager,
+          );
+
+          final response = responses.singleWhere(
+            (message) => message.document.threadId == task.document.id,
+          );
+
+          expect(
+            response.document.type.toString(),
+            '${AccountUpdateTask.taskType}#response',
+          );
+          final account =
+              response.document.payload['account'] as Map<String, dynamic>;
+          final acl = account['acl'] as Map<String, dynamic>;
+
+          expect(acl['accessListMode'], 'explicitAllow');
+        });
+
+        test('account update Trust Task rejects an admin-only flag', () async {
+          final task = TrustTaskMessage(
+            id: const Uuid().v4(),
+            // Alice is a standard account, so the mediator must refuse to let
+            // her block herself
+            document: AccountUpdateTask(
+              issuer: aliceDidDocument.id,
+              mediatorDid: bobMediatorDocument.id,
+              acl: const MediatorAcl(blocked: true),
+            ),
+          );
+
+          await expectLater(
+            aliceMediatorClient.sendTrustTask(task),
+            throwsA(
+              isA<MediatorClientException>().having(
+                (e) => e.innerMessage,
+                'innerMessage',
+                contains('e.p.authorization.acl.not_self_manageable'),
+              ),
+            ),
+          );
+        });
+
         test('REST API works correctly', () async {
           final expectedBodyContent = const Uuid().v4();
 
@@ -499,7 +560,8 @@ void main() async {
                     .fromJson(encryptedMessage.protected)
                     .subjectKeyId;
 
-                final isMediatorTelemetryMessage = isMediatorDid(senderDid);
+                final isMediatorTelemetryMessage =
+                    isMediatorDid(senderDid, bobMediatorDocument);
 
                 final unpackedMessage =
                     await DidcommMessage.unpackToPlainTextMessage(
@@ -651,7 +713,7 @@ void main() async {
                     .subjectKeyId;
 
                 // ignore mediator telemetry messages
-                if (isMediatorDid(senderDid)) {
+                if (isMediatorDid(senderDid, bobMediatorDocument)) {
                   return;
                 }
 
@@ -849,7 +911,7 @@ void main() async {
                 ],
               );
 
-              if (isMediatorDid(unpacked.from)) {
+              if (isMediatorDid(unpacked.from, bobMediatorDocument)) {
                 return;
               }
 
@@ -913,7 +975,7 @@ void main() async {
                 ],
               );
 
-              if (isMediatorDid(unpacked.from)) {
+              if (isMediatorDid(unpacked.from, bobMediatorDocument)) {
                 return;
               }
 
@@ -1138,6 +1200,39 @@ Future<List<String>> unpackMessageIds(
   return unpackedMessages.map((message) => message.id).toList();
 }
 
-/// Whether [did] belongs to the mediator (used to identify mediator-originated
-/// messages such as telemetry).
-bool isMediatorDid(String? did) => did?.contains('.affinidi.io') == true;
+/// Fetches the inbox of [mediatorClient] and returns its Trust Task messages,
+/// e.g. the mediator's responses to sent tasks.
+Future<List<TrustTaskMessage>> fetchTrustTaskMessages(
+  MediatorClient mediatorClient,
+  DidManager recipientDidManager,
+) async {
+  final messages = await mediatorClient.fetchMessages();
+
+  final unpackedMessages = await Future.wait(
+    messages.map(
+      (message) => DidcommMessage.unpackToPlainTextMessage(
+        message: message,
+        recipientDidManager: recipientDidManager,
+        expectedMessageWrappingTypes: [
+          MessageWrappingType.anoncryptSignPlaintext,
+          MessageWrappingType.authcryptSignPlaintext,
+          MessageWrappingType.authcryptPlaintext,
+          MessageWrappingType.anoncryptAuthcryptPlaintext,
+        ],
+      ),
+    ),
+  );
+
+  return unpackedMessages
+      .where(TrustTaskMessage.isTrustTask)
+      .map((message) => TrustTaskMessage.fromJson(message.toJson()))
+      .toList();
+}
+
+/// Whether [did] (or key ID) belongs to the mediator: the configured one, or a
+/// hosted Affinidi mediator. Used to identify mediator-originated messages such
+/// as telemetry.
+bool isMediatorDid(String? did, DidDocument mediatorDidDocument) =>
+    did != null &&
+    (did.contains('.affinidi.io') ||
+        getDidFromId(did) == mediatorDidDocument.id);

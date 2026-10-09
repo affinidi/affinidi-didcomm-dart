@@ -131,8 +131,14 @@ void main() async {
     throw Exception(
         'No error, Alice did send a message, are we using a mediator with explicit allow per DID?');
   } on MediatorClientException catch (e) {
-    if (!e.innerMessage
-        .contains('Delivery blocked due to ACLs (access_list denied)')) {
+    // Mediators before 0.25 name the reason; later ones only say the
+    // delivery was refused. They hide the reason on purpose, so a sender
+    // cannot learn whether the recipient exists or what its ACLs allow.
+    final isAccessListDenial = e.innerMessage
+            .contains('Delivery blocked due to ACLs (access_list denied)') ||
+        e.innerMessage.contains('e.p.delivery.refused');
+
+    if (!isAccessListDenial) {
       throw Exception('Unexpected error occurred: ${e.innerMessage}');
     }
     prettyPrint('Expected error occurred', object: e.innerMessage);
