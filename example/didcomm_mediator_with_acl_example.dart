@@ -155,24 +155,24 @@ void main() async {
   );
 
   // Bob needs to add Alice's DID to their ACL...
-  final bobAccessListAddMessage = AccessListAddMessage(
+  final bobAccessListUpdateMessage = TrustTaskMessage(
     id: const Uuid().v4(),
-    from: bobDidDocument.id,
-    to: [bobMediatorDocument.id],
-    theirDids: [aliceDidDocument.id],
+    document: AccessListUpdateTask(
+      issuer: bobDidDocument.id,
+      mediatorDid: bobMediatorDocument.id,
+      add: [aliceDidDocument.id],
+    ),
     expiresTime: expiresTime,
   );
 
-  prettyPrint('bobAccessListAddMessage', object: bobAccessListAddMessage);
+  prettyPrint('bobAccessListUpdateMessage', object: bobAccessListUpdateMessage);
 
-  final bobAccessListAddSentMessage =
-      await bobMediatorClient.sendAclManagementMessage(
-    bobAccessListAddMessage,
-  );
+  final bobAccessListUpdateSentMessage =
+      await bobMediatorClient.sendTrustTask(bobAccessListUpdateMessage);
 
   prettyPrint(
-    'bobAccessListAddSentMessage',
-    object: bobAccessListAddSentMessage,
+    'bobAccessListUpdateSentMessage',
+    object: bobAccessListUpdateSentMessage,
   );
 
   // ...only then Alice can send a message
