@@ -10,3 +10,5 @@ jobs:
     secrets: inherit
     with:
       publish: true
+      # Keep in sync with the melos dev_dependency (see release.yaml).
+      melos-version: '6.3.3'
