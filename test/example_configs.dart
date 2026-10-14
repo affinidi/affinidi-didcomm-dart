@@ -6,9 +6,10 @@ import 'package:uuid/uuid.dart';
 // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/alice_private_key.pem
 // openssl ecparam -name prime256v1 -genkey -noout -out example/keys/bob_private_key.pem
 // OR
-// set environment variables TEST_MEDIATOR_DID, TEST_ALICE_PRIVATE_KEY_PEM, and TEST_BOB_PRIVATE_KEY_PEM
+// set environment variables TEST_TRUST_TASK_MEDIATOR_DID, TEST_ALICE_PRIVATE_KEY_PEM, and TEST_BOB_PRIVATE_KEY_PEM
 
 // Create and run a DIDComm mediator, for instance with https://portal.affinidi.com.
+// It must support Trust Tasks, which the ACL setup below relies on.
 // Copy its DID Document URL into example/mediator/mediator_did.txt.
 
 const mediatorDidPath = './example/mediator/mediator_did.txt';
@@ -18,7 +19,9 @@ const bobPrivateKeyPath = './example/keys/bob_private_key.pem';
 /// Configures files based on ENV vars.
 Future<void> configureTestFiles() async {
   await writeEnvironmentVariableToFileIfNeeded(
-    'TEST_MEDIATOR_DID',
+    // Kept apart from TEST_MEDIATOR_DID, which still points to a mediator
+    // without Trust Task support for branches that use legacy ACL management.
+    'TEST_TRUST_TASK_MEDIATOR_DID',
     mediatorDidPath,
   );
 
@@ -41,17 +44,17 @@ Future<void> configureAcl({
   required MediatorClient mediatorClient,
   DateTime? expiresTime,
 }) async {
-  final accessListAddMessage = AccessListAddMessage(
+  final accessListUpdateMessage = TrustTaskMessage(
     id: const Uuid().v4(),
-    from: ownDidDocument.id,
-    to: [mediatorClient.mediatorDidDocument.id],
-    theirDids: theirDids,
+    document: AccessListUpdateTask(
+      issuer: ownDidDocument.id,
+      mediatorDid: mediatorClient.mediatorDidDocument.id,
+      add: theirDids,
+    ),
     expiresTime: expiresTime,
   );
 
-  await mediatorClient.sendAclManagementMessage(
-    accessListAddMessage,
-  );
+  await mediatorClient.sendTrustTask(accessListUpdateMessage);
 }
 
 Future<String> getDidKeyForPrivateKeyPath(String privateKeyPath) async {

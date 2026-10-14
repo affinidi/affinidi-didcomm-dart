@@ -8,6 +8,11 @@ import '../../didcomm.dart';
 /// Represents a root DIDComm ACL Management Message.
 ///
 /// This message is used as a parent to all ACL Management messages.
+@Deprecated(
+  'The acl-management protocol is not supported by Affinidi mediators 0.31 '
+  'and later. Use AccessListUpdateTask or AccountUpdateTask with '
+  'MediatorClient.sendTrustTask instead.',
+)
 abstract class AclManagementMessage extends PlainTextMessage {
   /// The URI representing the message type.
   /// This is used to identify the specific protocol message type within DIDComm.
@@ -41,6 +46,11 @@ abstract class AclManagementMessage extends PlainTextMessage {
 /// Represents a root DIDComm ACL Management Message.
 ///
 /// This message is used to add DIDs to the mediator's ACL of the did (from).
+@Deprecated(
+  'The acl-management protocol is not supported by Affinidi mediators 0.31 '
+  'and later. Use AccessListUpdateTask or AccountUpdateTask with '
+  'MediatorClient.sendTrustTask instead.',
+)
 class AccessListAddMessage extends AclManagementMessage {
   /// Lists of DIDs which shall be added to ACL.
   final List<String> theirDids;
@@ -85,7 +95,6 @@ class AccessListAddMessage extends AclManagementMessage {
   }
 }
 
-// TODO: should be eventually moved to TDK
 /// Extension for [MediatorClient] to support Affinidi-specific ACL management.
 ///
 /// ACL management is not covered by the DIDComm standard.
@@ -96,6 +105,11 @@ extension AffinidiAclManagementExtension on MediatorClient {
   /// [message] - The message to send.
   ///
   /// Returns the packed [DidcommMessage] that was sent.
+  @Deprecated(
+    'The acl-management protocol is not supported by Affinidi mediators 0.31 '
+    'and later. Use AccessListUpdateTask or AccountUpdateTask with '
+    'MediatorClient.sendTrustTask instead.',
+  )
   Future<DidcommMessage> sendAclManagementMessage(
     AclManagementMessage message,
   ) async {
