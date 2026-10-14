@@ -1,3 +1,36 @@
+## 2.4.0
+
+ - **FEAT**: add Trust Task support for mediator administration (#88).
+
+    * feat: add Trust Task DIDComm transport for mediator administration
+    
+    Affinidi mediators >= 0.31 are administered only through Trust Tasks;
+    the legacy acl-management protocol is no longer served. Add the Trust
+    Task document, its DIDComm envelope message and
+    MediatorClient.sendTrustTask so clients can talk to current mediators.
+    
+    Mediators store their Trust Task responses in the inbox, so
+    TrustTaskMessage.fromJson decodes them like other protocol messages,
+    keeping threadId and proof. It rejects a sender that differs from the
+    document issuer, or a recipient other than the document's, since the
+    message takes its addressing from the document. Malformed input is
+    reported as FormatException. Proofs are carried but not verified.
+    
+    * feat: add mediator access-list and account update Trust Tasks
+    
+    Replace the bitmask-based acl-management bodies with typed
+    messaging/access-list/update and messaging/account/update tasks.
+    MediatorAcl carries named flags and sends only the ones that are set,
+    since a non-admin DID may only change flags it can self-change.
+    
+    * feat: deprecate legacy acl-management in favour of Trust Tasks
+    
+    Affinidi mediators 0.31 and later answer acl-management messages with
+    501 not implemented. Mark AclManagementMessage, AccessListAddMessage
+    and sendAclManagementMessage as deprecated, and move the ACL example
+    and integration test setup to AccessListUpdateTask via sendTrustTask.
+
+
 ## 2.3.4
 
  - **FIX**: new mediator migration (#86).
