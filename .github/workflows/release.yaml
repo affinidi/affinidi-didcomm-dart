@@ -7,3 +7,7 @@ jobs:
   dart-pipeline:
     uses: affinidi/pipeline-dart/.github/workflows/release.yaml@main
     secrets: inherit
+    with:
+      # Keep in sync with the melos dev_dependency: melos >= 7 requires Dart >= 3.9
+      # and pub workspaces, while this repo still uses melos.yaml.
+      melos-version: '6.3.3'
